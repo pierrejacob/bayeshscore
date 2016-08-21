@@ -16,13 +16,22 @@ get_model_lineargaussian <- function(){
     return (cbind(phi,psi,sigmaV2,sigmaW2))
   }
 
-  # density the prior distribution on parameters
-  model.lineargaussian$dprior = function(theta){
+  # prior distribution density on parameters
+  model.lineargaussian$dprior = function(theta, log = TRUE){
     phi = theta[1]
     psi = theta[2]
     sigmaV2 = theta[3]
     sigmaW2 = theta[4]
-    return (dunif(phi,0.1,0.9)*dunif(psi,0.5,1.5)*dunif(sigmaV2,0.1,2)*dunif(sigmaW2,1,10))
+    if (log==TRUE){
+      combineterms = sum
+    }
+    else{
+      combineterms = prod
+    }
+    return (combineterms(dunif(phi,0.1,0.9,log),
+                         dunif(psi,0.5,1.5,log),
+                         dunif(sigmaV2,0.1,2,log),
+                         dunif(sigmaW2,1,10,log)))
   }
 
   # sampler from the initial distribution of the states
@@ -41,10 +50,22 @@ get_model_lineargaussian <- function(){
   }
 
   # density of the observations
-  model.lineargaussian$dobs = function(Yt,Xt,t,theta){
+  model.lineargaussian$dobs = function(Yt,Xt,t,theta,log = TRUE){
     psi = theta[2]
     sigmaV2 = theta[3]
-    return (dnorm(Yt,mean = psi*Xt,sd = sqrt(sigmaV2), log = TRUE))
+    return (dnorm(Yt,mean = psi*Xt,sd = sqrt(sigmaV2), log))
+  }
+
+  # first and second partial derivatives (k-th coordinate) of the observation log-density
+  model.lineargaussian$derivativelogdobs = function(Yt,Xt,t,theta,k){
+    phi = theta[1]
+    psi = theta[2]
+    sigmaV2 = theta[3]
+    sigmaW2 = theta[4]
+    N = nrow(Xt)
+    d1 = matrix((phi*Xt-Yt)/(sigmaV2),nrow = N)
+    d2 = matrix(-1/sigmaV2,nrow = N)
+    return (list(d1log = d1, d2log = d2))
   }
 
   # OPTIONAL: simulate observations
