@@ -1,8 +1,8 @@
 #'@export
 
-bootstrap_particle_filter <- function(observations, model, theta, algorithmc_parameters){
-  Nx <- algorithmc_parameters$Nx
-  resampling <- algorithmc_parameters$resampling
+bootstrap_particle_filter <- function(observations, model, theta, algorithmic_parameters){
+  Nx <- algorithmic_parameters$Nx
+  resampling <- algorithmic_parameters$resampling
   nobservations <- ncol(observations)
   log_p_y_hat <- 0 #initialize estimate of p_theta(y_{1:nobservations}))
   X = matrix(NA,nrow = Nx, ncol = model$dimX) # matrix of Nx particles row-wise
