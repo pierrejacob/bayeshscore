@@ -1,3 +1,6 @@
+#'@rdname simulateData
+#'@title simulateData
+#'@description This function generates artificial data from a model. 'additional_parameters' is a list of n lists, where n is the number of observations that are generated (examples of additional parameters include step size for simulating SDEs)
 #'@export
 simulateData = function(model,theta,nobservations) {
   X <- matrix(nrow = model$dimX, ncol = nobservations)
@@ -10,3 +13,4 @@ simulateData = function(model,theta,nobservations) {
   }
   return (list(X = X, Y = Y))
 }
+

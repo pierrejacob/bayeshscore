@@ -27,13 +27,14 @@ get_model_kangarooRandomwalk <- function(){
     return (combineterms(dunif(sigma,0,10,log),dunif(tau,0,10,log)))
   }
   # sampler from the initial distribution of the states
-  model.kangarooRandomwalk$rinitial = function(theta,N=1){
+  model.kangarooRandomwalk$rinitial = function(theta,N){
     return (matrix(rlnorm(N,meanlog = 5,sdlog = sqrt(10)), nrow = N))
   }
   # sampler from the transition density of the states
-  model.kangarooRandomwalk$rtransition = function(Xt,dt,theta){
+  model.kangarooRandomwalk$rtransition = function(Xt,t,theta){
     sigma = theta[1]
     N = nrow(Xt)
+    dt = data_kangaroo["time",t] - data_kangaroo["time",t-1]
     return (matrix(Xt*exp(sigma*rnorm(N,mean = 0,sd = sqrt(dt))), nrow = N))
   }
   # density of the observations

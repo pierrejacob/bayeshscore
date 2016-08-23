@@ -3,13 +3,12 @@ library(HyvarinenSSM)
 set.seed(17)
 
 nobservations <- 20
-model <- get_model_kangarooRandomwalk()
+model <- get_model_kangarooExponential()
 #simulate data
-sim = simulateData(model, theta = c(0.1,0.1), nobservations)
+sim = simulateData(model, theta = c(0.1,0.1,0.1), nobservations)
 X = sim$X
 Y = sim$Y
 
 plot(1:nobservations,X,ylim = c(min(X,Y),max(X,Y)),type = 'l')
 points(1:nobservations,Y[1,])
 points(1:nobservations,Y[2,])
-

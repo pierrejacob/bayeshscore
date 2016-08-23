@@ -3,9 +3,9 @@ library(HyvarinenSSM)
 set.seed(17)
 
 nobservations <- 20
-model <- get_model_kangarooRandomwalk()
+model <- get_model_kangarooLogistic()
 #simulate data
-sim = simulateData(model, theta = c(0.1,0.1), nobservations)
+sim = simulateData(model, theta = c(0.1,0.1,0.1,1), nobservations)
 X = sim$X
 Y = sim$Y
 

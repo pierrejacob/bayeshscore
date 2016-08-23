@@ -45,7 +45,7 @@ rejuvenation_step <- function(observations, t, model, thetas, thetanormw, X, xno
   xnormWnew <-  matrix(NA, nrow = Nx, ncol = Ntheta)
   znew = rep(0, Ntheta)
   #compute parameters for proposal move step
-  covariance = cov.wt(thetas,wt = thetanormw)
+  covariance = cov.wt(thetas,wt = thetanormw,method = "ML")
   mean_t <- covariance$center
   cov_t <- matrix(covariance$cov,nrow = model$dimtheta)
   # increased a little bit the diagonal to prevent degeneracy effects
