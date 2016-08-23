@@ -63,7 +63,7 @@ get_model_lineargaussian <- function(){
     sigmaV2 = theta[3]
     sigmaW2 = theta[4]
     N = nrow(Xt)
-    d1 = matrix((phi*Xt-Yt)/(sigmaV2),nrow = N)
+    d1 = (phi*Xt-matrix(Yt,nrow = N))/sigmaV2
     d2 = matrix(-1/sigmaV2,nrow = N)
     return (list(d1log = d1, d2log = d2))
   }
