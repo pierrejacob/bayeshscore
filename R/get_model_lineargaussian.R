@@ -1,3 +1,6 @@
+#'@rdname get_model_lineargaussian
+#'@title get_model_lineargaussian
+#'@description This implements the univariate linear Gaussian model
 #'@export
 get_model_lineargaussian <- function(){
   model.lineargaussian = list()
