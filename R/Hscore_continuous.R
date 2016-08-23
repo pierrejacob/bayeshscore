@@ -1,5 +1,5 @@
 #'@export
-smcsquare <- function(observations, model, algorithmic_parameters){
+hscore_continuous <- function(observations, model, algorithmic_parameters){
   if (algorithmic_parameters$progress) {
     progbar = txtProgressBar(min = 0,max = nobservations,style=3)
     count = 0

@@ -1,5 +1,6 @@
 filter_init <- function(observation1, model, thetas, algorithmic_parameters){
   Ntheta <- algorithmic_parameters$Ntheta
+  Nx <- algorithmic_parameters$Nx
   X = array(NA,dim = c(Nx, model$dimX, Ntheta)) #Nx particles of dimension dimX for each theta (most recent)
   z = rep(0, Ntheta) #matrix of likelihood estimates
   xnormW = matrix(NA, nrow = Nx, ncol = Ntheta) #matrix of normalized weights for X (most recent)
@@ -16,6 +17,7 @@ filter_init <- function(observation1, model, thetas, algorithmic_parameters){
 
 filter_next_step <- function(observationt, t, model, thetas, X, xnormW, algorithmic_parameters){
   Ntheta <- algorithmic_parameters$Ntheta
+  resampling <- algorithmic_parameters$resampling
   Xnew = X
   xnormWnew = xnormW
   z_incremental = rep(0, Ntheta) #matrix of likelihood estimates
@@ -36,6 +38,7 @@ filter_next_step <- function(observationt, t, model, thetas, X, xnormW, algorith
 
 rejuvenation_step <- function(observations, t, model, thetas, thetanormw, X, xnormW, z, algorithmic_parameters){
   Ntheta <- algorithmic_parameters$Ntheta
+  Nx <- algorithmic_parameters$Nx
   resampling <- algorithmic_parameters$resampling
   thetasnew <- matrix(NA, nrow = Ntheta, ncol = model$dimtheta)
   Xnew <- array(NA,dim = dim(X))
