@@ -1,3 +1,6 @@
+#'@rdname hscore_continuous
+#'@title hscore_continuous
+#'@description This function computes successive prequential Hyvarinen score for continuous observations by running the smc^2 algorithm. It also computes the successive log-evidence as a by-product.
 #'@export
 hscore_continuous <- function(observations, model, algorithmic_parameters){
   if (algorithmic_parameters$progress) {
