@@ -1,8 +1,8 @@
-#'@rdname hscore_continuous
-#'@title hscore_continuous
-#'@description This function computes successive prequential Hyvarinen score for continuous observations by running the smc^2 algorithm. It also computes the successive log-evidence as a by-product.
+#'@rdname hscore_discrete
+#'@title hscore_discrete
+#'@description This function computes successive prequential Hyvarinen score for discrete observations by running the smc^2 algorithm. It also computes the successive log-evidence as a by-product.
 #'@export
-hscore_continuous <- function(observations, model, algorithmic_parameters){
+hscore_discrete <- function(observations, model, algorithmic_parameters){
   Nx <- algorithmic_parameters$Nx
   Ntheta <- algorithmic_parameters$Ntheta
   resampling <- algorithmic_parameters$resampling
@@ -12,6 +12,7 @@ hscore_continuous <- function(observations, model, algorithmic_parameters){
     count = 0
     time_start = proc.time()
   }
+  Xpred = array(NA,dim = c(Nx, model$dimX, Ntheta)) #particles X w.r.t. predictive distributions (most recent)
   ESS = array(NA,dim = c(nobservations)) #ESS at successive times t
   Hscore = array(NA,dim = c(nobservations)) #prequential Hyvarinen score at successive times t
   logevidence = array(NA,dim = c(nobservations)) #log-evidence at successive times t
@@ -21,6 +22,8 @@ hscore_continuous <- function(observations, model, algorithmic_parameters){
   first_step <- filter_init(observations[,1], model, thetas, algorithmic_parameters)
   X = first_step$X  #Nx particles of dimension 1 for each theta (most recent)
   xnormW = first_step$xnormW  #matrix of normalized weights for X (most recent)
+  Xpred = X
+  XprednormW = matrix(1/Nx, nrow = Nx, ncol = Ntheta) #matrix of normalized weights for Xpred (most recent)
   z = first_step$z  #matrix of likelihood estimates
   thetalogw <- z #update log-weights for theta
   maxlogW <- max(thetalogw) #avoids overflow when exponentiating
@@ -28,7 +31,7 @@ hscore_continuous <- function(observations, model, algorithmic_parameters){
   logevidence[1] <- log(mean(W)) + maxlogW #udpate log-evidence
   thetanormw <- W / sum(W) #normalize weights for theta
   # compute H score
-  Hscore[1] = hincrementContinuous(1,model,observations[,1],thetas,thetanormw,X,xnormW,Ntheta,Nx)
+  Hscore[1] = SHd(1,model,observations[,1],thetas,rep(1/Ntheta,Ntheta),Xpred,XprednormW,Ntheta,Nx)
   # ...
   ESS[1] <- getESS(thetanormw)
   if ((ESS[1]/Ntheta) < 0.5){
@@ -44,6 +47,11 @@ hscore_continuous <- function(observations, model, algorithmic_parameters){
     setTxtProgressBar(progbar, count)
   }
   for (t in 2:nobservations){
+    Xpred = filter_predict(t, model, thetas, X, algorithmic_parameters)
+    XprednormW = xnormW
+    # compute H score
+    Hscore[t] = Hscore[t-1] + SHd(t,model,observations[,t],thetas,thetanormw,Xpred,XprednormW,Ntheta,Nx)
+    #...
     next_step <- filter_next_step(observations[,t], t, model, thetas, X, xnormW, algorithmic_parameters)
     X = next_step$X  #Nx particles of dimension 1 for each theta (most recent)
     xnormW = next_step$xnormW  #matrix of normalized weights for X (most recent)
@@ -57,9 +65,6 @@ hscore_continuous <- function(observations, model, algorithmic_parameters){
     maxlogW <- max(thetalogw) #avoids overflow when exponentiating
     W <- exp(thetalogw - maxlogW) #computes actual unnormalized weights for theta
     thetanormw <- W / sum(W) #normalize weights for theta
-
-    # compute H score here
-    Hscore[t] = Hscore[t-1] + hincrementContinuous(t,model,observations[,t],thetas,thetanormw,X,xnormW,Ntheta,Nx)
     # ...
     ESS[t] <- getESS(thetanormw)
     if ((ESS[t]/Ntheta) < 0.5){
@@ -84,3 +89,4 @@ hscore_continuous <- function(observations, model, algorithmic_parameters){
   }
   return (list(hscore = Hscore, logevidence = logevidence, ESS = ESS, thetas = thetas, thetanormw = thetanormw))
 }
+

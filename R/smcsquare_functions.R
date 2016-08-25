@@ -47,9 +47,8 @@ rejuvenation_step <- function(observations, t, model, thetas, thetanormw, X, xno
   #compute parameters for proposal move step
   covariance = cov.wt(thetas,wt = thetanormw,method = "ML")
   mean_t <- covariance$center
-  cov_t <- matrix(covariance$cov,nrow = model$dimtheta)
   # increased a little bit the diagonal to prevent degeneracy effects
-  # cov_t <- matrix(covariance$cov,nrow = model$dimtheta) + diag(rep(10^(-4)/model$dimtheta),model$dimtheta)
+  cov_t <- matrix(covariance$cov,nrow = model$dimtheta) + diag(rep(10^(-4)/model$dimtheta),model$dimtheta)
   resampled_index = resampling(thetanormw)
   theta_new_all = fast_rmvnorm(Ntheta,mean_t,cov_t)
   for (i in 1:Ntheta) {
@@ -85,4 +84,19 @@ rejuvenation_step <- function(observations, t, model, thetas, thetanormw, X, xno
     }
   }
   return(list(thetas = thetasnew, X = Xnew, xnormW = xnormWnew, z = znew))
+}
+
+filter_predict <- function(t, model, thetas, X, algorithmic_parameters){
+  Ntheta <- algorithmic_parameters$Ntheta
+  Nx <- algorithmic_parameters$Nx
+  Xpred = X
+  for (itheta in 1:Ntheta){
+    if (is.null(dim(X[,,itheta]))){
+      Xpred[,,itheta] = model$rtransition(matrix(X[,,itheta],nrow = Nx), t, thetas[itheta,])
+    }
+    else{
+      Xpred[,,itheta] = model$rtransition(X[,,itheta], t, thetas[itheta,])
+    }
+  }
+  return (Xpred)
 }
