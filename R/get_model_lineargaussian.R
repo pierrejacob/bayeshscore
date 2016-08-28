@@ -26,15 +26,11 @@ get_model_lineargaussian <- function(){
     sigmaV2 = theta[3]
     sigmaW2 = theta[4]
     if (log==TRUE){
-      combineterms = sum
+      return (dunif(phi,0.1,0.9,log)+dunif(psi,0.5,1.5,log)+dunif(sigmaV2,0.1,2,log)+dunif(sigmaW2,1,10,log))
     }
     else{
-      combineterms = prod
+      return (dunif(phi,0.1,0.9,log)*dunif(psi,0.5,1.5,log)*dunif(sigmaV2,0.1,2,log)*dunif(sigmaW2,1,10,log))
     }
-    return (combineterms(dunif(phi,0.1,0.9,log),
-                         dunif(psi,0.5,1.5,log),
-                         dunif(sigmaV2,0.1,2,log),
-                         dunif(sigmaW2,1,10,log)))
   }
 
   # sampler from the initial distribution of the states
