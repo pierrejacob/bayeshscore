@@ -21,14 +21,11 @@ get_model_kangarooExponential <- function(){
     tau = theta[2]
     r = theta[3]
     if (log==TRUE){
-      combineterms = sum
+      return (dunif(sigma,0,10,log) + dunif(tau,0,10,log) + dunif(r,-10,10,log))
     }
     else{
-      combineterms = prod
+      return (dunif(sigma,0,10,log) * dunif(tau,0,10,log) * dunif(r,-10,10,log))
     }
-    return (combineterms(dunif(sigma,0,10,log),
-                         dunif(tau,0,10,log),
-                         dunif(r,-10,10,log)))
   }
   # sampler from the initial distribution of the states
   model.kangarooExponential$rinitial = function(theta,N){
@@ -47,13 +44,11 @@ get_model_kangarooExponential <- function(){
     tau = theta[2]
     n = 1/tau
     if (log==TRUE){
-      combineterms = sum
+      return (dnbinom(Yt[1],size = n,mu = Xt,log = log) + dnbinom(Yt[2],size = n,mu = Xt,log = log))
     }
     else{
-      combineterms = prod
+      return (dnbinom(Yt[1],size = n,mu = Xt,log = log) * dnbinom(Yt[2],size = n,mu = Xt,log = log))
     }
-    return (combineterms(dnbinom(Yt[1],size = n,mu = Xt,log = log),
-                         dnbinom(Yt[2],size = n,mu = Xt,log = log)))
   }
   # OPTIONAL: simulate observations
   model.kangarooExponential$robs = function(Xt,t,theta){

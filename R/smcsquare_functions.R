@@ -47,8 +47,8 @@ rejuvenation_step <- function(observations, t, model, thetas, thetanormw, X, xno
   #compute parameters for proposal move step
   covariance = cov.wt(thetas,wt = thetanormw,method = "ML")
   mean_t <- covariance$center
-  # increased a little bit the diagonal to prevent degeneracy effects
   cov_t <- matrix(covariance$cov,nrow = model$dimtheta) + diag(rep(10^(-4)/model$dimtheta),model$dimtheta)
+  # increased a little bit the diagonal to prevent degeneracy effects
   resampled_index = resampling(thetanormw)
   theta_new_all = fast_rmvnorm(Ntheta,mean_t,cov_t)
   for (i in 1:Ntheta) {
@@ -64,23 +64,25 @@ rejuvenation_step <- function(observations, t, model, thetas, thetanormw, X, xno
       znew[i] <- z_old
       next
     }
-    PF <- bootstrap_particle_filter(matrix(observations[,1:t],ncol = t), model, theta_new, algorithmic_parameters)
-    z_new <- PF$log_p_y_hat
-    lognum <- logprior_theta_new + z_new + fast_dmvnorm(matrix(theta_old,ncol = model$dimtheta),mean_t,cov_t)
-    logdenom <- logprior_theta_old + z_old + fast_dmvnorm(matrix(theta_new,ncol = model$dimtheta),mean_t,cov_t)
-    logacceptance <- lognum - logdenom
-    logu <- log(runif(1))
-    if (logu <= logacceptance){
-      thetasnew[i,] <- theta_new
-      Xnew[,,i] <- PF$X
-      xnormWnew[,i] <- PF$normW
-      znew[i] <- z_new
-    }
     else {
-      thetasnew[i,] <- theta_old
-      Xnew[,,i] <- X[,,resampled_index[i]]
-      xnormWnew[,i] <- xnormW[,resampled_index[i]]
-      znew[i] <- z_old
+      PF <- bootstrap_particle_filter(matrix(observations[,1:t],ncol = t), model, theta_new, algorithmic_parameters)
+      z_new <- PF$log_p_y_hat
+      lognum <- logprior_theta_new + z_new + fast_dmvnorm(matrix(theta_old,ncol = model$dimtheta),mean_t,cov_t)
+      logdenom <- logprior_theta_old + z_old + fast_dmvnorm(matrix(theta_new,ncol = model$dimtheta),mean_t,cov_t)
+      logacceptance <- lognum - logdenom
+      logu <- log(runif(1))
+      if (logu <= logacceptance){
+        thetasnew[i,] <- theta_new
+        Xnew[,,i] <- PF$X
+        xnormWnew[,i] <- PF$normW
+        znew[i] <- z_new
+      }
+      else {
+        thetasnew[i,] <- theta_old
+        Xnew[,,i] <- X[,,resampled_index[i]]
+        xnormWnew[,i] <- xnormW[,resampled_index[i]]
+        znew[i] <- z_old
+      }
     }
   }
   return(list(thetas = thetasnew, X = Xnew, xnormW = xnormWnew, z = znew))

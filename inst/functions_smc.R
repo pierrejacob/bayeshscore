@@ -41,7 +41,7 @@ SMC = function(Nx,y,model,theta,resampling = multinomial,proposal = transition,s
     A[,t-1] = resampling(Nx,W[,t-1]) #sample the ancestors' indexes
     X[,t] = proposal(X[A[,t-1],t-1],y,t,model,theta) #propagate particles
     wt = model$dobs(y[t],X[,t],t,theta)
-    log_p_y_hat = log_p_y_hat + mean(wt) #udpate likelihood estimate  
+    log_p_y_hat = log_p_y_hat + log(mean(wt)) #udpate likelihood estimate
     W[,t] = wt/sum(wt) #normalize weights
   }
   if (smoothing) {
@@ -82,7 +82,7 @@ SMCmvtY = function(Nx,y,model,theta,resampling = multinomial,proposal = transiti
       X[n,t] = proposal(X[A[n,t-1],t-1],y,t,model,theta) #propagate particles
     }
     wt = model$dobs(y[,t],X[,t],t,theta)
-    log_p_y_hat = log_p_y_hat + mean(wt) #udpate likelihood estimate  
+    log_p_y_hat = log_p_y_hat + log(mean(wt)) #udpate likelihood estimate
     sum_weight = sum(wt)
     if (sum_weight>0) {
       W[,t] = wt/sum_weight #normalize weights
