@@ -33,7 +33,7 @@ hincrementContinuous = function(t,model,observationt,thetas,Wtheta,X,WX,Ntheta,N
 qhat = function(t,model,y,thetas,thetanormw,Xpred,xprednormw,Ntheta,Nx) {
   qy = 0
   for (m in 1:Ntheta){
-    qy = qy + thetanormw[m]*sum(xprednormw[,m]*model$dobs(y,Xpred[,,m],t,thetas[m,]))
+    qy = qy + thetanormw[m]*sum(xprednormw[,m]*model$dobs(y,Xpred[,,m],t,thetas[m,],log = FALSE))
   }
   return (qy)
 }
