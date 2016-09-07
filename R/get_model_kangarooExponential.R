@@ -2,7 +2,7 @@
 #'@title model.kangarooExponential
 #'@description This implements the exponential model in Knape et al. (2012)
 #'@export
-get_model_kangarooExponential <- function(){
+get_model_kangarooExponential <- function(rangeprior = 10){
   model.kangarooExponential = list()
   # dimension of parameter, observations, and states
   model.kangarooExponential$dimtheta = 3
@@ -10,9 +10,9 @@ get_model_kangarooExponential <- function(){
   model.kangarooExponential$dimX = 1
   # sampler from the prior distribution on parameters
   model.kangarooExponential$rprior = function(Ntheta){
-    sigma = runif(Ntheta,0,10)
-    tau = runif(Ntheta,0,10)
-    r = runif(Ntheta,-10,10)
+    sigma = runif(Ntheta,0,rangeprior)
+    tau = runif(Ntheta,0,rangeprior)
+    r = runif(Ntheta,-rangeprior,rangeprior)
     return (cbind(sigma,tau,r))
   }
   # density the prior distribution on parameters
@@ -21,10 +21,10 @@ get_model_kangarooExponential <- function(){
     tau = theta[2]
     r = theta[3]
     if (log==TRUE){
-      return (dunif(sigma,0,10,log) + dunif(tau,0,10,log) + dunif(r,-10,10,log))
+      return (dunif(sigma,0,rangeprior,log) + dunif(tau,0,rangeprior,log) + dunif(r,-rangeprior,rangeprior,log))
     }
     else{
-      return (dunif(sigma,0,10,log) * dunif(tau,0,10,log) * dunif(r,-10,10,log))
+      return (dunif(sigma,0,rangeprior,log) * dunif(tau,0,rangeprior,log) * dunif(r,-rangeprior,rangeprior,log))
     }
   }
   # sampler from the initial distribution of the states
