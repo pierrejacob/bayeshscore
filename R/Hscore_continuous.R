@@ -8,6 +8,7 @@ hscore_continuous <- function(observations, model, algorithmic_parameters){
   resampling <- algorithmic_parameters$resampling
   nobservations <- ncol(observations)
   if (algorithmic_parameters$progress) {
+    print(paste("Started at:",Sys.time()))
     progbar = txtProgressBar(min = 0,max = nobservations,style=3)
     count = 0
     time_start = proc.time()
@@ -15,17 +16,42 @@ hscore_continuous <- function(observations, model, algorithmic_parameters){
   ESS = array(NA,dim = c(nobservations)) #ESS at successive times t
   Hscore = array(NA,dim = c(nobservations)) #prequential Hyvarinen score at successive times t
   logevidence = array(NA,dim = c(nobservations)) #log-evidence at successive times t
-  # sample from prior
-  thetas <- model$rprior(Ntheta)
+  # sample from prior by default, otherwise from specified proposal
+  if (is.null(algorithmic_parameters$rinitial_theta)){
+    thetas <- model$rprior(Ntheta)
+  }
+  else {
+    thetas <- algorithmic_parameters$rinitial_theta(Ntheta)
+  }
   # initialize filter
   first_step <- filter_init(observations[,1], model, thetas, algorithmic_parameters)
   X = first_step$X  #Nx particles of dimension 1 for each theta (most recent)
   xnormW = first_step$xnormW  #matrix of normalized weights for X (most recent)
   z = first_step$z  #matrix of likelihood estimates
-  thetalogw <- z #update log-weights for theta
+  # if we initialize the first theta by using a proposal different from the prior, the first initial
+  # weights are not all equal but are importance weights targeting the prior. This happens before
+  # seeing the first observation
+  if (is.null(algorithmic_parameters$rinitial_theta)){
+    thetalogw <- rep(0,Ntheta)
+    thetanormw <- rep(1/Ntheta,Ntheta)
+  }
+  else {
+    thetalogw <- rep(NA,Ntheta)
+    for (m in 1:Ntheta) {
+      thetalogw[m] <- model$dprior(thetas[m,], log = TRUE) - algorithmic_parameters$dinitial_theta(thetas[m,], log = TRUE)
+    }
+    maxlogW <- max(thetalogw) #avoids overflow when exponentiating
+    W <- exp(thetalogw - maxlogW) #computes actual unnormalized weights for theta
+    thetanormw <- W / sum(W) #normalize weights for theta
+  }
+  maxz = max(z) #avoids overflow when exponentiating
+  actual_z = exp(z - maxz) #actual z up to a multiplicative constant
+  # compute log-evidence
+  logevidence[1] = log(sum(actual_z*thetanormw)) + maxz
+  # update the weights after seeing the first observation
+  thetalogw <- thetalogw + z #update log-weights for theta
   maxlogW <- max(thetalogw) #avoids overflow when exponentiating
   W <- exp(thetalogw - maxlogW) #computes actual unnormalized weights for theta
-  logevidence[1] <- log(mean(W)) + maxlogW #udpate log-evidence
   thetanormw <- W / sum(W) #normalize weights for theta
   # compute H score
   Hscore[1] = hincrementContinuous(1,model,observations[,1],thetas,thetanormw,X,xnormW,Ntheta,Nx)
