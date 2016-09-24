@@ -10,6 +10,9 @@ hincrementContinuous = function(t,model,observationt,thetas,Wtheta,X,WX,Ntheta,N
     for (m in 1:Ntheta){
       Ek_theta[m] = 0
       Fk_theta[m] = 0
+      if (Wtheta[m] == 0) {
+        next
+      }
       if (is.null(dim(X[,,m]))){
         dlogobs_k = model$derivativelogdobs(observationt,matrix(X[,,m],ncol = model$dimX),t,thetas[m,],k)
       }
@@ -33,6 +36,9 @@ hincrementContinuous = function(t,model,observationt,thetas,Wtheta,X,WX,Ntheta,N
 qhat = function(t,model,y,thetas,thetanormw,Xpred,xprednormw,Ntheta,Nx) {
   qy = 0
   for (m in 1:Ntheta){
+    if (thetanormw[m]==0){
+      next
+    }
     qy = qy + thetanormw[m]*sum(xprednormw[,m]*model$dobs(y,Xpred[,,m],t,thetas[m,],log = FALSE))
   }
   return (qy)
