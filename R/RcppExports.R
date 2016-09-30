@@ -29,6 +29,10 @@ dmvnorm_transpose_cholesky <- function(x, mean, cholesky_covariance) {
     .Call('HyvarinenSSM_dmvnorm_transpose_cholesky', PACKAGE = 'HyvarinenSSM', x, mean, cholesky_covariance)
 }
 
+rtransition_logistic_c <- function(Xt, dt, sigma, r, b) {
+    .Call('HyvarinenSSM_rtransition_logistic_c', PACKAGE = 'HyvarinenSSM', Xt, dt, sigma, r, b)
+}
+
 systematic_resampling_n_ <- function(weights, ndraws, u) {
     .Call('HyvarinenSSM_systematic_resampling_n_', PACKAGE = 'HyvarinenSSM', weights, ndraws, u)
 }

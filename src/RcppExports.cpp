@@ -96,6 +96,21 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// rtransition_logistic_c
+NumericVector rtransition_logistic_c(NumericVector Xt, double dt, double sigma, double r, double b);
+RcppExport SEXP HyvarinenSSM_rtransition_logistic_c(SEXP XtSEXP, SEXP dtSEXP, SEXP sigmaSEXP, SEXP rSEXP, SEXP bSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type Xt(XtSEXP);
+    Rcpp::traits::input_parameter< double >::type dt(dtSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< double >::type r(rSEXP);
+    Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    __result = Rcpp::wrap(rtransition_logistic_c(Xt, dt, sigma, r, b));
+    return __result;
+END_RCPP
+}
 // systematic_resampling_n_
 IntegerVector systematic_resampling_n_(const NumericVector& weights, int ndraws, double u);
 RcppExport SEXP HyvarinenSSM_systematic_resampling_n_(SEXP weightsSEXP, SEXP ndrawsSEXP, SEXP uSEXP) {
