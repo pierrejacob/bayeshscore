@@ -80,11 +80,17 @@ algorithmic_parameters3$rinitial_theta = rinitial_theta3
 algorithmic_parameters3$dinitial_theta = dinitial_theta3
 
 
+<<<<<<< HEAD
 r1 = hscore_discrete(observations, model1, algorithmic_parameters1)
 #takes time !!! (about 10h with 2048 particles in both theta and X)
+=======
+r1 = hscore_discrete(observations, model1, algorithmic_parameters1) #takes time !!!
+>>>>>>> a4d4748b10e61093c13e10230fc4ec164a6d4cdb
 # r1 = list(hscore=0,logevidence=0) #run that instead to allow plot while skipping the logistic model
 r2 = hscore_discrete(observations, model2, algorithmic_parameters2)
 r3 = hscore_discrete(observations, model3, algorithmic_parameters3)
+
+
 
 #sanity check ESS
 par(mfrow=c(3,1))
