@@ -5,8 +5,9 @@
 hscore_discrete <- function(observations, model, algorithmic_parameters){
   Nx <- algorithmic_parameters$Nx
   Ntheta <- algorithmic_parameters$Ntheta
-  resampling <- algorithmic_parameters$resampling
   nobservations <- ncol(observations)
+  if (is.null(algorithmic_parameters$progress)) algorithmic_parameters$progress <- FALSE
+  if (is.null(algorithmic_parameters$store)) algorithmic_parameters$store <- FALSE
   if (algorithmic_parameters$progress) {
     progbar = txtProgressBar(min = 0,max = nobservations,style=3)
     count = 0
@@ -16,6 +17,10 @@ hscore_discrete <- function(observations, model, algorithmic_parameters){
   ESS = array(NA,dim = c(nobservations)) #ESS at successive times t
   Hscore = array(NA,dim = c(nobservations)) #prequential Hyvarinen score at successive times t
   logevidence = array(NA,dim = c(nobservations)) #log-evidence at successive times t
+  #
+  rejuvenation_times <- c()
+  rejuvenation_accepts <- c()
+  #
   # sample from prior by default, otherwise from specified proposal
   if (is.null(algorithmic_parameters$rinitial_theta)){
     thetas <- model$rprior(Ntheta)
@@ -23,7 +28,7 @@ hscore_discrete <- function(observations, model, algorithmic_parameters){
   else {
     thetas <- algorithmic_parameters$rinitial_theta(Ntheta)
   }
-  # initialize filter
+  # initialize filter + one step
   first_step <- filter_init(observations[,1], model, thetas, algorithmic_parameters)
   X = first_step$X  #Nx particles of dimension 1 for each theta (most recent)
   xnormW = first_step$xnormW  #matrix of normalized weights for X (most recent)
@@ -57,6 +62,14 @@ hscore_discrete <- function(observations, model, algorithmic_parameters){
   W <- exp(thetalogw - maxlogW) #computes actual unnormalized weights for theta
   thetanormw <- W / sum(W) #normalize weights for theta
   # ...
+  # store thetas
+  thetas_history <- list()
+  weights_history <- list()
+  if (algorithmic_parameters$store){
+    thetas_history[[1]] <- thetas
+    weights_history[[1]] <- thetanormw
+  }
+  # ...
   ESS[1] <- getESS(thetanormw)
   if ((ESS[1]/Ntheta) < 0.5){
     rejuvenation = rejuvenation_step(observations, 1, model, thetas, thetanormw, X, xnormW, z, algorithmic_parameters)
@@ -65,6 +78,8 @@ hscore_discrete <- function(observations, model, algorithmic_parameters){
     X = rejuvenation$X
     xnormW = rejuvenation$xnormW
     z = rejuvenation$z
+    rejuvenation_times <- c(rejuvenation_times, 1)
+    rejuvenation_accepts <- c(rejuvenation_accepts, rejuvenation$accepts)
   }
   if (algorithmic_parameters$progress) {
     count = count + 1
@@ -90,6 +105,12 @@ hscore_discrete <- function(observations, model, algorithmic_parameters){
     W <- exp(thetalogw - maxlogW) #computes actual unnormalized weights for theta
     thetanormw <- W / sum(W) #normalize weights for theta
     # ...
+    if (algorithmic_parameters$store){
+      thetas_history[[t]] <- thetas
+      weights_history[[t]] <- thetanormw
+    }
+
+    # ...
     ESS[t] <- getESS(thetanormw)
     if ((ESS[t]/Ntheta) < 0.5){
       rejuvenation = rejuvenation_step(observations, t, model, thetas, thetanormw, X, xnormW, z, algorithmic_parameters)
@@ -98,6 +119,8 @@ hscore_discrete <- function(observations, model, algorithmic_parameters){
       X = rejuvenation$X
       xnormW = rejuvenation$xnormW
       z = rejuvenation$z
+      rejuvenation_times <- c(rejuvenation_times, t)
+      rejuvenation_accepts <- c(rejuvenation_accepts, rejuvenation$accepts)
     }
     if (algorithmic_parameters$progress) {
       count = count + 1
@@ -111,6 +134,13 @@ hscore_discrete <- function(observations, model, algorithmic_parameters){
               ", Nx = ",toString(Nx),"\n",sep = ""))
     print(time_end)
   }
-  return (list(hscore = Hscore, logevidence = logevidence, ESS = ESS, thetas = thetas, thetanormw = thetanormw))
+  if (algorithmic_parameters$store){
+    return (list(hscore = Hscore, logevidence = logevidence, ESS = ESS, thetas = thetas, thetanormw = thetanormw,
+                 thetas_history = thetas_history, weights_history = weights_history,
+                 rejuvenation_times = rejuvenation_times, rejuvenation_accepts = rejuvenation_accepts / Ntheta))
+  } else {
+    return (list(hscore = Hscore, logevidence = logevidence, ESS = ESS, thetas = thetas, thetanormw = thetanormw,
+                 rejuvenation_times = rejuvenation_times, rejuvenation_accepts = rejuvenation_accepts / Ntheta))
+  }
 }
 

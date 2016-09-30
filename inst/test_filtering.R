@@ -1,5 +1,6 @@
 rm(list = ls())
 library(HyvarinenSSM)
+library(doMC)
 set.seed(17)
 
 nobservations <- 50

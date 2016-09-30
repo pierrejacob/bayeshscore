@@ -51,6 +51,7 @@ rejuvenation_step <- function(observations, t, model, thetas, thetanormw, X, xno
   # increased a little bit the diagonal to prevent degeneracy effects
   resampled_index = resampling(thetanormw)
   theta_new_all = fast_rmvnorm(Ntheta,mean_t,cov_t)
+  accepts <- 0
   for (i in 1:Ntheta) {
     theta_old <- thetas[resampled_index[i],]
     theta_new <- theta_new_all[i,]
@@ -72,6 +73,7 @@ rejuvenation_step <- function(observations, t, model, thetas, thetanormw, X, xno
       logacceptance <- lognum - logdenom
       logu <- log(runif(1))
       if (logu <= logacceptance){
+        accepts <- accepts + 1
         thetasnew[i,] <- theta_new
         Xnew[,,i] <- PF$X
         xnormWnew[,i] <- PF$normW
@@ -85,7 +87,7 @@ rejuvenation_step <- function(observations, t, model, thetas, thetanormw, X, xno
       }
     }
   }
-  return(list(thetas = thetasnew, X = Xnew, xnormW = xnormWnew, z = znew))
+  return(list(thetas = thetasnew, X = Xnew, xnormW = xnormWnew, z = znew, accepts = accepts))
 }
 
 filter_predict <- function(t, model, thetas, X, algorithmic_parameters){
