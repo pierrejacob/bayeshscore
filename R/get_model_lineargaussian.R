@@ -34,14 +34,14 @@ get_model_lineargaussian <- function(){
   }
 
   # sampler from the initial distribution of the states
-  model.lineargaussian$rinitial = function(theta,N,additional_parameters){
+  model.lineargaussian$rinitial = function(theta,N){
     phi = theta[1]
     sigmaW2 = theta[4]
     return (matrix(rnorm(N, mean = 0, sd = sqrt((sigmaW2)/(1-phi^2))), nrow = N))
   }
 
   # sampler from the transition density of the states
-  model.lineargaussian$rtransition = function(Xt,t,theta,additional_parameters){
+  model.lineargaussian$rtransition = function(Xt,t,theta){
     phi = theta[1]
     sigmaW2 = theta[4]
     N = nrow(Xt)

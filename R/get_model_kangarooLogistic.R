@@ -2,7 +2,7 @@
 #'@title get_model_kangarooRandomwalk
 #'@description This implements the logistic model in Knape et al. (2012)
 #'@export
-get_model_kangarooLogistic <- function(rangeprior = 10){
+get_model_kangarooLogistic <- function(range_b = 10){
   model.kangarooLogistic = list()
   # dimension of parameter and variables
   model.kangarooLogistic$dimtheta = 4
@@ -10,10 +10,10 @@ get_model_kangarooLogistic <- function(rangeprior = 10){
   model.kangarooLogistic$dimX = 1
   # sampler from the prior distribution on parameters
   model.kangarooLogistic$rprior = function(Ntheta){
-    sigma = runif(Ntheta,0,rangeprior)
-    tau = runif(Ntheta,0,rangeprior)
-    r = runif(Ntheta,-rangeprior,rangeprior)
-    b = runif(Ntheta,0,rangeprior)
+    sigma = runif(Ntheta,0,10)
+    tau = runif(Ntheta,0,10)
+    r = runif(Ntheta,-10,10)
+    b = runif(Ntheta,0,range_b)
     return (cbind(sigma,tau,r,b))
   }
   # density the prior distribution on parameters
@@ -23,10 +23,10 @@ get_model_kangarooLogistic <- function(rangeprior = 10){
     r = theta[3]
     b = theta[4]
     if (log==TRUE){
-      return (dunif(sigma,0,rangeprior,log) + dunif(tau,0,rangeprior,log) + dunif(r,-rangeprior,rangeprior,log) + dunif(b,0,rangeprior,log))
+      return (dunif(sigma,0,10,log) + dunif(tau,0,10,log) + dunif(r,-10,10,log) + dunif(b,0,range_b,log))
     }
     else{
-      return (dunif(sigma,0,rangeprior,log) * dunif(tau,0,rangeprior,log) * dunif(r,-rangeprior,rangeprior,log) * dunif(b,0,rangeprior,log))
+      return (dunif(sigma,0,10,log) * dunif(tau,0,10,log) * dunif(r,-10,10,log) * dunif(b,0,range_b,log))
     }
   }
   # sampler from the initial distribution of the states
@@ -35,19 +35,7 @@ get_model_kangarooLogistic <- function(rangeprior = 10){
   }
   # sampler from the transition distribution of the states
   model.kangarooLogistic$rtransition = function(Xt,t,theta){
-    sigma = theta[1]
-    r = theta[3]
-    b = theta[4]
-    N = nrow(Xt)
-    logXtold = log(Xt)
-    dt = data_kangaroo["time",t] - data_kangaroo["time",t-1]
-    M = dt/0.001
-    delta = dt/M #Euler method discretization step size
-    for (i in 1:M) {
-      logXtnew = logXtold + (r-b*exp(logXtold))*delta + sigma*sqrt(delta)*rnorm(N)
-      logXtold = logXtnew
-    }
-    return (matrix(exp(logXtnew),nrow = N))
+    return (rtransition_logistic(Xt, t, theta))
   }
   # density of the observations
   model.kangarooLogistic$dobs = function(Yt,Xt,t,theta,log = TRUE){

@@ -4,7 +4,7 @@
 \alias{get_model_kangarooExponential}
 \title{model.kangarooExponential}
 \usage{
-get_model_kangarooExponential(rangeprior = 10)
+get_model_kangarooExponential(range_r = 10)
 }
 \description{
 This implements the exponential model in Knape et al. (2012)

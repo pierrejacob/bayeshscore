@@ -2,7 +2,7 @@
 #'@title get_model_kangarooRandomwalk
 #'@description This implements the random walk model in Knape et al. (2012)
 #'@export
-get_model_kangarooRandomwalk <- function(rangeprior = 10){
+get_model_kangarooRandomwalk <- function(){
   model.kangarooRandomwalk = list()
   # dimension of parameter, observations, and states
   model.kangarooRandomwalk$dimtheta = 2
@@ -10,8 +10,8 @@ get_model_kangarooRandomwalk <- function(rangeprior = 10){
   model.kangarooRandomwalk$dimX = 1
   # sampler from the prior distribution on parameters
   model.kangarooRandomwalk$rprior = function(Ntheta){
-    sigma = runif(Ntheta,0,rangeprior)
-    tau = runif(Ntheta,0,rangeprior)
+    sigma = runif(Ntheta,0,10)
+    tau = runif(Ntheta,0,10)
     return (cbind(sigma,tau))
   }
   # density the prior distribution on parameters
@@ -19,10 +19,10 @@ get_model_kangarooRandomwalk <- function(rangeprior = 10){
     sigma = theta[1]
     tau = theta[2]
     if (log==TRUE){
-      return (dunif(sigma,0,rangeprior,log) + dunif(tau,0,rangeprior,log))
+      return (dunif(sigma,0,10,log) + dunif(tau,0,10,log))
     }
     else{
-      return (dunif(sigma,0,rangeprior,log) * dunif(tau,0,rangeprior,log))
+      return (dunif(sigma,0,10,log) * dunif(tau,0,10,log))
     }
   }
   # sampler from the initial distribution of the states

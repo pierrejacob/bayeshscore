@@ -5,9 +5,9 @@
 \alias{get_model_kangarooRandomwalk}
 \title{get_model_kangarooRandomwalk}
 \usage{
-get_model_kangarooLogistic(rangeprior = 10)
+get_model_kangarooLogistic(range_b = 10)
 
-get_model_kangarooRandomwalk(rangeprior = 10)
+get_model_kangarooRandomwalk()
 }
 \description{
 This implements the logistic model in Knape et al. (2012)

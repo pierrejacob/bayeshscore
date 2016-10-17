@@ -7,88 +7,20 @@ set.seed(17)
 observations <- data_kangaroo[c("y1","y2"),]
 rangeprior = 10
 model1 <- get_model_kangarooLogistic(rangeprior)
-model2 <- get_model_kangarooExponential(rangeprior)
-model3 <- get_model_kangarooRandomwalk(rangeprior)
+model2 <- get_model_kangarooExponential()
+model3 <- get_model_kangarooRandomwalk()
 
 # Define initial proposal for theta (to avoid sampling from vague prior)
-# Model 1
-rinitial_theta1 = function(Ntheta) {
-  sigma = runif(Ntheta,0,2)
-  tau = runif(Ntheta,0,0.15)
-  r = runif(Ntheta,0,8)
-  b = runif(Ntheta,0,0.02)
-  return (cbind(sigma,tau,r,b))
-}
-dinitial_theta1 = function(theta, log = TRUE){
-  sigma = theta[1]
-  tau = theta[2]
-  r = theta[3]
-  b = theta[4]
-  if (log==TRUE){
-    return (dunif(sigma,0,2,log) + dunif(tau,0,0.15,log) + dunif(r,0,8,log) + dunif(b,0,0.02,log))
-  }
-  else{
-    return (dunif(sigma,0,2,log) * dunif(tau,0,0.15,log) * dunif(r,0,8,log) * dunif(b,0,0.02,log))
-  }
-}
-# Model 2
-rinitial_theta2 = function(Ntheta){
-  sigma = runif(Ntheta,0,2)
-  tau = runif(Ntheta,0,0.15)
-  r = runif(Ntheta,0,8)
-  return (cbind(sigma,tau,r))
-}
-dinitial_theta2 = function(theta, log = TRUE){
-  sigma = theta[1]
-  tau = theta[2]
-  r = theta[3]
-  if (log==TRUE){
-    return (dunif(sigma,0,2,log) + dunif(tau,0,0.15,log) + dunif(r,0,8,log))
-  }
-  else{
-    return (dunif(sigma,0,2,log) * dunif(tau,0,0.15,log) * dunif(r,0,8,log))
-  }
-}
-# Model 3
-rinitial_theta3 = function(Ntheta){
-  sigma = runif(Ntheta,0,2)
-  tau = runif(Ntheta,0,0.15)
-  return (cbind(sigma,tau))
-}
-dinitial_theta3 = function(theta, log = TRUE){
-  sigma = theta[1]
-  tau = theta[2]
-  if (log==TRUE){
-    return (dunif(sigma,0,2,log) + dunif(tau,0,0.15,log))
-  }
-  else{
-    return (dunif(sigma,0,2,log) * dunif(tau,0,0.15,log))
-  }
-}
 # Define algorithmic parameters for each model
-common = list(Ntheta = 2^10, Nx = 2^10,
+algorithmic_parameters = list(Ntheta = 2^10, Nx = 2^10,
               resampling = function(normw) systematic_resampling_n(normw, length(normw), runif(1)),
               progress = TRUE)
-algorithmic_parameters1 <- common
-algorithmic_parameters1$rinitial_theta = rinitial_theta1
-algorithmic_parameters1$dinitial_theta = dinitial_theta1
-algorithmic_parameters2 <- common
-algorithmic_parameters2$rinitial_theta = rinitial_theta2
-algorithmic_parameters2$dinitial_theta = dinitial_theta2
-algorithmic_parameters3 <- common
-algorithmic_parameters3$rinitial_theta = rinitial_theta3
-algorithmic_parameters3$dinitial_theta = dinitial_theta3
 
 
-<<<<<<< HEAD
-r1 = hscore_discrete(observations, model1, algorithmic_parameters1)
-#takes time !!! (about 10h with 2048 particles in both theta and X)
-=======
-r1 = hscore_discrete(observations, model1, algorithmic_parameters1) #takes time !!!
->>>>>>> a4d4748b10e61093c13e10230fc4ec164a6d4cdb
+r1 = hscore_discrete(observations, model1, algorithmic_parameters) #takes time !!!
 # r1 = list(hscore=0,logevidence=0) #run that instead to allow plot while skipping the logistic model
-r2 = hscore_discrete(observations, model2, algorithmic_parameters2)
-r3 = hscore_discrete(observations, model3, algorithmic_parameters3)
+r2 = hscore_discrete(observations, model2, algorithmic_parameters)
+r3 = hscore_discrete(observations, model3, algorithmic_parameters)
 
 
 
