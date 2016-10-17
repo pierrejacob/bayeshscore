@@ -13,5 +13,5 @@ NumericVector rtransition_logistic_c(NumericVector Xt, double dt, double sigma, 
   for (int im = 0; im < M; im ++){
     logXtold = logXtold + (r-b*exp(logXtold))*delta + sigma*sqrtdelta*rnorm(N);
   }
-  return logXtold;
+  return exp(logXtold);
 }
