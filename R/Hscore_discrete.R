@@ -62,6 +62,8 @@ hscore_discrete <- function(observations, model, algorithmic_parameters){
   maxlogW <- max(thetalogw) #avoids overflow when exponentiating
   W <- exp(thetalogw - maxlogW) #computes actual unnormalized weights for theta
   thetanormw <- W / sum(W) #normalize weights for theta
+
+
   # ...
   # store thetas
   thetas_history <- list()
@@ -110,7 +112,9 @@ hscore_discrete <- function(observations, model, algorithmic_parameters){
       thetas_history[[t]] <- thetas
       weights_history[[t]] <- thetanormw
     }
-
+    # ...
+    # ...
+    # ...
     # ...
     ESS[t] <- getESS(thetanormw)
     if ((ESS[t]/Ntheta) < 0.5){
