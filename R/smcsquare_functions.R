@@ -39,11 +39,13 @@ filter_next_step <- function(observationt, t, model, thetas, X, xnormW, algorith
 rejuvenation_step <- function(observations, t, model, thetas, thetanormw, X, xnormW, z, algorithmic_parameters){
   Ntheta <- algorithmic_parameters$Ntheta
   Nx <- algorithmic_parameters$Nx
+  nmoves <- algorithmic_parameters$nmoves
+  if (is.null(nmoves)) nmoves <- 1
   resampling <- algorithmic_parameters$resampling
-  thetasnew <- matrix(NA, nrow = Ntheta, ncol = model$dimtheta)
-  Xnew <- array(NA,dim = dim(X))
-  xnormWnew <-  matrix(NA, nrow = Nx, ncol = Ntheta)
-  znew = rep(0, Ntheta)
+  # thetasnew <- matrix(NA, nrow = Ntheta, ncol = model$dimtheta)
+  # Xnew <- array(NA,dim = dim(X))
+  # xnormWnew <-  matrix(NA, nrow = Nx, ncol = Ntheta)
+  # znew = rep(0, Ntheta)
   #compute parameters for proposal move step
   covariance = cov.wt(thetas,wt = thetanormw,method = "ML")
   mean_t <- covariance$center
@@ -51,43 +53,51 @@ rejuvenation_step <- function(observations, t, model, thetas, thetanormw, X, xno
   # increased a little bit the diagonal to prevent degeneracy effects
   resampled_index = resampling(thetanormw)
   theta_new_all = fast_rmvnorm(Ntheta,mean_t,cov_t)
-  accepts <- 0
-  for (i in 1:Ntheta) {
-    theta_old <- thetas[resampled_index[i],]
-    theta_new <- theta_new_all[i,]
-    z_old = z[resampled_index[i]]
-    logprior_theta_old <- model$dprior(theta_old, log = TRUE)
-    logprior_theta_new <- model$dprior(theta_new, log = TRUE)
-    if (logprior_theta_new == -Inf){
-      thetasnew[i,] <- theta_old
-      Xnew[,,i] <- X[,,resampled_index[i]]
-      xnormWnew[,i] <- xnormW[,resampled_index[i]]
-      znew[i] <- z_old
-      next
-    }
-    else {
-      PF <- bootstrap_particle_filter(matrix(observations[,1:t],ncol = t), model, theta_new, algorithmic_parameters)
-      z_new <- PF$log_p_y_hat
-      lognum <- logprior_theta_new + z_new + fast_dmvnorm(matrix(theta_old,ncol = model$dimtheta),mean_t,cov_t)
-      logdenom <- logprior_theta_old + z_old + fast_dmvnorm(matrix(theta_new,ncol = model$dimtheta),mean_t,cov_t)
-      logacceptance <- lognum - logdenom
-      logu <- log(runif(1))
-      if (logu <= logacceptance){
-        accepts <- accepts + 1
-        thetasnew[i,] <- theta_new
-        Xnew[,,i] <- PF$X
-        xnormWnew[,i] <- PF$normW
-        znew[i] <- z_new
+  thetas <- thetas[resampled_index,]
+  X <- X[,,resampled_index]
+  xnormW <- xnormW[,resampled_index]
+  z <- z[resampled_index]
+  #
+  for (imove in 1:nmoves){
+    proposal_density_new_all <- fast_dmvnorm(theta_new_all, mean_t, cov_t)
+    proposal_density_current <- fast_dmvnorm(thetas, mean_t, cov_t)
+    accepts <- 0
+    for (i in 1:Ntheta) {
+      theta_old <- thetas[i,]
+      theta_new <- theta_new_all[i,]
+      z_old = z[i]
+      logprior_theta_old <- model$dprior(theta_old, log = TRUE) # wasteful; this has been computed before ...
+      logprior_theta_new <- model$dprior(theta_new, log = TRUE)
+      if (logprior_theta_new == -Inf){
+        #
+        next
       }
       else {
-        thetasnew[i,] <- theta_old
-        Xnew[,,i] <- X[,,resampled_index[i]]
-        xnormWnew[,i] <- xnormW[,resampled_index[i]]
-        znew[i] <- z_old
+        PF <- bootstrap_particle_filter(matrix(observations[,1:t],ncol = t), model, theta_new, algorithmic_parameters)
+        z_new <- PF$log_p_y_hat
+        # lognum <- logprior_theta_new + z_new + fast_dmvnorm(matrix(theta_old,ncol = model$dimtheta),mean_t,cov_t)
+        lognum <- logprior_theta_new + z_new + proposal_density_current[i]
+        # logdenom <- logprior_theta_old + z_old + fast_dmvnorm(matrix(theta_new,ncol = model$dimtheta),mean_t,cov_t)
+        logdenom <- logprior_theta_old + z_old + proposal_density_new_all[i]
+        logacceptance <- lognum - logdenom
+        logu <- log(runif(1))
+        if (logu <= logacceptance){
+          accepts <- accepts + 1
+          thetas[i,] <- theta_new
+          X[,,i] <- PF$X
+          xnormW[,i] <- PF$normW
+          z[i] <- z_new
+        }
+        else {
+          # thetasnew[i,] <- theta_old
+          # Xnew[,,i] <- X[,,resampled_index[i]]
+          # xnormWnew[,i] <- xnormW[,resampled_index[i]]
+          # znew[i] <- z_old
+        }
       }
     }
   }
-  return(list(thetas = thetasnew, X = Xnew, xnormW = xnormWnew, z = znew, accepts = accepts))
+  return(list(thetas = thetas, X = X, xnormW = xnormW, z = z, accepts = accepts))
 }
 
 filter_predict <- function(t, model, thetas, X, algorithmic_parameters){

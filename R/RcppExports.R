@@ -29,6 +29,18 @@ dmvnorm_transpose_cholesky <- function(x, mean, cholesky_covariance) {
     .Call('HyvarinenSSM_dmvnorm_transpose_cholesky', PACKAGE = 'HyvarinenSSM', x, mean, cholesky_covariance)
 }
 
+one_step_pz_vector <- function(xparticles, alphas, t, parameters) {
+    .Call('HyvarinenSSM_one_step_pz_vector', PACKAGE = 'HyvarinenSSM', xparticles, alphas, t, parameters)
+}
+
+pz_generate_randomness_cpp <- function(nparticles, datalength) {
+    .Call('HyvarinenSSM_pz_generate_randomness_cpp', PACKAGE = 'HyvarinenSSM', nparticles, datalength)
+}
+
+pz_perturb_randomness_cpp <- function(randomness, rho) {
+    .Call('HyvarinenSSM_pz_perturb_randomness_cpp', PACKAGE = 'HyvarinenSSM', randomness, rho)
+}
+
 rtransition_logistic_c <- function(Xt, dt, sigma, r, b) {
     .Call('HyvarinenSSM_rtransition_logistic_c', PACKAGE = 'HyvarinenSSM', Xt, dt, sigma, r, b)
 }

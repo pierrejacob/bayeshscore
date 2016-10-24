@@ -96,6 +96,44 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// one_step_pz_vector
+NumericMatrix one_step_pz_vector(NumericMatrix xparticles, NumericVector alphas, double t, NumericVector parameters);
+RcppExport SEXP HyvarinenSSM_one_step_pz_vector(SEXP xparticlesSEXP, SEXP alphasSEXP, SEXP tSEXP, SEXP parametersSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericMatrix >::type xparticles(xparticlesSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type alphas(alphasSEXP);
+    Rcpp::traits::input_parameter< double >::type t(tSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type parameters(parametersSEXP);
+    __result = Rcpp::wrap(one_step_pz_vector(xparticles, alphas, t, parameters));
+    return __result;
+END_RCPP
+}
+// pz_generate_randomness_cpp
+NumericVector pz_generate_randomness_cpp(int nparticles, int datalength);
+RcppExport SEXP HyvarinenSSM_pz_generate_randomness_cpp(SEXP nparticlesSEXP, SEXP datalengthSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< int >::type nparticles(nparticlesSEXP);
+    Rcpp::traits::input_parameter< int >::type datalength(datalengthSEXP);
+    __result = Rcpp::wrap(pz_generate_randomness_cpp(nparticles, datalength));
+    return __result;
+END_RCPP
+}
+// pz_perturb_randomness_cpp
+NumericVector pz_perturb_randomness_cpp(const NumericVector& randomness, double rho);
+RcppExport SEXP HyvarinenSSM_pz_perturb_randomness_cpp(SEXP randomnessSEXP, SEXP rhoSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< const NumericVector& >::type randomness(randomnessSEXP);
+    Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
+    __result = Rcpp::wrap(pz_perturb_randomness_cpp(randomness, rho));
+    return __result;
+END_RCPP
+}
 // rtransition_logistic_c
 NumericVector rtransition_logistic_c(NumericVector Xt, double dt, double sigma, double r, double b);
 RcppExport SEXP HyvarinenSSM_rtransition_logistic_c(SEXP XtSEXP, SEXP dtSEXP, SEXP sigmaSEXP, SEXP rSEXP, SEXP bSEXP) {
