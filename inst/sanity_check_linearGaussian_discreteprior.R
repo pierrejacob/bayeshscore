@@ -4,7 +4,7 @@ library(gridExtra)
 library(numDeriv)
 
 # Define model and data
-nobservations <- 50
+nobservations <- 100
 model <- get_model_lineargaussian_discreteprior()
 sim = simulateData(model, theta = c(1), nobservations)
 X = sim$X
@@ -20,7 +20,7 @@ g = ggplot(observations.df, aes(x = time)) +
 plot(g)
 
 # Define algorithmic parameters for each model
-Ntheta = 2^10
+Ntheta = 2^7
 Nx = 2^7
 algorithmic_parameters = list(Ntheta = Ntheta, Nx = Nx,
                               resampling = function(normw) systematic_resampling_n(normw, length(normw), runif(1)),
@@ -167,17 +167,20 @@ results.df = rbind(results.df, data.frame(time = 1:ncol(observations),
 
 #Check Posterior
 dx = c(model$supportprior[1],diff(model$supportprior)) #used to renormalize discrete exact posterior (by approximating area by riemann sum)
-g11 <- ggplot(subset(posterior.df,sim>0.5)) + geom_line(aes(x = sigmaV2, weight = w, group = rep, ..density..),stat = "density") +
+g11 <- ggplot(subset(posterior.df,sim>0.5)) +
+  geom_line(aes(x = sigmaV2, weight = w, group = rep, ..density..),stat = "density") +
   geom_line(aes(x=x,y=y/dx),data = data.frame(x=model$supportprior,y=posterior_exact[,nobservations]),colour="red",size=1.5,linetype=1)
 grid.arrange(g11,ncol = 1, nrow = 1)
 
 #CHECK LOG-EVIDENCE
-g <- ggplot(subset(results.df,sim>0.5), aes(x = time, y = logevidence, group = rep)) + geom_line(colour = "blue") +
-  geom_line(aes(x = time, y=logevidence),data = subset(results.df,sim<0.5),colour = "red",size=1.5,linetype=2)
+g <- ggplot() +
+  geom_point(aes(x = time, y=logevidence),data = subset(results.df,sim<0.5),colour = "red",size=3) +
+  geom_line(data = subset(results.df,sim>0.5), aes(x = time, y = logevidence, group = rep))
 plot(g)
 
 #CHECK HSCORE
-g <- ggplot(subset(results.df,sim>0.5), aes(x = time, y = hscore, group = rep)) + geom_line(colour = "blue") +
-  geom_line(aes(x = time, y=hscore),data = subset(results.df,sim<0.5),colour = "red",size=1.5,linetype=2)
+g <- ggplot() +
+  geom_point(aes(x = time, y=hscore),data = subset(results.df,sim<0.5),colour = "red",size=3) +
+  geom_line(data = subset(results.df,sim>0.5), aes(x = time, y = hscore, group = rep))
 plot(g)
 

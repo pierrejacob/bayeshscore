@@ -3,7 +3,7 @@ library(HyvarinenSSM)
 library(gridExtra)
 
 # Define model and data
-nobservations <- 500
+nobservations <- 100
 model <- get_model_lineargaussian_iid()
 true_sigmav2 = 1
 sim = simulateData(model, theta = c(true_sigmav2), nobservations)
@@ -130,15 +130,17 @@ results.df = rbind(results.df, data.frame(time = 1:nobservations,
 
 
 #CHECK LOG-EVIDENCE (red is exact logevidence, blue is approximation via BIC)
-g <- ggplot(results.df) + geom_line(aes(x = time, y = logevidence, group = rep),data = subset(results.df,sim==1)) +
-  geom_line(aes(x = time, y = logevidence,color="Exact"),data = subset(results.df,sim==0), colour = "red",size=1.5,linetype=2) +
-  geom_line(aes(x = time, y = logevidence,color="Approx.BIC"),data = subset(results.df,sim==-1), colour="blue",size = 2,linetype=3)
+g <- ggplot(results.df) +
+  geom_point(aes(x = time, y = logevidence,color="Exact"),data = subset(results.df,sim==0), colour = "red",size=3) +
+  geom_line(aes(x = time, y = logevidence,color="Approx.BIC"),data = subset(results.df,sim==-1), colour="blue",size = 1,linetype=1) +
+  geom_line(aes(x = time, y = logevidence, group = rep),data = subset(results.df,sim==1))
 plot(g)
 
 #CHECK HSCORE (red is exact prequential hscore, blue is approximation via HIC_E)
-g <- ggplot(results.df) + geom_line(aes(x = time, y = hscore, group = rep),data = subset(results.df,sim==1)) +
-  geom_line(aes(x = time, y = hscore),data = subset(results.df,sim==0),colour = "red",size=1.5,linetype=2) +
-  geom_line(aes(x = time, y = hscore),data = subset(results.df,sim==-1), colour="blue",size = 2,linetype=3) +
+g <- ggplot(results.df) +
+  geom_point(aes(x = time, y = hscore),data = subset(results.df,sim==0),colour = "red",size=3) +
+  geom_line(aes(x = time, y = hscore),data = subset(results.df,sim==-1), colour="blue",size = 1,linetype=1) +
+  geom_line(aes(x = time, y = hscore, group = rep),data = subset(results.df,sim==1)) +
   ylab("prequential hscore")
 plot(g)
 
@@ -156,9 +158,10 @@ g <- ggplot(data.frame(time=1:nobservations, Hexact = subset(results.df,sim==0)[
 plot(g)
 
 #CHECK HSCORE (red is exact prequential hscore, blue is approximation via HIC_EV)
-g <- ggplot(results.df) + geom_line(aes(x = time, y = hscore, group = rep),data = subset(results.df,sim==1)) +
-  geom_line(aes(x = time, y = hscore),data = subset(results.df,sim==0),colour = "red",size=1.5,linetype=2) +
-  geom_line(aes(x = time, y = hscore),data = subset(results.df,sim==-2), colour="blue",size = 2,linetype=3) +
+g <- ggplot(results.df) +
+  geom_point(aes(x = time, y = hscore),data = subset(results.df,sim==0),colour = "red",size=3) +
+  geom_line(aes(x = time, y = hscore),data = subset(results.df,sim==-2), colour="blue",size = 1,linetype=1) +
+  geom_line(aes(x = time, y = hscore, group = rep),data = subset(results.df,sim==1)) +
   ylab("prequential hscore")
 plot(g)
 
@@ -169,7 +172,7 @@ plot(g)
 #   ylab("prequential hscore over time")
 # plot(g)
 
-#CHECK HIC_E relative error
+#CHECK HIC_EV relative error
 g <- ggplot(data.frame(time=1:nobservations, Hexact = subset(results.df,sim==0)[,"hscore"], HIC = subset(results.df,sim==-2)[,"hscore"])) +
   geom_line(aes(x = time, y = (HIC-Hexact)/Hexact),color="blue",size=1) +
   geom_hline(aes(yintercept = 0),linetype=2)
