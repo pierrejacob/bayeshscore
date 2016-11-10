@@ -23,8 +23,8 @@ filter_next_step <- function(observationt, t, model, thetas, X, xnormW, algorith
   z_incremental = rep(0, Ntheta) #matrix of likelihood estimates
   for (itheta in 1:Ntheta){
     ancestors <- resampling(xnormW[,itheta]) #sample the ancestors' indexes
-    X_current <- X[ancestors,,itheta]
-    if (is.null(dim(X_current))) X_current <- matrix(X_current, ncol = model$dimX)
+    X_current <- X[ancestors,,itheta,drop=FALSE]
+    # if (is.null(dim(X_current))) X_current <- matrix(X_current, ncol = model$dimX)
     X_current <- model$rtransition(X_current, t, thetas[itheta,])
     logW <- model$dobs(observationt, X_current, t, thetas[itheta,],log = TRUE)
     maxlogW <- max(logW)
@@ -53,8 +53,8 @@ rejuvenation_step <- function(observations, t, model, thetas, thetanormw, X, xno
   # increased a little bit the diagonal to prevent degeneracy effects
   resampled_index = resampling(thetanormw)
   theta_new_all = fast_rmvnorm(Ntheta,mean_t,cov_t)
-  thetas <- thetas[resampled_index,]
-  X <- X[,,resampled_index]
+  thetas <- thetas[resampled_index,,drop=FALSE]
+  X <- X[,,resampled_index,drop=FALSE]
   xnormW <- xnormW[,resampled_index]
   z <- z[resampled_index]
   #
@@ -104,13 +104,15 @@ filter_predict <- function(t, model, thetas, X, algorithmic_parameters){
   Ntheta <- algorithmic_parameters$Ntheta
   Nx <- algorithmic_parameters$Nx
   Xpred = X
+
   for (itheta in 1:Ntheta){
-    if (is.null(dim(X[,,itheta]))){
-      Xpred[,,itheta] = model$rtransition(matrix(X[,,itheta],nrow = Nx), t, thetas[itheta,])
-    }
-    else{
-      Xpred[,,itheta] = model$rtransition(X[,,itheta], t, thetas[itheta,])
-    }
+#     if (is.null(dim(X[,,itheta]))){
+#       Xpred[,,itheta] = model$rtransition(matrix(X[,,itheta],nrow = Nx), t, thetas[itheta,])
+#     }
+#     else{
+#       Xpred[,,itheta] = model$rtransition(X[,,itheta], t, thetas[itheta,])
+#     }
+    Xpred[,,itheta,drop=FALSE] = model$rtransition(X[,,itheta,drop=FALSE], t, thetas[itheta,,drop=FALSE])
   }
   return (Xpred)
 }
