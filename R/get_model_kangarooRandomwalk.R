@@ -2,7 +2,7 @@
 #'@title get_model_kangarooRandomwalk
 #'@description This implements the random walk model in Knape et al. (2012)
 #'@export
-get_model_kangarooRandomwalk <- function(){
+get_model_kangarooRandomwalk <- function(timesteps = data_kangaroo["time",]){
   model.kangarooRandomwalk = list()
   # dimension of parameter, observations, and states
   model.kangarooRandomwalk$dimtheta = 2
@@ -33,7 +33,7 @@ get_model_kangarooRandomwalk <- function(){
   model.kangarooRandomwalk$rtransition = function(Xt,t,theta){
     sigma = theta[1]
     N = nrow(Xt)
-    dt = data_kangaroo["time",t] - data_kangaroo["time",t-1]
+    dt = timesteps[t] - timesteps[t-1]
     return (matrix(Xt*exp(sigma*rnorm(N,mean = 0,sd = sqrt(dt))), nrow = N))
   }
   # density of the observations

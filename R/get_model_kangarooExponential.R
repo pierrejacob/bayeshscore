@@ -2,7 +2,7 @@
 #'@title model.kangarooExponential
 #'@description This implements the exponential model in Knape et al. (2012)
 #'@export
-get_model_kangarooExponential <- function(range_r = 10){
+get_model_kangarooExponential <- function(timesteps = data_kangaroo["time",],range_r = 10){
   model.kangarooExponential = list()
   # dimension of parameter, observations, and states
   model.kangarooExponential$dimtheta = 3
@@ -36,7 +36,7 @@ get_model_kangarooExponential <- function(range_r = 10){
     sigma = theta[1]
     r = theta[3]
     N = nrow(Xt)
-    dt = data_kangaroo["time",t] - data_kangaroo["time",t-1]
+    dt = timesteps[t] - timesteps[t-1]
     return (matrix(Xt*exp(r*dt+sigma*rnorm(N,mean = 0,sd = sqrt(dt))),nrow = N))
   }
   # density of the observations

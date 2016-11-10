@@ -2,7 +2,7 @@
 #'@title get_model_kangarooRandomwalk
 #'@description This implements the logistic model in Knape et al. (2012)
 #'@export
-get_model_kangarooLogistic <- function(range_b = 10){
+get_model_kangarooLogistic <- function(timesteps = data_kangaroo["time",],range_b = 10){
   model.kangarooLogistic = list()
   # dimension of parameter and variables
   model.kangarooLogistic$dimtheta = 4
@@ -35,7 +35,7 @@ get_model_kangarooLogistic <- function(range_b = 10){
   }
   # sampler from the transition distribution of the states
   model.kangarooLogistic$rtransition = function(Xt,t,theta){
-    return (rtransition_logistic(Xt, t, theta))
+    return (rtransition_logistic(Xt, t, theta,timesteps))
   }
   # density of the observations
   model.kangarooLogistic$dobs = function(Yt,Xt,t,theta,log = TRUE){
