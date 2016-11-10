@@ -5,9 +5,10 @@
 \alias{get_model_kangarooRandomwalk}
 \title{get_model_kangarooRandomwalk}
 \usage{
-get_model_kangarooLogistic(range_b = 10)
+get_model_kangarooLogistic(timesteps = data_kangaroo["time", ],
+  range_b = 10)
 
-get_model_kangarooRandomwalk()
+get_model_kangarooRandomwalk(timesteps = data_kangaroo["time", ])
 }
 \description{
 This implements the logistic model in Knape et al. (2012)
