@@ -1,5 +1,7 @@
+#'@export bootstrap_particle_filter
+#'@title bootstrap_particle_filter
+#'@description This function implements the bootstrap particle filter. It returns log-evidence estimates, particles, and normalized weights.
 #'@export
-
 bootstrap_particle_filter <- function(observations, model, theta, algorithmic_parameters){
   Nx <- algorithmic_parameters$Nx
   resampling <- algorithmic_parameters$resampling

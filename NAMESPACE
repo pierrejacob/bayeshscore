@@ -2,6 +2,7 @@
 
 export(PMMH)
 export(bootstrap_particle_filter)
+export(conditional_particle_filter)
 export(dinvchisq)
 export(dinvgamma)
 export(dtscaled)

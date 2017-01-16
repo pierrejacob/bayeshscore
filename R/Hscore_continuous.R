@@ -3,6 +3,7 @@
 #'@description This function computes successive prequential Hyvarinen score for continuous observations by running the smc^2 algorithm. It also computes the successive log-evidence as a by-product.
 #'@export
 hscore_continuous <- function(observations, model, algorithmic_parameters){
+  # Extract algorithmic parameters and set flags accordingly
   Nx <- algorithmic_parameters$Nx
   Ntheta <- algorithmic_parameters$Ntheta
   nobservations <- ncol(observations)
@@ -14,36 +15,36 @@ hscore_continuous <- function(observations, model, algorithmic_parameters){
     count = 0
     time_start = proc.time()
   }
-
+  # Initialize empty arrays and lists to store the results
   ESS = array(NA,dim = c(nobservations)) #ESS at successive times t
   Hscore = array(NA,dim = c(nobservations)) #prequential Hyvarinen score at successive times t
   logevidence = array(NA,dim = c(nobservations)) #log-evidence at successive times t
-  #
-  rejuvenation_times <- c()
-  rejuvenation_accepts <- c()
-  #
-  # sample from prior by default, otherwise from specified proposal
+  rejuvenation_times <- c() #successive times where resampling is triggered
+  rejuvenation_accept_rate <- c() #successive acceptance rates of resampling
+  # Initialize SMC2 by sampling from prior (default), or from specified proposal
+  # (e.g. relevant in case the prior is vague)
   if (is.null(algorithmic_parameters$rinitial_theta)){
     thetas <- model$rprior(Ntheta)
   }
   else {
     thetas <- algorithmic_parameters$rinitial_theta(Ntheta)
   }
-  # initialize filter + one step
-  first_step <- filter_init(observations[,1], model, thetas, algorithmic_parameters)
-  X = first_step$X  #Nx particles of dimension 1 for each theta (most recent)
-  xnormW = first_step$xnormW  #matrix of normalized weights for X (most recent)
-
-
-  z = first_step$z  #matrix of likelihood estimates
-  # if we initialize the first theta by using a proposal different from the prior, the first initial
-  # weights are not all equal but are importance weights targeting the prior. This happens before
-  # seeing the first observation
+  # Initialize particle filter + one step (i.e. including 1 observations)
+  first_step <- filter_first_step(observations[,1], model, thetas, algorithmic_parameters)
+  X = first_step$X  #Nx particles (most recent) for each theta (size = Nx,dimX,Ntheta)
+  xnormW = first_step$xnormW  #matrix of corresponding normalized X-weights (size = Nx,Ntheta)
+  log_z = first_step$log_z  #matrix of log-likelihood estimates (size = Ntheta)
+  trees = first_step$trees #list of trees to extract X-paths
+  # Initialize the weights for theta
   if (is.null(algorithmic_parameters$rinitial_theta)){
+    # Equal initial weights when sampling from the prior initially (default)
     thetalogw <- rep(0,Ntheta)
     thetanormw <- rep(1/Ntheta,Ntheta)
   }
   else {
+    # If we initialize the first theta by using a proposal different from the prior, the first initial
+    # weights are not all equal but are importance weights targeting the prior. This re-weighting
+    # happens before seeing the first observation
     thetalogw <- rep(NA,Ntheta)
     for (m in 1:Ntheta) {
       thetalogw[m] <- model$dprior(thetas[m,], log = TRUE) - algorithmic_parameters$dinitial_theta(thetas[m,], log = TRUE)
@@ -52,86 +53,86 @@ hscore_continuous <- function(observations, model, algorithmic_parameters){
     W <- exp(thetalogw - maxlogW) #computes actual unnormalized weights for theta
     thetanormw <- W / sum(W) #normalize weights for theta
   }
-  maxz = max(z) #avoids overflow when exponentiating
-  actual_z = exp(z - maxz) #actual z up to a multiplicative constant
-  # compute log-evidence
-  logevidence[1] = log(sum(actual_z*thetanormw)) + maxz
-
+  maxlog_z = max(log_z) #avoids overflow when exponentiating
+  actual_z = exp(log_z - maxlog_z) #actual likelihood up to a multiplicative constant
+  # Compute log-evidence
+  logevidence[1] = log(sum(actual_z*thetanormw)) + maxlog_z
   # update the weights after seeing the first observation
-  thetalogw <- thetalogw + z #update log-weights for theta
+  thetalogw <- thetalogw + log_z #update log-weights for theta
   maxlogW <- max(thetalogw) #avoids overflow when exponentiating
   W <- exp(thetalogw - maxlogW) #computes actual unnormalized weights for theta
   thetanormw <- W / sum(W) #normalize weights for theta
-  # compute H score
+  # Compute prequential H score
   Hscore[1] = hincrementContinuous(1,model,observations[,1],thetas,thetanormw,X,xnormW,Ntheta,Nx)
-  # ...
-  # store thetas
+  # Store thetas and weights if needed
   thetas_history <- list()
   weights_history <- list()
   if (algorithmic_parameters$store){
     thetas_history[[1]] <- thetas
     weights_history[[1]] <- thetanormw
   }
-  # ...
+  # Compute ESS and resample if needed
   ESS[1] <- getESS(thetanormw)
   if ((ESS[1]/Ntheta) < 0.5){
-    rejuvenation = rejuvenation_step(observations, 1, model, thetas, thetanormw, X, xnormW, z, algorithmic_parameters)
+    rejuvenation = rejuvenation_step(observations, 1, model, thetas, thetanormw, X, xnormW, log_z, algorithmic_parameters)
     thetas = rejuvenation$thetas
     thetalogw = rep(log(1/Ntheta),Ntheta)
     X = rejuvenation$X
     xnormW = rejuvenation$xnormW
-    z = rejuvenation$z
+    log_z = rejuvenation$log_z
+    trees = rejuvenation$trees
     rejuvenation_times <- c(rejuvenation_times, 1)
-    rejuvenation_accepts <- c(rejuvenation_accepts, rejuvenation$accepts)
+    rejuvenation_accept_rate <- c(rejuvenation_accept_rate, rejuvenation$accept_rate)
   }
+  # Update progress bar if needed
   if (algorithmic_parameters$progress) {
     count = count + 1
     setTxtProgressBar(progbar, count)
   }
+  # Iterate over the next observations
   for (t in 2:nobservations){
-    #...
-    #...
-    #...
-    #...
-    #...
+    # Propagate X-particles
     next_step <- filter_next_step(observations[,t], t, model, thetas, X, xnormW, algorithmic_parameters)
-    X = next_step$X  #Nx particles of dimension 1 for each theta (most recent)
-    xnormW = next_step$xnormW  #matrix of normalized weights for X (most recent)
-    z_incremental = next_step$z_incremental  #matrix of likelihood estimates
-    z <- z + z_incremental
-    # update log-evidence estimator
-    maxz_incremental = max(z_incremental)
-    logevidence[t] <- logevidence[t-1] + log(sum(exp(z_incremental - maxz_incremental)*thetanormw)) + maxz_incremental
-    #
-    thetalogw <- thetalogw + z_incremental #update log-weights for theta
+    X = next_step$X
+    xnormW = next_step$xnormW
+    log_z_incremental = next_step$log_z_incremental
+    trees = next_step$trees
+    log_z <- log_z + log_z_incremental
+    # Update log-evidence estimator
+    maxlogz_incremental = max(log_z_incremental)
+    logevidence[t] <- logevidence[t-1] + log(sum(exp(log_z_incremental - maxlogz_incremental)*thetanormw)) + maxlogz_incremental
+    # Reweighting
+    thetalogw <- thetalogw + log_z_incremental #update log-weights for theta
     maxlogW <- max(thetalogw) #avoids overflow when exponentiating
     W <- exp(thetalogw - maxlogW) #computes actual unnormalized weights for theta
     thetanormw <- W / sum(W) #normalize weights for theta
-    # ...
+    # Store thetas and weights if needed
     if (algorithmic_parameters$store){
       thetas_history[[t]] <- thetas
       weights_history[[t]] <- thetanormw
     }
-    # ...
-    # compute H score here
+    # compute prequential H score here
     Hscore[t] = Hscore[t-1] + hincrementContinuous(t,model,observations[,t],thetas,thetanormw,X,xnormW,Ntheta,Nx)
-    # ...
+    # Compute ESS and resample if needed
     ESS[t] <- getESS(thetanormw)
     if ((ESS[t]/Ntheta) < 0.5){
-      rejuvenation = rejuvenation_step(observations, t, model, thetas, thetanormw, X, xnormW, z, algorithmic_parameters)
+      rejuvenation = rejuvenation_step(observations, t, model, thetas, thetanormw, X, xnormW, log_z, algorithmic_parameters)
       thetas = rejuvenation$thetas
       thetalogw = rep(log(1/Ntheta),Ntheta)
       X = rejuvenation$X
       xnormW = rejuvenation$xnormW
-      z = rejuvenation$z
+      log_z = rejuvenation$log_z
+      trees = rejuvenation$trees
       rejuvenation_times <- c(rejuvenation_times, t)
-      rejuvenation_accepts <- c(rejuvenation_accepts, rejuvenation$accepts)
+      rejuvenation_accept_rate <- c(rejuvenation_accept_rate, rejuvenation$accept_rate)
     }
+    # Update progress bar if needed
     if (algorithmic_parameters$progress) {
       count = count + 1
       setTxtProgressBar(progbar, count)
     }
   }
+  # Update progress bar if needed
   if (algorithmic_parameters$progress) {
     close(progbar)
     time_end = proc.time()-time_start
@@ -139,13 +140,16 @@ hscore_continuous <- function(observations, model, algorithmic_parameters){
               ", Nx = ",toString(Nx),"\n",sep = ""))
     print(time_end)
   }
+  # Return results
   if (algorithmic_parameters$store){
     return (list(hscore = Hscore, logevidence = logevidence, ESS = ESS, thetas = thetas, thetanormw = thetanormw,
-                 thetas_history = thetas_history, weights_history = weights_history,
-                 rejuvenation_times = rejuvenation_times, rejuvenation_accepts = rejuvenation_accepts / Ntheta))
-  } else {
+                 thetas_history = thetas_history, weights_history = weights_history, trees = trees,
+                 rejuvenation_times = rejuvenation_times, rejuvenation_accept_rate = rejuvenation_accept_rate))
+  }
+  else {
     return (list(hscore = Hscore, logevidence = logevidence, ESS = ESS, thetas = thetas, thetanormw = thetanormw,
-                 rejuvenation_times = rejuvenation_times, rejuvenation_accepts = rejuvenation_accepts / Ntheta))
+                 trees = trees,
+                 rejuvenation_times = rejuvenation_times, rejuvenation_accept_rate = rejuvenation_accept_rate))
   }
 }
 
