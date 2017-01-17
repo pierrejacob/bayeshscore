@@ -3,16 +3,16 @@
 #'@description This function implements the conditional particle filter. If no conditioning path is provided, it performs a regular bootstrap particle filter. It returns log-evidence estimates, particles, normalized weights, tree of paths, and one sample final path.
 #'@export
 conditional_particle_filter <- function(observations, model, theta, algorithmic_parameters, path = NULL){
-  Tree <- new(TreeClass, algorithmc_parameters$Nx, 10*algorithmc_parameters$Nx, model$dimX)
+  # TreeClass = algorithmic_parameters$TreeClass
+  Tree <- new(TreeClass, algorithmic_parameters$Nx, 10*algorithmic_parameters$Nx, model$dimX)
   # we expect a path as a matrix of size dimX x nobservations
   cpf <- TRUE
   if (is.null(path)){
     cpf <- FALSE
   }
   Nx <- algorithmic_parameters$Nx
-  # resampling <- algorithmic_parameters$resampling
   nobservations <- ncol(observations)
-  log_p_y_hat <- 0 #initialize estimate of p_theta(y_{1:nobservations}))
+  log_p_y_hat <- 0 #initialize estimate of log-evidence
   X = matrix(NA,nrow = Nx, ncol = model$dimX) # matrix of Nx particles row-wise
   normW = rep(1/Nx, Nx) #vector of normalized weights
   X <- model$rinitial(theta,Nx) #initial step 1

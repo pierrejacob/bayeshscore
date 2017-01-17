@@ -4,9 +4,25 @@
 #'@export
 hscore_discrete <- function(observations, model, algorithmic_parameters){
   # Extract algorithmic parameters and set flags accordingly
-  Nx <- algorithmic_parameters$Nx
   Ntheta <- algorithmic_parameters$Ntheta
   nobservations <- ncol(observations)
+  # If no number of X-particles Nx is specified, use adaptive Nx starting with Nx = 128
+  if (is.null(algorithmic_parameters$Nx)) {
+    adaptNx = TRUE
+    Nx = 2^7
+    algorithmic_parameters$Nx = Nx
+    # Trigger increase in Nx when acceptance rate drops below threshold (default is 10%)
+    if (is.null(algorithmic_parameters$min_acceptance_rate)) {
+      min_acceptance_rate = 0.10
+    }
+    else {
+      min_acceptance_rate = algorithmic_parameters$min_acceptance_rate
+    }
+  }
+  else {
+    adaptNx = FALSE
+    Nx = algorithmic_parameters$Nx
+  }
   if (is.null(algorithmic_parameters$progress)) algorithmic_parameters$progress <- FALSE
   if (is.null(algorithmic_parameters$store)) algorithmic_parameters$store <- FALSE
   if (algorithmic_parameters$progress) {
@@ -21,6 +37,8 @@ hscore_discrete <- function(observations, model, algorithmic_parameters){
   logevidence = array(NA,dim = c(nobservations)) #log-evidence at successive times t
   rejuvenation_times <- c() #successive times where resampling is triggered
   rejuvenation_accept_rate <- c() #successive acceptance rates of resampling
+  increase_Nx_times <- c() #successive times where adaptation regarding Nx is triggered
+  increase_Nx_values <- c() #successive values of Nx
   # Initialize array of particles X targeting predictive distributions (most recent)
   Xpred = array(NA,dim = c(Nx, model$dimX, Ntheta))
   # Initialize SMC2 by sampling from prior (default), or from specified proposal
@@ -77,7 +95,7 @@ hscore_discrete <- function(observations, model, algorithmic_parameters){
   # Compute ESS and resample if needed
   ESS[1] <- getESS(thetanormw)
   if ((ESS[1]/Ntheta) < 0.5){
-    rejuvenation = rejuvenation_step(observations, 1, model, thetas, thetanormw, X, xnormW, log_z, algorithmic_parameters)
+    rejuvenation = rejuvenation_step(observations, 1, model, thetas, thetanormw, X, xnormW, log_z, trees, algorithmic_parameters)
     thetas = rejuvenation$thetas
     thetalogw = rep(log(1/Ntheta),Ntheta)
     X = rejuvenation$X
@@ -86,6 +104,20 @@ hscore_discrete <- function(observations, model, algorithmic_parameters){
     trees = rejuvenation$trees
     rejuvenation_times <- c(rejuvenation_times, 1)
     rejuvenation_accept_rate <- c(rejuvenation_accept_rate, rejuvenation$accept_rate)
+    if (adaptNx){
+      if (rejuvenation$accept_rate < min_acceptance_rate){
+        # Increase the number Nx of particles for each theta
+        new_filter = increase_Nx(observations, 1, model, thetas, xnormW, trees, algorithmic_parameters)
+        X = new_filter$X
+        xnormW = new_filter$xnormW
+        log_z = new_filter$log_z
+        trees = new_filter$trees
+        Nx = new_filter$new_Nx
+        algorithmic_parameters$Nx = Nx
+        increase_Nx_times <- c(increase_Nx_times,1)
+        increase_Nx_values <- c(increase_Nx_values,new_filter$new_Nx)
+      }
+    }
   }
   # Update progress bar if needed
   if (algorithmic_parameters$progress) {
@@ -99,7 +131,7 @@ hscore_discrete <- function(observations, model, algorithmic_parameters){
     # compute prequential H score
     Hscore[t] = Hscore[t-1] + SHd(t,model,observations[,t],thetas,thetanormw,Xpred,XprednormW,Ntheta,Nx)
     # Propagate X-particles
-    next_step <- filter_next_step(observations[,t], t, model, thetas, X, xnormW, algorithmic_parameters)
+    next_step <- filter_next_step(observations[,t], t, model, thetas, X, xnormW, trees, algorithmic_parameters)
     X = next_step$X
     xnormW = next_step$xnormW
     log_z_incremental = next_step$log_z_incremental
@@ -121,7 +153,7 @@ hscore_discrete <- function(observations, model, algorithmic_parameters){
     # Compute ESS and resample if needed
     ESS[t] <- getESS(thetanormw)
     if ((ESS[t]/Ntheta) < 0.5){
-      rejuvenation = rejuvenation_step(observations, t, model, thetas, thetanormw, X, xnormW, log_z, algorithmic_parameters)
+      rejuvenation = rejuvenation_step(observations, t, model, thetas, thetanormw, X, xnormW, log_z, trees, algorithmic_parameters)
       thetas = rejuvenation$thetas
       thetalogw = rep(log(1/Ntheta),Ntheta)
       X = rejuvenation$X
@@ -130,6 +162,20 @@ hscore_discrete <- function(observations, model, algorithmic_parameters){
       trees = rejuvenation$trees
       rejuvenation_times <- c(rejuvenation_times, t)
       rejuvenation_accept_rate <- c(rejuvenation_accept_rate, rejuvenation$accept_rate)
+      if (adaptNx){
+        if (rejuvenation$accept_rate < min_acceptance_rate){
+          # Increase the number Nx of particles for each theta
+          new_filter = increase_Nx(observations, t, model, thetas, xnormW, trees, algorithmic_parameters)
+          X = new_filter$X
+          xnormW = new_filter$xnormW
+          log_z = new_filter$log_z
+          trees = new_filter$trees
+          Nx = new_filter$new_Nx
+          algorithmic_parameters$Nx = Nx
+          increase_Nx_times <- c(increase_Nx_times,t)
+          increase_Nx_values <- c(increase_Nx_values,new_filter$new_Nx)
+        }
+      }
     }
     # Update progress bar if needed
     if (algorithmic_parameters$progress) {
@@ -148,13 +194,15 @@ hscore_discrete <- function(observations, model, algorithmic_parameters){
   # Return results
   if (algorithmic_parameters$store){
     return (list(hscore = Hscore, logevidence = logevidence, ESS = ESS, thetas = thetas, thetanormw = thetanormw,
-                 thetas_history = thetas_history, weights_history = weights_history, trees = trees,
-                 rejuvenation_times = rejuvenation_times, rejuvenation_accepts = rejuvenation_accepts / Ntheta))
+                 thetas_history = thetas_history, weights_history = weights_history, trees = trees, xnormW = xnormW,
+                 rejuvenation_times = rejuvenation_times, rejuvenation_accept_rate = rejuvenation_accept_rate,
+                 increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values))
   }
   else {
     return (list(hscore = Hscore, logevidence = logevidence, ESS = ESS, thetas = thetas, thetanormw = thetanormw,
-                 trees = trees,
-                 rejuvenation_times = rejuvenation_times, rejuvenation_accepts = rejuvenation_accepts / Ntheta))
+                 trees = trees, xnormW = xnormW, rejuvenation_times = rejuvenation_times,
+                 rejuvenation_accept_rate = rejuvenation_accept_rate,
+                 increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values))
   }
 }
 
