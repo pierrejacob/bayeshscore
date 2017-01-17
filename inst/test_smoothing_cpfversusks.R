@@ -63,7 +63,7 @@ conditional_particle_filter <- function(observations, model, theta, algorithmic_
     }
   }
   new_path <- Tree$get_path(sample(x = 0:(Nx-1), size = 1, replace = TRUE, prob = normW))
-  return(list(log_p_y_hat = log_p_y_hat, X = X, normW = normW, path = new_path))
+  return(list(log_p_y_hat = log_p_y_hat, X = X, normW = normW, tree = Tree, path = new_path))
 }
 
 cpf_results <- conditional_particle_filter(observations, model, theta, algorithmc_parameters)
