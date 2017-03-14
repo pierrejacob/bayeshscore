@@ -9,4 +9,3 @@ rinvchisq(N, df, s2 = 1)
 \description{
 rinvchisq
 }
-

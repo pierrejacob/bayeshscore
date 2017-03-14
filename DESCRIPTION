@@ -12,4 +12,4 @@ Depends:
 Imports:
     Rcpp (>= 0.11.6),RcppEigen,BH
 LinkingTo: Rcpp,RcppEigen,BH
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1

@@ -9,4 +9,3 @@ bootstrap_particle_filter(observations, model, theta, algorithmic_parameters)
 \description{
 This function implements the bootstrap particle filter. It returns log-evidence estimates, particles, and normalized weights.
 }
-

@@ -9,4 +9,3 @@ dinvgamma(y, a, b, log)
 \description{
 dinvgamma
 }
-

@@ -61,7 +61,6 @@ rejuvenation_step <- function(observations, t, model, thetas, thetanormw, X, xno
   cov_t = matrix(covariance$cov,nrow = model$dimtheta) + diag(rep(10^(-4)/model$dimtheta),model$dimtheta)
   #(increased a little bit the diagonal to prevent degeneracy effects)
   resampled_index = resampling(thetanormw)
-  theta_new_all = fast_rmvnorm(Ntheta,mean_t,cov_t)
   thetas = thetas[resampled_index,,drop=FALSE]
   X = X[,,resampled_index,drop=FALSE]
   xnormW = xnormW[,resampled_index]
@@ -69,6 +68,7 @@ rejuvenation_step <- function(observations, t, model, thetas, thetanormw, X, xno
   trees = trees[resampled_index]
   #
   for (imove in 1:nmoves){
+    theta_new_all = fast_rmvnorm(Ntheta,mean_t,cov_t)
     proposal_density_new_all <- fast_dmvnorm(theta_new_all, mean_t, cov_t)
     proposal_density_current <- fast_dmvnorm(thetas, mean_t, cov_t)
     accepts <- 0

@@ -9,4 +9,3 @@ fast_dmvnorm_transpose(x, mean, chol_covariance)
 \description{
 fast_dmvnorm_transpose
 }
-

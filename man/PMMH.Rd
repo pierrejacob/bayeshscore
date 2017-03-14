@@ -9,4 +9,3 @@ PMMH(observations, model, algorithmic_parameters)
 \description{
 This function uses PMMH to sample from the posterior p(theta|Y1:t)
 }
-

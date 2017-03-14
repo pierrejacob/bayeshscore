@@ -9,4 +9,3 @@ dinvchisq(y, df, s2 = 1, log)
 \description{
 dinvchisq
 }
-

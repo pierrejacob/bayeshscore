@@ -9,4 +9,3 @@ fast_dmvnorm_transpose_cholesky(x, mean, cholcovariance)
 \description{
 fast_dmvnorm_transpose_cholesky
 }
-

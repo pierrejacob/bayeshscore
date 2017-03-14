@@ -9,4 +9,3 @@ get_model_lineargaussian_iid()
 \description{
 This implements a degenerate univariate linear Gaussian model with iid states
 }
-

@@ -10,4 +10,3 @@ get_model_kangarooExponential(timesteps = data_kangaroo["time", ],
 \description{
 This implements the exponential model in Knape et al. (2012)
 }
-
