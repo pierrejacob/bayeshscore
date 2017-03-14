@@ -38,7 +38,9 @@ posterior.df = data.frame()
 
 module_tree <<- Module("module_tree", PACKAGE = "HyvarinenSSM")
 TreeClass <<- module_tree$Tree
-
+# algorithmic_parameters = list(Ntheta = Ntheta, Nx = Nx,
+#                               resampling = function(normw) systematic_resampling_n(normw, length(normw), runif(1)),
+#                               progress = TRUE, TreeClass = TreeClass)
 all_results = list()
 for (i in 1:length(all_models)){
   all_results[[i]] = list()
@@ -70,7 +72,6 @@ for (i in 1:length(all_models)){
 #=======================================================================
 #========= (not sure how to properly export the Cpp Class TreeClass ) ==
 #=======================================================================
-#
 # registerDoParallel(cores=5)
 #
 # for (i in 1:length(all_models)){
@@ -78,6 +79,11 @@ for (i in 1:length(all_models)){
 #   print(paste("Started at:",Sys.time()))
 #   time_start = proc.time()
 #   results = foreach(i=1:repl,.packages='HyvarinenSSM',.verbose = TRUE) %dopar% {
+#
+#     ####### THIS DOES NOT WORK !!!!! "error: objet TreeClass introuvable" #######
+#     module_tree <- Module("module_tree", PACKAGE = "HyvarinenSSM")
+#     TreeClass <- module_tree$Tree
+#     ####### THIS DOES NOT WORK !!!!! "error: objet TreeClass introuvable" #######
 #     hscore_discrete(observations, M, algorithmic_parameters)
 #   }
 #   time_end = proc.time()-time_start

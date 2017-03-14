@@ -3,6 +3,7 @@ filter_first_step <- function(observation1, model, thetas, algorithmic_parameter
   Ntheta <- algorithmic_parameters$Ntheta
   Nx <- algorithmic_parameters$Nx
 
+
   # Construct list of trees to store paths (one tree for each theta)
   trees = list()
   for (itheta in 1:Ntheta){
