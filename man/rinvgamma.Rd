@@ -9,3 +9,4 @@ rinvgamma(N, a, b)
 \description{
 rinvgamma
 }
+

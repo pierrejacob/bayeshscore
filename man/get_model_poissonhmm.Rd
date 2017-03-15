@@ -9,3 +9,4 @@ get_model_poissonhmm()
 \description{
 This implements a Poisson HMM
 }
+

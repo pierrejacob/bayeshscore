@@ -9,3 +9,4 @@ fast_rmvnorm_transpose(nparticles, mean, covariance)
 \description{
 fast_rmvnorm_transpose
 }
+

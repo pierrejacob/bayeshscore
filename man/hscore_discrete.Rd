@@ -9,3 +9,4 @@ hscore_discrete(observations, model, algorithmic_parameters)
 \description{
 This function computes successive prequential Hyvarinen score for discrete observations by running the smc^2 algorithm. It also computes the successive log-evidence as a by-product.
 }
+

@@ -9,3 +9,4 @@ get_model_simplerlineargaussian()
 \description{
 This implements the univariate linear Gaussian model
 }
+

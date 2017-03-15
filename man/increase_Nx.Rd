@@ -10,3 +10,4 @@ increase_Nx(observations, t, model, thetas, xnormW, trees,
 \description{
 This function runs a CPF in order to increase Nx (the number of particles). The default new number of particles is set to 2*Nx.
 }
+

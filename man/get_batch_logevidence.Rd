@@ -9,3 +9,4 @@ get_batch_logevidence(observations, model, proposal, algorithmic_parameters)
 \description{
 This function computes the logevidence of a batch of observation Y1:b via importance sampling
 }
+

@@ -9,3 +9,4 @@ get_batch_initial_proposal(observations, model, algorithmic_parameters)
 \description{
 This function provides an initial proposal targetting P(theta|Ybatch) based on fitting a Normal to a PMMH sample from P(theta|Ybatch)
 }
+
