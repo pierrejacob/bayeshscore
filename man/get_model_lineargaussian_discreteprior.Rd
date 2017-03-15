@@ -9,3 +9,4 @@ get_model_lineargaussian_discreteprior()
 \description{
 This implements a univariate linear Gaussian model with discrete prior
 }
+

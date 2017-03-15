@@ -177,14 +177,127 @@ smc_sampler <- function(observations, model, algorithmic_parameters){
 }
 
 algorithmic_parameters <- list(Ntheta = 1024, resampling = function(normw) systematic_resampling_n(normw, length(normw), runif(1)),
-                               ess_threshold = 0.5, nmoves = 10)
+                               ess_threshold = 0.5, nmoves = 1)
 
 smc_results <- smc_sampler(observations, model, algorithmic_parameters)
 thetas <- smc_results$thetas_history[[nobservations+1]]
 normw <- smc_results$normw_history[[nobservations+1]]
 
 qplot(x = thetas[,1], weight = normw, geom = "blank") + geom_histogram(aes(y = ..density..))
-qplot(x = thetas[,1], y = thetas[,2], alpha = normw, geom = "point") + geom_point(aes(x = theta_star[1], y = theta_star[2]), colour = "red", size = 5)
+qplot(x = thetas[,2], weight = normw, geom = "blank") + geom_histogram(aes(y = ..density..))
+qplot(x = thetas[,1], y = thetas[,2], alpha = normw, geom = "point") +
+  geom_point(aes(x = theta_star[1], y = theta_star[2]), colour = "red", size = 5)
+
+###############################################################################################
+###############################################################################################
+
+#### Sanity check: sample posterior via naive MH
+# Computes the posterior density (target)
+psi = model$psi
+sigmaV2 = model$sigmaV2
+dpost = function(theta, log = TRUE){
+  Kalman <- new(kalman_module$Kalman)
+  Kalman$set_parameters(list(rho = theta[1], sigma = sqrt(theta[2]), eta = psi, tau = sqrt(sigmaV2)))
+  Kalman$set_observations(matrix(observations, ncol = 1))
+  Kalman$first_step()
+  for (t in 1:nobservations){
+    Kalman$filtering_step(t-1)
+  }
+  loglikelihood = sum(Kalman$get_incremental_ll())
+  if (log){
+    return (model$dprior(theta,log = TRUE) + loglikelihood)
+  } else {
+    return (exp((model$dprior(theta,log = TRUE) + loglikelihood)))
+  }
+}
+
+MH_cov = (cov.wt(thetas,wt=normw)$cov)/5
+M = 10000
+burnin = 9000
+thetas_MH = matrix(NA,ncol = 2,nrow = M)
+###
+print(paste("Started at:",Sys.time()))
+progbar = txtProgressBar(min = 0,max = M,style=3)
+count = 1
+time_start = proc.time()
+###
+thetas_MH[1,] = c(0.7,1)
+accepts = 0
+###
+for (i in 2:M){
+  theta_new = fast_rmvnorm(1,thetas_MH[i-1,],MH_cov)
+  if (model$dprior(theta_new) == -Inf){
+    thetas_MH[i,] = thetas_MH[i-1,]
+    count = count + 1
+    setTxtProgressBar(progbar, count)
+    next
+  } else {
+    logacceptance = dpost(theta_new) - dpost(thetas_MH[i-1,])
+    logu = log(runif(1))
+    if (logu <= logacceptance){
+      accepts = accepts + 1
+      thetas_MH[i,] = theta_new
+    } else {
+      thetas_MH[i,] = thetas_MH[i-1,]
+    }
+  }
+  ###
+  count = count + 1
+  setTxtProgressBar(progbar, count)
+}
+time_end = proc.time()-time_start
+print(time_end)
+cat("acceptance rate = ", accepts/(M-1))
+# Traceplots
+par(mfrow=c(2,1))
+index = seq(burnin,M,by = 1)
+plot(index,thetas_MH[index,1],type='l')
+plot(index,thetas_MH[index,2],type='l')
+par(mfrow=c(1,1))
+
+
+
+### Check SMC_2 output
+module_tree <<- Module("module_tree", PACKAGE = "HyvarinenSSM")
+TreeClass <<- module_tree$Tree
+algorithmic_parameters$progress = TRUE
+smc2_results <- hscore_continuous(observations, model, algorithmic_parameters)
+thetas_smc2 <- smc2_results$thetas
+normw_smc2 <- smc2_results$thetanormw
+
+# Visual (qualitative) diagnostic
+M = 100
+x = seq(0.01, 1.5, length.out = M)
+y = seq(0.5,10, length.out = M)
+z = matrix(NA,ncol = M,nrow = M)
+print(paste("Started at:",Sys.time()))
+progbar = txtProgressBar(min = 0,max = M*M,style=3)
+count = 0
+time_start = proc.time()
+for (i in 1:M){
+  for (j in 1:M){
+    z[i,j] = dpost(c(x[i],y[j]))
+    count = count + 1
+    setTxtProgressBar(progbar, count)
+  }
+}
+time_end = proc.time()-time_start
+print(time_end)
+contour_df = expand.grid(x = x, y = y)
+contour_df$z = c(z)
+
+
+# Checking sample from the posterior distribution
+### BLACK = SMC output
+### YELLOW = MH output
+### PURPLE = SMC_2 output
+ggplot() +
+  geom_point(aes(thetas[,1], thetas[,2], alpha = normw)) +
+  geom_contour(data = contour_df,aes(x,y,z=z,color = ..level..)) +
+  scale_colour_gradient(low="black", high="red") +
+  geom_point(aes(thetas_MH[index,1],thetas_MH[index,2]),color="yellow", size = 1, shape = 3) +
+  geom_point(aes(thetas_smc2[,1], thetas_smc2[,2], alpha = normw_smc2),color="purple", shape=15) +
+  geom_point(aes(x = theta_star[1], y = theta_star[2]), colour = "red", size = 10)
 
 
 

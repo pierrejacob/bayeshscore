@@ -9,3 +9,4 @@ simulateData(model, theta, nobservations)
 \description{
 This function generates artificial data from a model. 'additional_parameters' is a list of n lists, where n is the number of observations that are generated (examples of additional parameters include step size for simulating SDEs)
 }
+
