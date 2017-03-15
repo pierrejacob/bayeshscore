@@ -183,10 +183,6 @@ smc_results <- smc_sampler(observations, model, algorithmic_parameters)
 thetas_smc <- smc_results$thetas_history[[nobservations+1]]
 normw_smc <- smc_results$normw_history[[nobservations+1]]
 
-# qplot(x = thetas[,1], weight = normw, geom = "blank") + geom_histogram(aes(y = ..density..))
-# qplot(x = thetas[,2], weight = normw, geom = "blank") + geom_histogram(aes(y = ..density..))
-# qplot(x = thetas[,1], y = thetas[,2], alpha = normw, geom = "point") +
-#   geom_point(aes(x = theta_star[1], y = theta_star[2]), colour = "red", size = 5)
 
 ###############################################################################################
 ###############################################################################################
@@ -298,5 +294,3 @@ ggplot() +
   geom_point(aes(thetas_MH[index,1],thetas_MH[index,2]),color="yellow", size = 1, shape = 3) +
   geom_point(aes(thetas_smc2[,1], thetas_smc2[,2], alpha = normw_smc2),color="purple", shape=15) +
   geom_point(aes(x = theta_star[1], y = theta_star[2]), colour = "red", size = 10)
-
-
