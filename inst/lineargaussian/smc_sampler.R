@@ -183,11 +183,6 @@ smc_results <- smc_sampler(observations, model, algorithmic_parameters)
 thetas_smc <- smc_results$thetas_history[[nobservations+1]]
 normw_smc <- smc_results$normw_history[[nobservations+1]]
 
-# qplot(x = thetas[,1], weight = normw, geom = "blank") + geom_histogram(aes(y = ..density..))
-# qplot(x = thetas[,2], weight = normw, geom = "blank") + geom_histogram(aes(y = ..density..))
-# qplot(x = thetas[,1], y = thetas[,2], alpha = normw, geom = "point") +
-#   geom_point(aes(x = theta_star[1], y = theta_star[2]), colour = "red", size = 5)
-
 ###############################################################################################
 ###############################################################################################
 
@@ -300,3 +295,13 @@ ggplot() +
   geom_point(aes(x = theta_star[1], y = theta_star[2]), colour = "red", size = 10)
 
 
+library(gridExtra)
+plot_theta1 = ggplot() +
+  geom_density(aes(thetas_smc[,1], weight = normw_smc, alpha = 0.1), fill = "black") +
+  geom_density(aes(thetas_smc2[,1], weight = normw_smc2, alpha = 0.1), fill = "purple") +
+  geom_density(aes(thetas_MH[,1], alpha = 0.1), fill = "yellow")
+plot_theta2 = ggplot() +
+  geom_density(aes(thetas_smc[,2], weight = normw_smc, alpha = 0.1), fill = "black") +
+  geom_density(aes(thetas_smc2[,2], weight = normw_smc2, alpha = 0.1), fill = "purple") +
+  geom_density(aes(thetas_MH[,2], alpha = 0.1), fill = "yellow")
+grid.arrange(plot_theta1, plot_theta2, ncol = 2)
