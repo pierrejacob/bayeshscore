@@ -294,7 +294,6 @@ ggplot() +
   geom_point(aes(thetas_smc2[,1], thetas_smc2[,2], alpha = normw_smc2),color="purple", shape=15) +
   geom_point(aes(x = theta_star[1], y = theta_star[2]), colour = "red", size = 10)
 
-
 library(gridExtra)
 plot_theta1 = ggplot() +
   geom_density(aes(thetas_smc[,1], weight = normw_smc, alpha = 0.1), fill = "black") +
@@ -305,3 +304,4 @@ plot_theta2 = ggplot() +
   geom_density(aes(thetas_smc2[,2], weight = normw_smc2, alpha = 0.1), fill = "purple") +
   geom_density(aes(thetas_MH[,2], alpha = 0.1), fill = "yellow")
 grid.arrange(plot_theta1, plot_theta2, ncol = 2)
+
