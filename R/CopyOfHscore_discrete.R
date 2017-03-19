@@ -1,8 +1,8 @@
-#'@rdname hscore_discrete_no_tempering
-#'@title hscore_discrete_no_tempering
+#'@rdname hscore_discrete
+#'@title hscore_discrete
 #'@description This function computes successive prequential Hyvarinen score for discrete observations by running the smc^2 algorithm. It also computes the successive log-evidence as a by-product.
 #'@export
-hscore_discrete_no_tempering <- function(observations, model, algorithmic_parameters){
+hscore_discrete <- function(observations, model, algorithmic_parameters){
   # Extract algorithmic parameters and set flags accordingly
   Ntheta <- algorithmic_parameters$Ntheta
   nobservations <- ncol(observations)
@@ -112,7 +112,7 @@ hscore_discrete_no_tempering <- function(observations, model, algorithmic_parame
     if (adaptNx){
       if (rejuvenation$accept_rate < min_acceptance_rate){
         # Increase the number Nx of particles for each theta
-        new_filter = increase_Nx_no_tempering(observations, 1, model, thetas, xnormW, trees, algorithmic_parameters)
+        new_filter = increase_Nx(observations, 1, model, thetas, xnormW, trees, algorithmic_parameters)
         X = new_filter$X
         xnormW = new_filter$xnormW
         log_z = new_filter$log_z
@@ -170,7 +170,7 @@ hscore_discrete_no_tempering <- function(observations, model, algorithmic_parame
       if (adaptNx){
         if (rejuvenation$accept_rate < min_acceptance_rate){
           # Increase the number Nx of particles for each theta
-          new_filter = increase_Nx_no_tempering(observations, t, model, thetas, xnormW, trees, algorithmic_parameters)
+          new_filter = increase_Nx(observations, t, model, thetas, xnormW, trees, algorithmic_parameters)
           X = new_filter$X
           xnormW = new_filter$xnormW
           log_z = new_filter$log_z

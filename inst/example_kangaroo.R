@@ -47,7 +47,7 @@ for (i in 1:length(all_models)){
   M = all_models[[i]]
   for (r in 1:repl){
     print(paste("Model",toString(i)))
-    results = hscore_discrete(observations, M, algorithmic_parameters)
+    results = hscore_discrete_no_tempering(observations, M, algorithmic_parameters)
     all_results[[i]][[r]] = results
     results.df = rbind(results.df, data.frame(time = 1:ncol(observations),
                                               logevidence = results$logevidence,

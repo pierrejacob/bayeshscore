@@ -1,17 +1,10 @@
-filter_first_step <- function(observation1, model, thetas, algorithmic_parameters){
+filter_first_step <- function(observation1, model, thetas, trees, algorithmic_parameters){
   # Extract algorithmic parameters
   Ntheta <- algorithmic_parameters$Ntheta
   Nx <- algorithmic_parameters$Nx
-
-
-  # Construct list of trees to store paths (one tree for each theta)
-  trees = list()
-  for (itheta in 1:Ntheta){
-    trees[[itheta]] = new(TreeClass, Nx, 10*Nx, model$dimX)
-  }
   # Initialize array of particles X and associated weights
   X = array(NA,dim = c(Nx, model$dimX, Ntheta)) #Nx particles (most recent) for each theta (size = Nx,dimX,Ntheta)
-  xnormW = matrix(NA, nrow = Nx, ncol = Ntheta) #matrix of corresponding normalized X-weights (size = Nx,Ntheta)
+  xnormW = matrix(0, nrow = Nx, ncol = Ntheta) #matrix of corresponding normalized X-weights (size = Nx,Ntheta)
   log_z = rep(0, Ntheta) #matrix of log-likelihood estimates (size = Ntheta)
   for (itheta in 1:Ntheta){
     X[,,itheta] <- model$rinitial(thetas[itheta,],Nx) #initial step 1
@@ -83,7 +76,7 @@ rejuvenation_step <- function(observations, t, model, thetas, thetanormw, X, xno
       }
       else {
         #the CPF function performs a regular PF when no conditioning path is provided
-        PF <- conditional_particle_filter(matrix(observations[,1:t],ncol = t), model, theta_new, algorithmic_parameters)
+        PF <- conditional_particle_filter(matrix(observations[,1:t],ncol = t), model, theta_new, Nx)
         log_z_new <- PF$log_p_y_hat
         lognum <- logprior_theta_new + log_z_new + proposal_density_current[i]
         logdenom <- logprior_theta_old + log_z_old + proposal_density_new_all[i]
@@ -93,7 +86,7 @@ rejuvenation_step <- function(observations, t, model, thetas, thetanormw, X, xno
           accepts <- accepts + 1
           thetas[i,] <- theta_new
           X[,,i] <- PF$X
-          xnormW[,i] <- PF$normW
+          xnormW[,i] <- PF$xnormW
           log_z[i] <- log_z_new
           trees[[i]] = PF$tree
         }

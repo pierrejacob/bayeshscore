@@ -4,8 +4,7 @@
 \alias{increase_Nx}
 \title{increase_Nx}
 \usage{
-increase_Nx(observations, t, model, thetas, xnormW, trees,
-  algorithmic_parameters)
+increase_Nx(observations, t, model, thetas, PFs, Ntheta)
 }
 \description{
 This function runs a CPF in order to increase Nx (the number of particles). The default new number of particles is set to 2*Nx.
