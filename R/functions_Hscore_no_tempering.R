@@ -1,7 +1,7 @@
 #----------------------------------------------------------------------------------------#
 #---------------------------- CONTINUOUS OBSERVATIONS -----------------------------------#
 #----------------------------------------------------------------------------------------#
-hincrementContinuous = function(t,model,observationt,thetas,Wtheta,X,WX,Ntheta,Nx) {
+hincrementContinuous_no_tempering = function(t,model,observationt,thetas,Wtheta,X,WX,Ntheta,Nx) {
   d = model$dimY
   hincrement = 0
   for (k in 1:d) {

@@ -1,8 +1,9 @@
 rm(list = ls())
 library(HyvarinenSSM)
 library(doMC)
-set.seed(17)
+set.seed(19)
 set_global_path()
+
 assimilate_one <- function(thetas, KFs, t, observations, model, Ntheta, ess_objective, nmoves, resampling, logtargetdensities, logw, normw){
   current_gamma <- 0
   logcst <- 0
@@ -16,7 +17,9 @@ assimilate_one <- function(thetas, KFs, t, observations, model, Ntheta, ess_obje
   while (current_gamma < 1){
     ess_given_gamma <- function(gamma){
       logw_ <- logw + (gamma - current_gamma) * logw_incremental
-      maxlogw <- max(logw_);  w <- exp(logw_ - maxlogw); normw <- w / sum(w)
+      maxlogw <- max(logw_)
+      w <- exp(logw_ - maxlogw)
+      normw <- w / sum(w)
       return(1/(sum(normw^2)))
     }
     # try gamma = 1 first
@@ -27,7 +30,7 @@ assimilate_one <- function(thetas, KFs, t, observations, model, Ntheta, ess_obje
         gamma <- current_gamma
         print("warning! ESS at current gamma too low; something went wrong.")
       } else {
-        gamma <- seach_gamma(current_gamma, ess_given_gamma, objective = ess_objective)$x
+        gamma <- search_gamma(current_gamma, ess_given_gamma, objective = ess_objective)$x
       }
     }
     # now we've found our gamma
@@ -109,19 +112,6 @@ assimilate_one <- function(thetas, KFs, t, observations, model, Ntheta, ess_obje
 }
 
 
-# load data
-nobservations <- 50
-model <- get_model_simplerlineargaussian()
-theta_star <- model$theta
-sim = simulateData(model, theta = theta_star, nobservations)
-X = sim$X
-Y = sim$Y
-# observations in a matrix of dimensions dimy x nobservations
-observations <- matrix(Y, nrow = model$dimY)
-
-
-kalman_module <<- Module( "kalman_mod", PACKAGE = "HyvarinenSSM")
-
 smc_sampler <- function(observations, model, algorithmic_parameters){
   Ntheta <- algorithmic_parameters$Ntheta
   nmoves = algorithmic_parameters$nmoves
@@ -173,135 +163,189 @@ smc_sampler <- function(observations, model, algorithmic_parameters){
     thetas_history[[t+1]] <- thetas
     normw_history[[t+1]] <- normw
   }
-  return(list(thetas_history = thetas_history, normw_history = normw_history, logevidence = logevidence, logtargetdensities = logtargetdensities))
+  return(list(thetas_history = thetas_history, normw_history = normw_history,
+              logevidence = cumsum(logevidence), logtargetdensities = logtargetdensities))
 }
+
+
+# load data
+nobservations <- 50
+model <- get_model_simplerlineargaussian()
+theta_star <- model$theta
+sim = simulateData(model, theta = theta_star, nobservations)
+X = sim$X
+Y = sim$Y
+# observations in a matrix of dimensions dimy x nobservations
+observations <- matrix(Y, nrow = model$dimY)
 
 algorithmic_parameters <- list(Ntheta = 1024, resampling = function(normw) systematic_resampling_n(normw, length(normw), runif(1)),
-                               ess_threshold = 0.5, nmoves = 1)
+                               ess_threshold = 0.5, nmoves = 2)
+algorithmic_parameters$Nx = NULL # this uses adaptive Nx, starting with Nx = 128
+algorithmic_parameters$min_acceptance_rate = 0.45
+
+
+kalman_module <<- Module( "kalman_mod", PACKAGE = "HyvarinenSSM")
 
 smc_results <- smc_sampler(observations, model, algorithmic_parameters)
-thetas_smc <- smc_results$thetas_history[[nobservations+1]]
-normw_smc <- smc_results$normw_history[[nobservations+1]]
 
 ###############################################################################################
 ###############################################################################################
 
-#### Sanity check: sample posterior via naive MH
-# Computes the posterior density (target)
-psi = model$psi
-sigmaV2 = model$sigmaV2
-dpost = function(theta, log = TRUE){
-  Kalman <- new(kalman_module$Kalman)
-  Kalman$set_parameters(list(rho = theta[1], sigma = sqrt(theta[2]), eta = psi, tau = sqrt(sigmaV2)))
-  Kalman$set_observations(matrix(observations, ncol = 1))
-  Kalman$first_step()
-  for (t in 1:nobservations){
-    Kalman$filtering_step(t-1)
-  }
-  loglikelihood = sum(Kalman$get_incremental_ll())
-  if (log){
-    return (model$dprior(theta,log = TRUE) + loglikelihood)
-  } else {
-    return (exp((model$dprior(theta,log = TRUE) + loglikelihood)))
-  }
-}
-
-MH_cov = (cov.wt(thetas_smc,wt=normw_smc)$cov)/5
-M = 50000
-burnin = 49000
-thetas_MH = matrix(NA,ncol = 2,nrow = M)
-###
-print(paste("Started at:",Sys.time()))
-progbar = txtProgressBar(min = 0,max = M,style=3)
-count = 1
-time_start = proc.time()
-###
-thetas_MH[1,] = c(0.7,1)
-accepts = 0
-###
-for (i in 2:M){
-  theta_new = fast_rmvnorm(1,thetas_MH[i-1,],MH_cov)
-  if (model$dprior(theta_new) == -Inf){
-    thetas_MH[i,] = thetas_MH[i-1,]
-    count = count + 1
-    setTxtProgressBar(progbar, count)
-    next
-  } else {
-    logacceptance = dpost(theta_new) - dpost(thetas_MH[i-1,])
-    logu = log(runif(1))
-    if (logu <= logacceptance){
-      accepts = accepts + 1
-      thetas_MH[i,] = theta_new
-    } else {
-      thetas_MH[i,] = thetas_MH[i-1,]
-    }
-  }
-  ###
-  count = count + 1
-  setTxtProgressBar(progbar, count)
-}
-time_end = proc.time()-time_start
-print(time_end)
-cat("acceptance rate = ", accepts/(M-1))
-# Traceplots
-par(mfrow=c(2,1))
-index = seq(burnin,M,by = 1)
-plot(index,thetas_MH[index,1],type='l')
-plot(index,thetas_MH[index,2],type='l')
-par(mfrow=c(1,1))
-
+# #### Sanity check: sample posterior via naive MH
+# # Computes the posterior density (target)
+# psi = model$psi
+# sigmaV2 = model$sigmaV2
+# dpost = function(theta, log = TRUE){
+#   Kalman <- new(kalman_module$Kalman)
+#   Kalman$set_parameters(list(rho = theta[1], sigma = sqrt(theta[2]), eta = psi, tau = sqrt(sigmaV2)))
+#   Kalman$set_observations(matrix(observations, ncol = 1))
+#   Kalman$first_step()
+#   for (t in 1:nobservations){
+#     Kalman$filtering_step(t-1)
+#   }
+#   loglikelihood = sum(Kalman$get_incremental_ll())
+#   if (log){
+#     return (model$dprior(theta,log = TRUE) + loglikelihood)
+#   } else {
+#     return (exp((model$dprior(theta,log = TRUE) + loglikelihood)))
+#   }
+# }
+#
+# MH_cov = (cov.wt(thetas_smc,wt=normw_smc)$cov)/5
+# M = 10000
+# burnin = 9000
+# thetas_MH = matrix(NA,ncol = 2,nrow = M)
+# ###
+# print(paste("Started at:",Sys.time()))
+# progbar = txtProgressBar(min = 0,max = M,style=3)
+# count = 1
+# time_start = proc.time()
+# ###
+# thetas_MH[1,] = c(0.7,1)
+# accepts = 0
+# ###
+# for (i in 2:M){
+#   theta_new = fast_rmvnorm(1,thetas_MH[i-1,],MH_cov)
+#   if (model$dprior(theta_new) == -Inf){
+#     thetas_MH[i,] = thetas_MH[i-1,]
+#     count = count + 1
+#     setTxtProgressBar(progbar, count)
+#     next
+#   } else {
+#     logacceptance = dpost(theta_new) - dpost(thetas_MH[i-1,])
+#     logu = log(runif(1))
+#     if (logu <= logacceptance){
+#       accepts = accepts + 1
+#       thetas_MH[i,] = theta_new
+#     } else {
+#       thetas_MH[i,] = thetas_MH[i-1,]
+#     }
+#   }
+#   ###
+#   count = count + 1
+#   setTxtProgressBar(progbar, count)
+# }
+# time_end = proc.time()-time_start
+# print(time_end)
+# cat("acceptance rate = ", accepts/(M-1))
+# # Traceplots
+# par(mfrow=c(2,1))
+# index = seq(burnin,M,by = 1)
+# plot(index,thetas_MH[index,1],type='l')
+# plot(index,thetas_MH[index,2],type='l')
+# par(mfrow=c(1,1))
+#
+#
+#
+# ### Check SMC_2 output
+# module_tree <<- Module("module_tree", PACKAGE = "HyvarinenSSM")
+# TreeClass <<- module_tree$Tree
+# algorithmic_parameters$progress = TRUE
+# smc2_results <- hscore_continuous(observations, model, algorithmic_parameters)
+# thetas_smc2 <- smc2_results$thetas
+# normw_smc2 <- smc2_results$thetanormw
+#
+# # Visual (qualitative) diagnostic
+# M = 100
+# x = seq(0.01, 1.5, length.out = M)
+# y = seq(0.5,10, length.out = M)
+# z = matrix(NA,ncol = M,nrow = M)
+# print(paste("Started at:",Sys.time()))
+# progbar = txtProgressBar(min = 0,max = M*M,style=3)
+# count = 0
+# time_start = proc.time()
+# for (i in 1:M){
+#   for (j in 1:M){
+#     z[i,j] = dpost(c(x[i],y[j]))
+#     count = count + 1
+#     setTxtProgressBar(progbar, count)
+#   }
+# }
+# time_end = proc.time()-time_start
+# print(time_end)
+# contour_df = expand.grid(x = x, y = y)
+# contour_df$z = c(z)
+#
+#
+# # Checking sample from the posterior distribution
+# ### BLACK = SMC output
+# ### YELLOW = MH output
+# ### PURPLE = SMC_2 output
+# ggplot() +
+#   geom_point(aes(thetas_smc[,1], thetas_smc[,2], alpha = normw_smc)) +
+#   geom_contour(data = contour_df,aes(x,y,z=z,color = ..level..)) +
+#   scale_colour_gradient(low="black", high="red") +
+#   geom_point(aes(thetas_MH[index,1],thetas_MH[index,2]),color="yellow", size = 1, shape = 3) +
+#   geom_point(aes(thetas_smc2[,1], thetas_smc2[,2], alpha = normw_smc2),color="purple", shape=15) +
+#   geom_point(aes(x = theta_star[1], y = theta_star[2]), colour = "red", size = 10)
 
 
 ### Check SMC_2 output
 module_tree <<- Module("module_tree", PACKAGE = "HyvarinenSSM")
 TreeClass <<- module_tree$Tree
 algorithmic_parameters$progress = TRUE
-smc2_results <- hscore_continuous(observations, model, algorithmic_parameters)
-thetas_smc2 <- smc2_results$thetas
-normw_smc2 <- smc2_results$thetanormw
+algorithmic_parameters$store = TRUE
 
-# Visual (qualitative) diagnostic
-M = 100
-x = seq(0.01, 1.5, length.out = M)
-y = seq(0.5,10, length.out = M)
-z = matrix(NA,ncol = M,nrow = M)
-print(paste("Started at:",Sys.time()))
-progbar = txtProgressBar(min = 0,max = M*M,style=3)
-count = 0
-time_start = proc.time()
-for (i in 1:M){
-  for (j in 1:M){
-    z[i,j] = dpost(c(x[i],y[j]))
-    count = count + 1
-    setTxtProgressBar(progbar, count)
-  }
-}
-time_end = proc.time()-time_start
-print(time_end)
-contour_df = expand.grid(x = x, y = y)
-contour_df$z = c(z)
+# Tempered SMC^2
+smc2_results_temp <- hscore_continuous(observations, model, algorithmic_parameters)
+# Regular SMC^2
+smc2_results <- hscore_continuous_no_tempering(observations, model, algorithmic_parameters)
 
+
+########### BE CAREFUL, SMC starts with the prior sample at t = 1 #######################
+time_t = 50
+#
+thetas_smc <- smc_results$thetas_history[[time_t+1]]
+normw_smc <- smc_results$normw_history[[time_t+1]]
+#
+thetas_smc2 <- smc2_results$thetas_history[[time_t+1]]
+normw_smc2 <- smc2_results$weights_history[[time_t+1]]
+#
+thetas_smc2_temp <- smc2_results_temp$thetas_history[[time_t+1]]
+normw_smc2_temp <- smc2_results_temp$normw_history[[time_t+1]]
 
 # Checking sample from the posterior distribution
-### BLACK = SMC output
-### YELLOW = MH output
-### PURPLE = SMC_2 output
-ggplot() +
-  geom_point(aes(thetas_smc[,1], thetas_smc[,2], alpha = normw_smc)) +
-  geom_contour(data = contour_df,aes(x,y,z=z,color = ..level..)) +
-  scale_colour_gradient(low="black", high="red") +
-  geom_point(aes(thetas_MH[index,1],thetas_MH[index,2]),color="yellow", size = 1, shape = 3) +
-  geom_point(aes(thetas_smc2[,1], thetas_smc2[,2], alpha = normw_smc2),color="purple", shape=15) +
-  geom_point(aes(x = theta_star[1], y = theta_star[2]), colour = "red", size = 10)
-
 library(gridExtra)
 plot_theta1 = ggplot() +
-  geom_density(aes(thetas_smc[,1], weight = normw_smc, alpha = 0.1), fill = "black") +
+  geom_density(aes(thetas_smc[,1], weight = normw_smc, alpha = 0.1), fill = "green") +
   geom_density(aes(thetas_smc2[,1], weight = normw_smc2, alpha = 0.1), fill = "purple") +
-  geom_density(aes(thetas_MH[,1], alpha = 0.1), fill = "yellow")
+  geom_density(aes(thetas_smc2_temp[,1], weight = normw_smc2_temp, alpha = 0.1), fill = "blue")
+# geom_density(aes(thetas_MH[,1], alpha = 0.1), fill = "yellow")
 plot_theta2 = ggplot() +
-  geom_density(aes(thetas_smc[,2], weight = normw_smc, alpha = 0.1), fill = "black") +
+  geom_density(aes(thetas_smc[,2], weight = normw_smc, alpha = 0.1), fill = "green") +
   geom_density(aes(thetas_smc2[,2], weight = normw_smc2, alpha = 0.1), fill = "purple") +
-  geom_density(aes(thetas_MH[,2], alpha = 0.1), fill = "yellow")
+  geom_density(aes(thetas_smc2_temp[,2], weight = normw_smc2_temp, alpha = 0.1), fill = "blue")
+# geom_density(aes(thetas_MH[,2], alpha = 0.1), fill = "yellow")
 grid.arrange(plot_theta1, plot_theta2, ncol = 2)
+
+# Check the log-evidence (RESCALED BY 1/t)
+ggplot() +
+  geom_line(aes(1:time_t,smc_results$logevidence[1:time_t]/1:time_t), color = "green", size = 1) +
+  geom_line(aes(1:time_t,smc2_results$logevidence[1:time_t]/1:time_t), color = "purple", size = 1) +
+  geom_line(aes(1:time_t,smc2_results_temp$logevidence[1:time_t]/1:time_t), color = "blue", size = 1)
+
+# Check the h-score (RESCALED BY 1/t)
+ggplot() +
+  geom_line(aes(1:time_t,smc2_results$hscore[1:time_t]/1:time_t), color = "purple", size = 1) +
+  geom_line(aes(1:time_t,smc2_results_temp$Hscore[1:time_t]/1:time_t), color = "blue", size = 1)
 
