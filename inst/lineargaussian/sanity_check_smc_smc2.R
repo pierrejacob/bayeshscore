@@ -348,4 +348,3 @@ ggplot() +
 ggplot() +
   geom_line(aes(1:time_t,smc2_results$hscore[1:time_t]/1:time_t), color = "purple", size = 1) +
   geom_line(aes(1:time_t,smc2_results_temp$Hscore[1:time_t]/1:time_t), color = "blue", size = 1)
-
