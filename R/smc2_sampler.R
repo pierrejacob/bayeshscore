@@ -66,7 +66,7 @@ smc2_sampler <- function(observations, model, algorithmic_parameters){
   }
   # Assimilate observations one by one
   for (t in 1:nobservations){
-    results = assimilate_next(thetas, PFs, t, observations, model, Ntheta, Nx, ess_objective,
+    results = assimilate_next(thetas, PFs, t, observations, model, Ntheta, ess_objective,
                               nmoves, resampling, logtargetdensities, logw, normw,
                               algorithmic_parameters$progress)
     thetas = results$thetas
