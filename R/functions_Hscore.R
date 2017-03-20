@@ -36,7 +36,7 @@ hincrementContinuous = function(t,model,observationt,thetas,Wtheta,PFs,Ntheta) {
 #------------------------------ DISCRETE OBSERVATIONS -----------------------------------#
 #----------------------------------------------------------------------------------------#
 # This function computes the approximation qt_hat(y) for a given set of particles
-qhat = function(t,model,y,thetas,thetanormw,Xpred,xprednormw,Ntheta,Nx) {
+qhat = function(t,model,y,thetas,thetanormw,Xpred,xprednormw,Ntheta) {
   qy = 0
   for (m in 1:Ntheta){
     if (thetanormw[m]==0){
@@ -64,7 +64,7 @@ SBk = function(k,a,b,d,y,qy_minusek,qy,qy_plusek) {
 # This function computes the partial score term SHd
 # a,b are vectors of componentwise lower and upper bounds of the observations
 # d is the dimension of y
-SHd = function(t,model,yt,thetas,thetanormw,Xpred,xprednormw,Ntheta,Nx) {
+SHd = function(t,model,yt,thetas,thetanormw,Xpred,xprednormw,Ntheta) {
   a = model$lower
   b = model$upper
   d = model$dimY
@@ -72,9 +72,9 @@ SHd = function(t,model,yt,thetas,thetanormw,Xpred,xprednormw,Ntheta,Nx) {
   for (k in 1:d) {
     ek = rep(0,d)
     ek[k] = 1
-    qy = qhat(t,model,yt,thetas,thetanormw,Xpred,xprednormw,Ntheta,Nx)
-    qy_minusek = qhat(t,model,yt-ek,thetas,thetanormw,Xpred,xprednormw,Ntheta,Nx)
-    qy_plusek = qhat(t,model,yt+ek,thetas,thetanormw,Xpred,xprednormw,Ntheta,Nx)
+    qy = qhat(t,model,yt,thetas,thetanormw,Xpred,xprednormw,Ntheta)
+    qy_minusek = qhat(t,model,yt-ek,thetas,thetanormw,Xpred,xprednormw,Ntheta)
+    qy_plusek = qhat(t,model,yt+ek,thetas,thetanormw,Xpred,xprednormw,Ntheta)
     result = result + SBk(k,a,b,d,yt,qy_minusek,qy,qy_plusek)
   }
   return (result)

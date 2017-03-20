@@ -1,8 +1,8 @@
-#'@rdname hscore_continuous
-#'@title hscore_continuous
-#'@description This function computes successive prequential Hyvarinen score for continuous observations by running the smc^2 algorithm. It also computes the successive log-evidence as a by-product.
+#'@rdname hscore_discrete
+#'@title hscore_discrete
+#'@description This function computes successive prequential Hyvarinen score for discrete observations by running the smc^2 algorithm. It also computes the successive log-evidence as a by-product.
 #'@export
-hscore_continuous <- function(observations, model, algorithmic_parameters){
+hscore_discrete <- function(observations, model, algorithmic_parameters){
   # Extract algorithmic parameters and set flags accordingly
   Ntheta = algorithmic_parameters$Ntheta
   nmoves = algorithmic_parameters$nmoves
@@ -57,25 +57,54 @@ hscore_continuous <- function(observations, model, algorithmic_parameters){
   PFs = list() # list of particle filters (one for each theta)
   thetas_history[[1]] = thetas
   normw_history[[1]] = normw
+  # Initialize array of particles X targeting predictive distributions (most recent)
+  Xprevious = array(NA,dim = c(Nx, model$dimX, Ntheta))
+  Xpred = array(NA,dim = c(Nx, model$dimX, Ntheta))
+  XnormW_previous = matrix(1/Nx, nrow = Nx, ncol = Ntheta) #matrix of normalized weights for X at previous step
   # Initialize filters (first observation passed as argument just to initialize the fields of PF)
   for (itheta in 1:Ntheta){
     theta = thetas[itheta,]
     PFs[[itheta]] = conditional_particle_filter(matrix(observations[,1],ncol = 1), model, theta, Nx)
     #the CPF performs a regular PF when no conditioning path is provided
+    Xpred[,,itheta] = PFs[[itheta]]$X
   }
   # Assimilate observations one by one
   for (t in 1:nobservations){
+    # Construct particles targeting the one-step-ahead predictive (need to reconstruct since size Nx might change)
+    if (t > 1){
+      Nx = PFs[[1]]$Nx
+      Xpred = array(NA,dim = c(Nx, model$dimX, Ntheta)) # (need to reconstruct since size Nx might change)
+      for (itheta in 1:Ntheta){
+        X = Xprevious[,,itheta]
+        if (is.null(dim(X))){
+          Xpred[,,itheta] = model$rtransition(matrix(X,nrow = Nx), t, thetas[itheta,])
+        }
+        else{
+          Xpred[,,itheta] = model$rtransition(X, t, thetas[itheta,])
+        }
+      }
+    }
+    # compute prequential H score (with theta from time t-1, see formula in the paper)
+    Hscore[t] = SHd(t,model,observations[,t],thetas,normw,Xpred,XnormW_previous,Ntheta)
+    # assimilate the next observation
     results = assimilate_next(thetas, PFs, t, observations, model, Ntheta, ess_objective,
                               nmoves, resampling, logtargetdensities, logw, normw,
                               algorithmic_parameters$progress, adaptNx, min_acceptance_rate)
+    # Update the particles theta and compute the log-evidence
     thetas = results$thetas
     normw = results$normw
     logw = results$logw
     PFs = results$PFs
     logtargetdensities = results$logtargetdensities
     logevidence[t] = results$logcst
-    # compute prequential H score here
-    Hscore[t] = hincrementContinuous(t, model, observations[,t], thetas, normw, PFs, Ntheta)
+    #matrix of normalized weights for X at previous step (need to reconstruct since size Nx might change)
+    Nx = PFs[[1]]$Nx
+    Xprevious = array(NA,dim = c(Nx, model$dimX, Ntheta))
+    XnormW_previous = matrix(NA, nrow = PFs[[1]]$Nx, ncol = Ntheta)
+    for (itheta in 1:Ntheta){
+      Xprevious[,,itheta] = PFs[[itheta]]$X
+      XnormW_previous[,itheta] = PFs[[itheta]]$xnormW
+    }
     # do some book-keeping
     thetas_history[[t+1]] = thetas
     normw_history[[t+1]] = normw

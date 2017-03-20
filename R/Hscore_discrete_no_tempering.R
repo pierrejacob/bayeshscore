@@ -83,7 +83,7 @@ hscore_discrete_no_tempering <- function(observations, model, algorithmic_parame
   maxlogz = max(log_z) #avoids overflow when exponentiating
   actual_z = exp(log_z - maxlogz) #actual z up to a multiplicative constant
   # compute prequential H score and log-evidence
-  Hscore[1] = SHd(1,model,observations[,1],thetas,thetanormw,Xpred,XprednormW,Ntheta,Nx)
+  Hscore[1] = SHd(1,model,observations[,1],thetas,thetanormw,Xpred,XprednormW,Ntheta)
   logevidence[1] = log(sum(actual_z*thetanormw)) + maxlogz
   # update the weights after seeing the first observation
   thetalogw <- thetalogw + log_z #update log-weights for theta
@@ -134,7 +134,7 @@ hscore_discrete_no_tempering <- function(observations, model, algorithmic_parame
     Xpred = filter_predict(t, model, thetas, X, algorithmic_parameters)
     XprednormW = xnormW
     # compute prequential H score
-    Hscore[t] = Hscore[t-1] + SHd(t,model,observations[,t],thetas,thetanormw,Xpred,XprednormW,Ntheta,Nx)
+    Hscore[t] = Hscore[t-1] + SHd(t,model,observations[,t],thetas,thetanormw,Xpred,XprednormW,Ntheta)
     # Propagate X-particles
     next_step <- filter_next_step(observations[,t], t, model, thetas, X, xnormW, trees, algorithmic_parameters)
     X = next_step$X

@@ -1,8 +1,9 @@
+rm(list = ls())
 library(doParallel)
 library(HyvarinenSSM)
 library(gridExtra)
 library(wesanderson)
-
+set.seed(19)
 
 #=======================================================================
 #=======================================================================
@@ -17,31 +18,33 @@ library(wesanderson)
 model1 = get_model_kangarooLogistic()
 model2 = get_model_kangarooExponential()
 model3 = get_model_kangarooRandomwalk()
-all_models = list(model1,model2,model3)
+# all_models = list(model1,model2,model3)
+all_models = list(model2,model3)
 dataset = data_kangaroo
-observations = dataset[1:2,]
-nobservations = ncol(observations)
+
+
+nobservations = 3
+observations = dataset[1:2,1:nobservations]
+# nobservations = ncol(observations)
 
 
 # Define algorithmic parameters for each model
-Ntheta = 2^5
-Nx = NULL
-min_acceptance_rate = 0.30
+Ntheta = 2^10
+Nx = NULL # this triggers adaptive Nx starting with Nx = 128
 algorithmic_parameters = list(Ntheta = Ntheta, Nx = Nx,
                               resampling = function(normw) systematic_resampling_n(normw, length(normw), runif(1)),
-                              progress = TRUE, min_acceptance_rate = min_acceptance_rate)
-repl = 1
-results.df = data.frame()
-posterior.df = data.frame()
-
-
+                              progress = TRUE)
+algorithmic_parameters$ess_threshold = 0.5
+algorithmic_parameters$min_acceptance_rate = 0.20
+algorithmic_parameters$nmoves = 2
+repl = 5
 
 module_tree <<- Module("module_tree", PACKAGE = "HyvarinenSSM")
 TreeClass <<- module_tree$Tree
-# algorithmic_parameters = list(Ntheta = Ntheta, Nx = Nx,
-#                               resampling = function(normw) systematic_resampling_n(normw, length(normw), runif(1)),
-#                               progress = TRUE, TreeClass = TreeClass)
+
 all_results = list()
+results.df = data.frame()
+posterior.df = data.frame()
 for (i in 1:length(all_models)){
   all_results[[i]] = list()
   M = all_models[[i]]
@@ -61,6 +64,32 @@ for (i in 1:length(all_models)){
                                                   w = results$thetanormw,
                                                   rep=r,
                                                   model = i))
+  }
+}
+
+all_results_temp = list()
+results_temp.df = data.frame()
+posterior_temp.df = data.frame()
+for (i in 1:length(all_models)){
+  all_results_temp[[i]] = list()
+  M = all_models[[i]]
+  for (r in 1:repl){
+    print(paste("Model",toString(i)))
+    results = hscore_discrete(observations, M, algorithmic_parameters)
+    all_results_temp[[i]][[r]] = results
+    results_temp.df = rbind(results_temp.df, data.frame(time = 1:ncol(observations),
+                                              logevidence = results$logevidence,
+                                              hscore = results$Hscore,
+                                              rep = r,
+                                              model = i))
+    posterior_temp.df = rbind(posterior_temp.df,
+                              data.frame(sigma = results$thetas_history[[nobservations+1]][,1],
+                                         tau = results$thetas_history[[nobservations+1]][,2],
+                                         r = tryCatch({results$thetas_history[[nobservations+1]][,3]},error=function(e){NA}),
+                                         b = tryCatch({results$thetas_history[[nobservations+1]][,4]},error=function(e){NA}),
+                                         w = results$normw_history[[nobservations+1]],
+                                         rep=r,
+                                         model = i))
   }
 }
 
@@ -108,8 +137,9 @@ for (i in 1:length(all_models)){
 # }
 
 #Plot log-evidence across time
-g = ggplot(results.df, aes(x = time, y = -logevidence, group = interaction(rep,model),colour = factor(model))) +
-  geom_line(size=1.2) +
+g = ggplot() +
+  geom_line(data = results.df, aes(x = time, y = -logevidence, group = interaction(rep,model),colour = factor(model)), size=1.2, linetype="dashed") +
+  geom_line(data = results_temp.df, aes(x = time, y = -logevidence, group = interaction(rep,model),colour = factor(model)), size = 1.2) +
   scale_color_manual(name= "Model",values = wes_palette("Darjeeling")[c(1,3,5)]) +
   ylab("Negative Log-evidence") +
   guides(colour = guide_legend(title.hjust = 0.2,keywidth = 3, keyheight = 2)) +
@@ -120,8 +150,9 @@ g = ggplot(results.df, aes(x = time, y = -logevidence, group = interaction(rep,m
 plot(g)
 
 #Plot prequential hscore across time
-g = ggplot(results.df, aes(x = time, y = hscore, group = interaction(rep,model),colour = factor(model))) +
-  geom_line(size=1.2) +
+g = ggplot() +
+  geom_line(data = results.df, aes(x = time, y = hscore, group = interaction(rep,model),colour = factor(model)),size=1.2, linetype="dashed") +
+  geom_line(data = results_temp.df, aes(x = time, y = hscore, group = interaction(rep,model),colour = factor(model)),size=1.2) +
   scale_color_manual(name= "Model",values = wes_palette("Darjeeling")[c(1,3,5)]) +
   ylab("Prequential Hyvarinen score") +
   guides(colour = guide_legend(title.hjust = 0.2,keywidth = 3, keyheight = 2)) +
@@ -131,67 +162,70 @@ g = ggplot(results.df, aes(x = time, y = hscore, group = interaction(rep,model),
         axis.title=element_text(size=20,face="bold")) + xlab("\n Number of observations")
 plot(g)
 
-#Boxplot final log-evidence and final prequential hscore
-final_logevidence = subset(results.df,time==41)[,c("logevidence","model")]
-final_preq_hscore = subset(results.df,time==41)[,c("hscore","model")]
-g = ggplot(final_logevidence,aes(model,-logevidence,group=model,colour=factor(model))) +
-  geom_boxplot(outlier.shape = NA,size=1) +
-  scale_color_manual(name= "Model",values = wes_palette("Darjeeling")[c(1,3,5)]) +
-  ylab("Final negative log-evidence") +
-  xlab("") +
-  guides(colour = guide_legend(title.hjust = 0.2,keywidth = 3, keyheight = 2)) +
-  theme(legend.title=element_text(size=20,face="bold"),
-        legend.text=element_text(size=20,face="bold"),
-        axis.text=element_text(size=18),
-        axis.title=element_text(size=20,face="bold"))
-plot(g)
-g = ggplot(final_preq_hscore,aes(model,hscore,group=model,colour=factor(model))) +
-  geom_boxplot(outlier.shape = NA,size=1) +
-  scale_color_manual(name= "Model",values = wes_palette("Darjeeling")[c(1,3,5)]) +
-  ylab("Final prequential hscore") +
-  xlab("") +
-  guides(colour = guide_legend(title.hjust = 0.2,keywidth = 3, keyheight = 2)) +
-  theme(legend.title=element_text(size=20,face="bold"),
-        legend.text=element_text(size=20,face="bold"),
-        axis.text=element_text(size=18),
-        axis.title=element_text(size=20,face="bold"))
-plot(g)
 
 
-
-posterior1 = subset(posterior.df,model==1)
-g1 = ggplot(posterior1, aes(x = r, weight = w, group = rep,colour = rep)) +
-  stat_density(size=0.8,geom='line',position="identity") +
-  ylab("") +
-  theme(legend.title=element_text(size=20,face="bold"),
-        legend.text=element_text(size=20,face="bold"),
-        axis.text=element_text(size=18),
-        axis.title=element_text(size=20,face="bold"),
-        legend.position='none') +
-  xlab(expression(atop("",r)))
-g2 = ggplot(posterior1, aes(x = sigma, weight = w, group = rep,colour = rep)) +
-  stat_density(size=0.8,geom='line',position="identity") +
-  ylab("") +
-  theme(legend.title=element_text(size=20,face="bold"),
-        legend.text=element_text(size=20,face="bold"),
-        axis.text=element_text(size=18),
-        axis.title=element_text(size=20,face="bold"),
-        legend.position='none') +
-  xlab(expression(atop("",bold(sigma))))
-g3 = ggplot(posterior1, aes(x = tau, weight = w, group = rep,colour = rep)) +
-  stat_density(size=0.8,geom='line',position="identity") +
-  ylab("") +
-  theme(legend.title=element_text(size=20,face="bold"),
-        legend.text=element_text(size=20,face="bold"),
-        axis.text=element_text(size=18),
-        axis.title=element_text(size=20,face="bold")) +
-  xlab(expression(atop("",bold(tau))))
-g4 = ggplot(posterior1, aes(x = b, weight = w, group = rep,colour = rep)) +
-  stat_density(size=0.8,geom='line',position="identity") +
-  ylab("") +
-  theme(legend.title=element_text(size=20,face="bold"),
-        legend.text=element_text(size=20,face="bold"),
-        axis.text=element_text(size=18),
-        axis.title=element_text(size=20,face="bold")) +
-  xlab(expression(atop("",bold(b))))
-grid.arrange(g1,g4,g2,g3, ncol = 2, nrow = 2)
+# #########################################################################################################
+# #Boxplot final log-evidence and final prequential hscore
+# final_logevidence = subset(results.df,time==41)[,c("logevidence","model")]
+# final_preq_hscore = subset(results.df,time==41)[,c("hscore","model")]
+# g = ggplot(final_logevidence,aes(model,-logevidence,group=model,colour=factor(model))) +
+#   geom_boxplot(outlier.shape = NA,size=1) +
+#   scale_color_manual(name= "Model",values = wes_palette("Darjeeling")[c(1,3,5)]) +
+#   ylab("Final negative log-evidence") +
+#   xlab("") +
+#   guides(colour = guide_legend(title.hjust = 0.2,keywidth = 3, keyheight = 2)) +
+#   theme(legend.title=element_text(size=20,face="bold"),
+#         legend.text=element_text(size=20,face="bold"),
+#         axis.text=element_text(size=18),
+#         axis.title=element_text(size=20,face="bold"))
+# plot(g)
+# g = ggplot(final_preq_hscore,aes(model,hscore,group=model,colour=factor(model))) +
+#   geom_boxplot(outlier.shape = NA,size=1) +
+#   scale_color_manual(name= "Model",values = wes_palette("Darjeeling")[c(1,3,5)]) +
+#   ylab("Final prequential hscore") +
+#   xlab("") +
+#   guides(colour = guide_legend(title.hjust = 0.2,keywidth = 3, keyheight = 2)) +
+#   theme(legend.title=element_text(size=20,face="bold"),
+#         legend.text=element_text(size=20,face="bold"),
+#         axis.text=element_text(size=18),
+#         axis.title=element_text(size=20,face="bold"))
+# plot(g)
+#
+#
+#
+# posterior1 = subset(posterior.df,model==1)
+# g1 = ggplot(posterior1, aes(x = r, weight = w, group = rep,colour = rep)) +
+#   stat_density(size=0.8,geom='line',position="identity") +
+#   ylab("") +
+#   theme(legend.title=element_text(size=20,face="bold"),
+#         legend.text=element_text(size=20,face="bold"),
+#         axis.text=element_text(size=18),
+#         axis.title=element_text(size=20,face="bold"),
+#         legend.position='none') +
+#   xlab(expression(atop("",r)))
+# g2 = ggplot(posterior1, aes(x = sigma, weight = w, group = rep,colour = rep)) +
+#   stat_density(size=0.8,geom='line',position="identity") +
+#   ylab("") +
+#   theme(legend.title=element_text(size=20,face="bold"),
+#         legend.text=element_text(size=20,face="bold"),
+#         axis.text=element_text(size=18),
+#         axis.title=element_text(size=20,face="bold"),
+#         legend.position='none') +
+#   xlab(expression(atop("",bold(sigma))))
+# g3 = ggplot(posterior1, aes(x = tau, weight = w, group = rep,colour = rep)) +
+#   stat_density(size=0.8,geom='line',position="identity") +
+#   ylab("") +
+#   theme(legend.title=element_text(size=20,face="bold"),
+#         legend.text=element_text(size=20,face="bold"),
+#         axis.text=element_text(size=18),
+#         axis.title=element_text(size=20,face="bold")) +
+#   xlab(expression(atop("",bold(tau))))
+# g4 = ggplot(posterior1, aes(x = b, weight = w, group = rep,colour = rep)) +
+#   stat_density(size=0.8,geom='line',position="identity") +
+#   ylab("") +
+#   theme(legend.title=element_text(size=20,face="bold"),
+#         legend.text=element_text(size=20,face="bold"),
+#         axis.text=element_text(size=18),
+#         axis.title=element_text(size=20,face="bold")) +
+#   xlab(expression(atop("",bold(b))))
+# grid.arrange(g1,g4,g2,g3, ncol = 2, nrow = 2)

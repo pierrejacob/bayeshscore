@@ -1,4 +1,4 @@
-# This function performs one step of particle filter
+# This function performs one step of particle filter for a given theta
 filter_step <- function(observationt, t, model, theta, X, xnormW, tree, resampling){
   Xnew = X
   xnormWnew = xnormW
@@ -38,6 +38,9 @@ assimilate_next <- function(thetas, PFs, t, observations, model, Ntheta, ess_obj
       # the argument PFs was initialized externally using the first observation, so it
       # already contains all the correct values
       ######################################################################################
+
+      ########## if we start from a proposal instead of the prior (e.g. improper prior) #####
+      ### "logcst = log(prior_density) - log(proposal_density)"
     }
   }
   else {
@@ -146,6 +149,7 @@ assimilate_next <- function(thetas, PFs, t, observations, model, Ntheta, ess_obj
             if (rejuvenation_accept_rate < min_acceptance_rate){
               # Increase the number Nx of particles for each theta
               PFs = increase_Nx(observations, t, model, thetas, PFs, Ntheta)
+              Nx = PFs[[1]]$Nx
               increase_Nx_times = t
               increase_Nx_values = PFs[[1]]$Nx
               if (progress){
@@ -162,3 +166,4 @@ assimilate_next <- function(thetas, PFs, t, observations, model, Ntheta, ess_obj
               rejuvenation_time = rejuvenation_time, rejuvenation_accept_rate = rejuvenation_accept_rate,
               increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values))
 }
+
