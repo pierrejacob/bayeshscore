@@ -7,6 +7,6 @@
 smc2_sampler(observations, model, algorithmic_parameters)
 }
 \description{
-This function computes successive prequential Hyvarinen score for continuous observations by running the smc^2 algorithm. It also computes the successive log-evidence as a by-product.
+This function runs the SMC^2 algorithm, using adapive Nx and tempering.
 }
 

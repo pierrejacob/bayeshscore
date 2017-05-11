@@ -1,6 +1,6 @@
 #'@rdname smc2_sampler
 #'@title smc2_sampler
-#'@description This function computes successive prequential Hyvarinen score for continuous observations by running the smc^2 algorithm. It also computes the successive log-evidence as a by-product.
+#'@description This function runs the SMC^2 algorithm, using adapive Nx and tempering.
 #'@export
 smc2_sampler <- function(observations, model, algorithmic_parameters){
   # Extract algorithmic parameters and set flags accordingly
@@ -27,11 +27,11 @@ smc2_sampler <- function(observations, model, algorithmic_parameters){
   }
   # Set flags for progress bar and storage of particle history
   if (is.null(algorithmic_parameters$progress)) algorithmic_parameters$progress = FALSE
+  if (is.null(algorithmic_parameters$verbose)) algorithmic_parameters$verbose = FALSE
   if (is.null(algorithmic_parameters$store)) algorithmic_parameters$store = FALSE
   if (algorithmic_parameters$progress) {
     print(paste("Started at:",Sys.time()))
     progbar = txtProgressBar(min = 0,max = nobservations,style=3)
-    cat("\n")
     count = 0
     time_start = proc.time()
   }
@@ -60,15 +60,15 @@ smc2_sampler <- function(observations, model, algorithmic_parameters){
   normw_history[[1]] = normw
   # Initialize filters (first observation passed as argument just to initialize the fields of PF)
   for (itheta in 1:Ntheta){
-    theta = thetas[itheta,]
-    PFs[[itheta]] = conditional_particle_filter(matrix(observations[,1],ncol = 1), model, theta, Nx)
+    theta = thetas[,itheta]
+    PFs[[itheta]] = conditional_particle_filter(observations[,1,drop = FALSE], model, theta, Nx)
     #the CPF performs a regular PF when no conditioning path is provided
   }
   # Assimilate observations one by one
   for (t in 1:nobservations){
-    results = assimilate_next(thetas, PFs, t, observations, model, Ntheta, ess_objective,
+    results = assimilate_one_smc2(thetas, PFs, t, observations, model, Ntheta, ess_objective,
                               nmoves, resampling, logtargetdensities, logw, normw,
-                              algorithmic_parameters$progress)
+                              algorithmic_parameters$verbose)
     thetas = results$thetas
     normw = results$normw
     logw = results$logw
@@ -77,6 +77,18 @@ smc2_sampler <- function(observations, model, algorithmic_parameters){
     logevidence[t] = results$logcst
     thetas_history[[t+1]] = thetas
     normw_history[[t+1]] = normw
+    # Update progress bar if needed
+    if (algorithmic_parameters$progress) {
+      count = count + 1
+      setTxtProgressBar(progbar, count)
+    }
+  }
+  # Update progress bar if needed
+  if (algorithmic_parameters$progress) {
+    close(progbar)
+    time_end = proc.time()-time_start
+    cat(paste("T = ",toString(nobservations),", Ntheta = ",toString(Ntheta),", Nx = ",toString(Nx),"\n",sep=""))
+    print(time_end)
   }
   return(list(thetas_history = thetas_history, normw_history = normw_history,
               logevidence = cumsum(logevidence), logtargetdensities = logtargetdensities))

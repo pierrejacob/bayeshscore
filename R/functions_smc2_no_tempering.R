@@ -7,8 +7,8 @@ filter_first_step <- function(observation1, model, thetas, trees, algorithmic_pa
   xnormW = matrix(0, nrow = Nx, ncol = Ntheta) #matrix of corresponding normalized X-weights (size = Nx,Ntheta)
   log_z = rep(0, Ntheta) #matrix of log-likelihood estimates (size = Ntheta)
   for (itheta in 1:Ntheta){
-    X[,,itheta] <- model$rinitial(thetas[itheta,],Nx) #initial step 1
-    logW <- model$dobs(observation1, X[,,itheta], 1, thetas[itheta,],log = TRUE)
+    X[,,itheta] <- model$rinitial(thetas[,itheta],Nx) #initial step 1
+    logW <- model$dobs(observation1, X[,,itheta], 1, thetas[,itheta],log = TRUE)
     maxlogW <- max(logW)
     W <- exp(logW - maxlogW)
     log_z[itheta] <- log(mean(W)) + maxlogW #udpate likelihood estimate
@@ -29,8 +29,8 @@ filter_next_step <- function(observationt, t, model, thetas, X, xnormW, trees, a
     ancestors <- resampling(xnormW[,itheta]) #sample the ancestors' indexes
     X_current <- X[ancestors,,itheta]
     if (is.null(dim(X_current))) X_current <- matrix(X_current, ncol = model$dimX)
-    X_current <- model$rtransition(X_current, t, thetas[itheta,])
-    logW <- model$dobs(observationt, X_current, t, thetas[itheta,],log = TRUE)
+    X_current <- model$rtransition(X_current, t, thetas[,itheta])
+    logW <- model$dobs(observationt, X_current, t, thetas[,itheta],log = TRUE)
     maxlogW <- max(logW)
     W <- exp(logW - maxlogW)
     log_z_incremental[itheta] <- log(mean(W)) + maxlogW #udpate likelihood estimate
@@ -49,12 +49,12 @@ rejuvenation_step <- function(observations, t, model, thetas, thetanormw, X, xno
   if (is.null(nmoves)) nmoves = 1
   resampling = algorithmic_parameters$resampling
   # Compute parameters for proposal move step
-  covariance = cov.wt(thetas,wt = thetanormw,method = "ML")
+  covariance = cov.wt(t(thetas),wt = thetanormw,method = "ML")
   mean_t = covariance$center
   cov_t = matrix(covariance$cov,nrow = model$dimtheta) + diag(rep(10^(-4)/model$dimtheta),model$dimtheta)
   #(increased a little bit the diagonal to prevent degeneracy effects)
   resampled_index = resampling(thetanormw)
-  thetas = thetas[resampled_index,,drop=FALSE]
+  thetas = thetas[,resampled_index,drop=FALSE]
   X = X[,,resampled_index,drop=FALSE]
   xnormW = xnormW[,resampled_index]
   log_z = log_z[resampled_index]
@@ -66,8 +66,8 @@ rejuvenation_step <- function(observations, t, model, thetas, thetanormw, X, xno
     proposal_density_current <- fast_dmvnorm(thetas, mean_t, cov_t)
     accepts <- 0
     for (i in 1:Ntheta) {
-      theta_old <- thetas[i,]
-      theta_new <- theta_new_all[i,]
+      theta_old <- thetas[,i]
+      theta_new <- theta_new_all[,i]
       log_z_old = log_z[i]
       logprior_theta_old <- model$dprior(theta_old, log = TRUE) # wasteful; this has been computed before ...
       logprior_theta_new <- model$dprior(theta_new, log = TRUE)
@@ -84,7 +84,7 @@ rejuvenation_step <- function(observations, t, model, thetas, thetanormw, X, xno
         logu <- log(runif(1))
         if (logu <= logacceptance){
           accepts <- accepts + 1
-          thetas[i,] <- theta_new
+          thetas[,i] <- theta_new
           X[,,i] <- PF$X
           xnormW[,i] <- PF$xnormW
           log_z[i] <- log_z_new
@@ -105,10 +105,10 @@ filter_predict <- function(t, model, thetas, X, algorithmic_parameters){
   Xpred = X
   for (itheta in 1:Ntheta){
     if (is.null(dim(X[,,itheta]))){
-      Xpred[,,itheta] = model$rtransition(matrix(X[,,itheta],nrow = Nx), t, thetas[itheta,])
+      Xpred[,,itheta] = model$rtransition(matrix(X[,,itheta],nrow = Nx), t, thetas[,itheta])
     }
     else{
-      Xpred[,,itheta] = model$rtransition(X[,,itheta], t, thetas[itheta,])
+      Xpred[,,itheta] = model$rtransition(X[,,itheta], t, thetas[,itheta])
     }
   }
   return (Xpred)
