@@ -13,7 +13,7 @@ get_model_kangarooExponential <- function(timesteps = data_kangaroo["time",],ran
     sigma = runif(Ntheta,0,10)
     tau = runif(Ntheta,0,10)
     r = runif(Ntheta,-range_r,range_r)
-    return (cbind(sigma,tau,r))
+    return (rbind(sigma,tau,r))
   }
   # density the prior distribution on parameters
   model.kangarooExponential$dprior = function(theta, log = TRUE){
@@ -29,15 +29,15 @@ get_model_kangarooExponential <- function(timesteps = data_kangaroo["time",],ran
   }
   # sampler from the initial distribution of the states
   model.kangarooExponential$rinitial = function(theta,N){
-    return (matrix(rlnorm(N,meanlog = 5,sdlog = sqrt(10)),nrow = N))
+    return (matrix(rlnorm(N,meanlog = 5,sdlog = sqrt(10)),ncol = N))
   }
   # sampler from the transition density of the states
   model.kangarooExponential$rtransition = function(Xt,t,theta){
     sigma = theta[1]
     r = theta[3]
-    N = nrow(Xt)
+    N = ncol(Xt)
     dt = timesteps[t] - timesteps[t-1]
-    return (matrix(Xt*exp(r*dt+sigma*rnorm(N,mean = 0,sd = sqrt(dt))),nrow = N))
+    return (matrix(Xt*exp(r*dt+sigma*rnorm(N,mean = 0,sd = sqrt(dt))),ncol = N))
   }
   # density of the observations
   model.kangarooExponential$dobs = function(Yt,Xt,t,theta,log = TRUE){
@@ -54,7 +54,7 @@ get_model_kangarooExponential <- function(timesteps = data_kangaroo["time",],ran
   model.kangarooExponential$robs = function(Xt,t,theta){
     tau = theta[2]
     n = 1/tau
-    return (rnbinom(2,size = n,mu = Xt))
+    return (matrix(rnbinom(2,size = n,mu = Xt),nrow = model$dimY))
   }
   # OPTIONAL: lower and upper bounds of observations
   model.kangarooExponential$lower = c(0,0)

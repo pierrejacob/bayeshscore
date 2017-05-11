@@ -22,44 +22,47 @@ g = ggplot(observations.df, aes(x = time)) +
 plot(g)
 
 # Define algorithmic parameters for each model
-Ntheta = 2^7
-Nx = 10
-algorithmic_parameters = list(Ntheta = Ntheta, Nx = Nx,
-                              resampling = function(normw) systematic_resampling_n(normw, length(normw), runif(1)),
-                              progress = TRUE, nmoves = 1)
+algorithmic_parameters <- list()
+algorithmic_parameters$Ntheta = 2^10
+algorithmic_parameters$Nx = 10 # NULL forces adaptive Nx, starting with Nx = 128
+algorithmic_parameters$resampling = function(normw) systematic_resampling_n(normw, length(normw), runif(1))
+algorithmic_parameters$observation_type = 'discrete'
+algorithmic_parameters$progress = FALSE
+algorithmic_parameters$verbose = TRUE
+algorithmic_parameters$store = TRUE
+algorithmic_parameters$ess_threshold = 0.5
+algorithmic_parameters$min_acceptance_rate = 0.45
+algorithmic_parameters$nmoves = 2
+module_tree <<- Module("module_tree", PACKAGE = "HyvarinenSSM")
+TreeClass <<- module_tree$Tree
 
 repl = 5
+# registerDoParallel(cores=5)
+# print(paste("Started at:",Sys.time()))
+# time_start = proc.time()
+# results = foreach(i=1:repl,.packages='HyvarinenSSM',.verbose = TRUE) %dopar% {
+#   hscore(observations, model, algorithmic_parameters)
+# }
+# time_end = proc.time()-time_start
+# cat(paste("Hscore: T = ",toString(nobservations),", Ntheta = ",toString(algorithmic_parameters$Ntheta),
+#           ", Nx = ",toString(algorithmic_parameters$Nx),"\n",sep = ""))
+# print(time_end)
 
-registerDoParallel(cores=5)
-print(paste("Started at:",Sys.time()))
-time_start = proc.time()
-results = foreach(i=1:repl,.packages='HyvarinenSSM',.verbose = TRUE) %dopar% {
-  hscore_discrete(observations, model, algorithmic_parameters)
-}
-time_end = proc.time()-time_start
-cat(paste("Hscore: T = ",toString(nobservations),", Ntheta = ",toString(Ntheta),
-          ", Nx = ",toString(Nx),"\n",sep = ""))
-print(time_end)
-
-
+results = list()
 results.df = data.frame()
 posterior.df = data.frame()
 for (r in 1:repl){
+  results[[r]] = hscore(observations, model, algorithmic_parameters)
   results.df = rbind(results.df, data.frame(time = 1:ncol(observations),
                                             logevidence = results[[r]]$logevidence,
                                             hscore = results[[r]]$hscore,
-                                            ess = results[[r]]$ESS,
                                             rep = r,
                                             sim = 1))
-  posterior.df = rbind(posterior.df, data.frame(theta = results[[r]]$thetas[,1],
-                                                w = results[[r]]$thetanormw,
+  posterior.df = rbind(posterior.df, data.frame(theta = c(results[[r]]$thetas_history[[nobservations+1]]),
+                                                w = results[[r]]$normw_history[[nobservations+1]],
                                                 rep = r,
                                                 sim = 1))
 }
-
-#plot ESS
-g <- ggplot(results.df, aes(x = time, y = ess, group = rep)) + geom_line(colour = "blue")
-plot(g)
 
 
 #Compute exact likelihood
@@ -161,17 +164,16 @@ grid.arrange(g11,ncol = 1, nrow = 1)
 results.df = rbind(results.df, data.frame(time = 1:nobservations,
                                           logevidence = logevidence_exact,
                                           hscore = exact_preq_hscore,
-                                          ess = rep(1,nobservations),
                                           rep = 0,
                                           sim = 0))
 
-#CHECK LOG-EVIDENCE (red is exact logevidence, blue is approximation via BIC)
+#CHECK LOG-EVIDENCE
 g <- ggplot(results.df) +
   geom_point(aes(x = time, y = logevidence,color="Exact"),data = subset(results.df,sim==0), colour = "red",size=3) +
   geom_line(aes(x = time, y = logevidence, group = rep),data = subset(results.df,sim==1))
 plot(g)
 
-#CHECK HSCORE (red is exact prequential hscore, blue is approximation via HIC_E)
+#CHECK HSCORE
 g <- ggplot(results.df) +
   geom_point(aes(x = time, y = hscore),data = subset(results.df,sim==0),colour = "red",size=3) +
   geom_line(aes(x = time, y = hscore, group = rep),data = subset(results.df,sim==1)) +

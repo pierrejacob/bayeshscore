@@ -14,7 +14,7 @@ get_model_kangarooLogistic <- function(timesteps = data_kangaroo["time",],range_
     tau = runif(Ntheta,0,10)
     r = runif(Ntheta,-10,10)
     b = runif(Ntheta,0,range_b)
-    return (cbind(sigma,tau,r,b))
+    return (rbind(sigma,tau,r,b))
   }
   # density the prior distribution on parameters
   model.kangarooLogistic$dprior = function(theta, log = TRUE){
@@ -31,11 +31,11 @@ get_model_kangarooLogistic <- function(timesteps = data_kangaroo["time",],range_
   }
   # sampler from the initial distribution of the states
   model.kangarooLogistic$rinitial = function(theta,N){
-    return (matrix(rlnorm(N,meanlog = 5,sdlog = sqrt(10)),nrow = N))
+    return (matrix(rlnorm(N,meanlog = 5,sdlog = sqrt(10)),ncol = N))
   }
   # sampler from the transition distribution of the states
   model.kangarooLogistic$rtransition = function(Xt,t,theta){
-    return (rtransition_logistic(Xt, t, theta,timesteps))
+    return (matrix(rtransition_logistic(Xt, t, theta,timesteps),nrow = model$dimX))
   }
   # density of the observations
   model.kangarooLogistic$dobs = function(Yt,Xt,t,theta,log = TRUE){
@@ -52,7 +52,7 @@ get_model_kangarooLogistic <- function(timesteps = data_kangaroo["time",],range_
   model.kangarooLogistic$robs = function(Xt,t,theta){
     tau = theta[2]
     n = 1/tau
-    return (rnbinom(2,size = n,mu = Xt))
+    return (matrix(rnbinom(2,size = n,mu = Xt),nrow = model$dimY))
   }
   # OPTIONAL: lower and upper bounds of observations
   model.kangarooLogistic$lower = c(0,0)

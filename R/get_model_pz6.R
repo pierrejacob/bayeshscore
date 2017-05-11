@@ -19,7 +19,7 @@ get_model_pz6 <- function(){
     theta4 <- runif(Ntheta)
     theta5 <- runif(Ntheta)
     theta6 <- runif(Ntheta)
-    return (cbind(theta1,theta2,theta3,theta4,theta5,theta6))
+    return (rbind(theta1,theta2,theta3,theta4,theta5,theta6))
   }
 
   # density the prior distribution on parameters
@@ -36,13 +36,13 @@ get_model_pz6 <- function(){
 
   # sampler from the initial distribution of the states
   model.pz$rinitial = function(theta, N){
-    return (matrix(rlnorm(N*2,meanlog = log(2), sdlog = 1), ncol = 2))
+    return (matrix(rlnorm(N*2,meanlog = log(2), sdlog = 1), nrow = 2))
   }
 
   model.pz$rtransition = function(Xt, t, theta){
-    N <- nrow(Xt)
+    N <- ncol(Xt)
     alphas <- theta[1] + theta[2] * rnorm(N, 0, 1)
-    xparticles <- pz_transition(Xt, alphas, t-1, c(theta[3:6]))
+    xparticles <- t(pz_transition(t(Xt), alphas, t-1, c(theta[3:6])))
     return(xparticles)
   }
 
@@ -52,18 +52,18 @@ get_model_pz6 <- function(){
     # n = 1/tau
     # p = 1/(1+tau*Xt)
     # return (dnbinom(Yt[1],size = n,prob = p)*dnbinom(Yt[2],size = n,prob = p))
-    return(dnorm(Yt[1], mean = log(Xt[,1]), sd = 0.2, log = log))
+    return(dnorm(Yt[1], mean = log(Xt[1,]), sd = 0.2, log = log))
   }
 
   model.pz$derivativelogdobs = function(Yt,Xt,t,theta,k){
-    N = nrow(Xt)
-    d1 = (log(Xt[,1])-matrix(Yt, N))/(0.2^2)
+    N = ncol(Xt)
+    d1 = (log(Xt[1,])-matrix(Yt, N))/(0.2^2)
     d2 = matrix(-1/(0.2^2),nrow = N)
     return (list(d1log = d1, d2log = d2))
   }
   model.pz$robs = function(Xt,t,theta){
-    N = nrow(Xt)
-    return (log(Xt[,1]) + rnorm(N, mean = 0, sd = 0.2))
+    N = ncol(Xt)
+    return (log(Xt[1,]) + rnorm(N, mean = 0, sd = 0.2))
   }
   return(model.pz)
 }

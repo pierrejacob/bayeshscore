@@ -14,9 +14,8 @@ hincrementContinuous_no_tempering = function(t,model,observationt,thetas,Wtheta,
         next
       }
       if (is.null(dim(X[,,m]))){
-        dlogobs_k = model$derivativelogdobs(observationt,matrix(X[,,m],ncol = model$dimX),t,thetas[,m],k)
-      }
-      else{
+        dlogobs_k = model$derivativelogdobs(observationt,matrix(X[,,m], nrow = model$dimX),t,thetas[,m],k)
+      } else{
         dlogobs_k = model$derivativelogdobs(observationt,X[,,m],t,thetas[,m],k)
       }
       Ek_theta[m] = sum(WX[,m]*(dlogobs_k$d2log + (dlogobs_k$d1log)^2))

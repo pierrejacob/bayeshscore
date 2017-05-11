@@ -16,7 +16,7 @@ get_model_lineargaussian <- function(){
     psi = runif(Ntheta,0.5,1.5)
     sigmaV2 = runif(Ntheta,0.1,10)
     sigmaW2 = runif(Ntheta,0.1,10)
-    return (cbind(phi,psi,sigmaV2,sigmaW2))
+    return (rbind(phi,psi,sigmaV2,sigmaW2))
   }
 
   # prior distribution density on parameters
@@ -37,15 +37,15 @@ get_model_lineargaussian <- function(){
   model.lineargaussian$rinitial = function(theta,N){
     phi = theta[1]
     sigmaW2 = theta[4]
-    return (matrix(rnorm(N, mean = 0, sd = sqrt((sigmaW2)/(1-phi^2))), nrow = N))
+    return (matrix(rnorm(N, mean = 0, sd = sqrt((sigmaW2)/(1-phi^2))), ncol = N))
   }
 
   # sampler from the transition density of the states
   model.lineargaussian$rtransition = function(Xt,t,theta){
     phi = theta[1]
     sigmaW2 = theta[4]
-    N = nrow(Xt)
-    return (matrix(phi*Xt + rnorm(N, mean = 0, sd = sqrt(sigmaW2)), nrow = N))
+    N = ncol(Xt)
+    return (matrix(phi*Xt + rnorm(N, mean = 0, sd = sqrt(sigmaW2)), ncol = N))
   }
 
   # density of the observations
@@ -55,15 +55,17 @@ get_model_lineargaussian <- function(){
     return (dnorm(Yt,mean = psi*Xt,sd = sqrt(sigmaV2), log))
   }
 
+
+
   # first and second partial derivatives (k-th coordinate) of the observation log-density
   model.lineargaussian$derivativelogdobs = function(Yt,Xt,t,theta,k){
     phi = theta[1]
     psi = theta[2]
     sigmaV2 = theta[3]
     sigmaW2 = theta[4]
-    N = nrow(Xt)
-    d1 = (phi*Xt-matrix(Yt,nrow = N))/sigmaV2
-    d2 = matrix(-1/sigmaV2,nrow = N)
+    N = ncol(Xt)
+    d1 = (phi*Xt-matrix(Yt,ncol = N))/sigmaV2
+    d2 = matrix(-1/sigmaV2,ncol = N)
     return (list(d1log = d1, d2log = d2))
   }
 
@@ -71,7 +73,7 @@ get_model_lineargaussian <- function(){
   model.lineargaussian$robs = function(Xt,t,theta){
     psi = theta[2]
     sigmaV2 = theta[3]
-    N = nrow(Xt)
+    N = ncol(Xt)
     return (psi*Xt + rnorm(N, mean = 0, sd = sqrt(sigmaV2)))
   }
 

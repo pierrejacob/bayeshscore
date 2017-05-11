@@ -13,7 +13,7 @@ conditional_particle_filter <- function(observations, model, theta, Nx, path = N
   nobservations <- ncol(observations)
   log_p_y_hat <- 0 #initialize estimate of log-evidence
   incremental_ll = rep(NA,nobservations)
-  X = matrix(NA,nrow = Nx, ncol = model$dimX) # matrix of Nx particles row-wise
+  X = matrix(NA,nrow = model$dimX, ncol = Nx) # matrix of Nx particles column-wise
   normW = rep(1/Nx, Nx) #vector of normalized weights
   X <- model$rinitial(theta,Nx) #initial step 1
   logW <- model$dobs(observations[,1],X,1,theta)
@@ -24,9 +24,9 @@ conditional_particle_filter <- function(observations, model, theta, Nx, path = N
   normW <- W / sum(W)
   #
   if (cpf){
-    X[Nx,] <- path[,1]
+    X[,Nx] <- path[,1]
   }
-  Tree$init(t(X))
+  Tree$init(X)
   #iterate for n = 2, ... T
   if (nobservations > 1){
     for (t in 2:nobservations) {
@@ -34,10 +34,10 @@ conditional_particle_filter <- function(observations, model, theta, Nx, path = N
       if (cpf){
         ancestors[Nx] <- Nx
       }
-      X <- X[ancestors,,drop=FALSE]
+      X <- X[,ancestors,drop=FALSE]
       X <- model$rtransition(X, t, theta)
       if (cpf){
-        X[Nx,] <- path[,t]
+        X[,Nx] <- path[,t]
       }
       logW <- model$dobs(observations[,t], X, t, theta)
       maxlogW <- max(logW)
@@ -45,7 +45,7 @@ conditional_particle_filter <- function(observations, model, theta, Nx, path = N
       incremental_ll[t] = log(mean(W)) + maxlogW #udpate likelihood estimate
       log_p_y_hat <- log_p_y_hat + incremental_ll[t] #udpate likelihood estimate
       normW <- W / sum(W)
-      Tree$update(t(X), ancestors-1)
+      Tree$update(X, ancestors-1)
     }
   }
   new_path <- Tree$get_path(sample(x = 0:(Nx-1), size = 1, replace = TRUE, prob = normW))

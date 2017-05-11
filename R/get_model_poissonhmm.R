@@ -14,7 +14,7 @@ get_model_poissonhmm <- function(){
 
   # sampler from the prior distribution on parameters
   model.poissonhmm$rprior = function(Ntheta){
-    return (cbind(runif(Ntheta,0,1)))
+    return (rbind(runif(Ntheta,0,1)))
   }
 
   # prior distribution density on parameters
@@ -24,18 +24,18 @@ get_model_poissonhmm <- function(){
 
   # sampler from the initial distribution of the states
   model.poissonhmm$rinitial = function(theta,N){
-    return (matrix(sample(c(0,1),N,replace = TRUE), nrow = N))
+    return (matrix(sample(c(0,1),N,replace = TRUE), ncol = N))
   }
 
   # sampler from the transition density of the states
   model.poissonhmm$rtransition = function(Xt,t,theta){
     Xnew = Xt
-    N = nrow(Xnew)
+    N = ncol(Xnew)
     index_0 = (Xnew == 0)
     N0 = sum(index_0)
-    Xnew[index_0,] = sample(c(0,1),N0,replace = TRUE,prob = c(theta,1-theta))
-    Xnew[!index_0,] = sample(c(0,1),N-N0,replace = TRUE,prob = c(1-theta,theta))
-    return (matrix(Xnew, nrow = N))
+    Xnew[,index_0] = sample(c(0,1),N0,replace = TRUE,prob = c(theta,1-theta))
+    Xnew[,!index_0] = sample(c(0,1),N-N0,replace = TRUE,prob = c(1-theta,theta))
+    return (matrix(Xnew, ncol = N))
   }
 
 

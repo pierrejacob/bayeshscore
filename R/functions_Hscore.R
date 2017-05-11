@@ -12,7 +12,7 @@ hincrementContinuous_smc2 = function(t,model,observationt,thetas,Wtheta,PFs,Nthe
       PF = PFs[[m]]
       X = PF$X
       if (is.null(dim(X))){
-        X = matrix(X,ncol = model$dimX)
+        X = matrix(X,nrow = model$dimX)
       }
       WX = PF$xnormW
       Ek_theta[m] = 0

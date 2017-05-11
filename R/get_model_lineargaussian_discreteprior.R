@@ -18,7 +18,7 @@ get_model_lineargaussian_discreteprior <- function(){
   model.lineargaussian$rprior = function(Ntheta){
     support = model.lineargaussian$supportprior
     sigmaV2 = sample(support,Ntheta,replace = TRUE)
-    return (cbind(sigmaV2))
+    return (rbind(sigmaV2))
   }
 
   # prior distribution density on parameters
@@ -48,15 +48,15 @@ get_model_lineargaussian_discreteprior <- function(){
   model.lineargaussian$rinitial = function(theta,N){
     phi = model.lineargaussian$phi
     sigmaW2 = model.lineargaussian$sigmaW2
-    return (matrix(rnorm(N, mean = 0, sd = sqrt((sigmaW2)/(1-phi^2))), nrow = N))
+    return (matrix(rnorm(N, mean = 0, sd = sqrt((sigmaW2)/(1-phi^2))), ncol = N))
   }
 
   # sampler from the transition density of the states
   model.lineargaussian$rtransition = function(Xt,t,theta){
     phi = model.lineargaussian$phi
     sigmaW2 = model.lineargaussian$sigmaW2
-    N = nrow(Xt)
-    return (matrix(phi*Xt + rnorm(N, mean = 0, sd = sqrt(sigmaW2)), nrow = N))
+    N = ncol(Xt)
+    return (matrix(phi*Xt + rnorm(N, mean = 0, sd = sqrt(sigmaW2)), ncol = N))
   }
 
   # density of the observations
@@ -72,9 +72,9 @@ get_model_lineargaussian_discreteprior <- function(){
     psi = model.lineargaussian$psi
     sigmaV2 = theta[1]
     sigmaW2 = model.lineargaussian$sigmaW2
-    N = nrow(Xt)
-    d1 = (phi*Xt-matrix(Yt,nrow = N))/sigmaV2
-    d2 = matrix(-1/sigmaV2,nrow = N)
+    N = ncol(Xt)
+    d1 = (phi*Xt-matrix(Yt,ncol = N))/sigmaV2
+    d2 = matrix(-1/sigmaV2,ncol = N)
     return (list(d1log = d1, d2log = d2))
   }
 
@@ -82,7 +82,7 @@ get_model_lineargaussian_discreteprior <- function(){
   model.lineargaussian$robs = function(Xt,t,theta){
     psi = model.lineargaussian$psi
     sigmaV2 = theta[1]
-    N = nrow(Xt)
+    N = ncol(Xt)
     return (psi*Xt + rnorm(N, mean = 0, sd = sqrt(sigmaV2)))
   }
 

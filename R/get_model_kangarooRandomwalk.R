@@ -12,7 +12,7 @@ get_model_kangarooRandomwalk <- function(timesteps = data_kangaroo["time",]){
   model.kangarooRandomwalk$rprior = function(Ntheta){
     sigma = runif(Ntheta,0,10)
     tau = runif(Ntheta,0,10)
-    return (cbind(sigma,tau))
+    return (rbind(sigma,tau))
   }
   # density the prior distribution on parameters
   model.kangarooRandomwalk$dprior = function(theta, log = TRUE){
@@ -27,14 +27,14 @@ get_model_kangarooRandomwalk <- function(timesteps = data_kangaroo["time",]){
   }
   # sampler from the initial distribution of the states
   model.kangarooRandomwalk$rinitial = function(theta,N){
-    return (matrix(rlnorm(N,meanlog = 5,sdlog = sqrt(10)), nrow = N))
+    return (matrix(rlnorm(N,meanlog = 5,sdlog = sqrt(10)), ncol = N))
   }
   # sampler from the transition density of the states
   model.kangarooRandomwalk$rtransition = function(Xt,t,theta){
     sigma = theta[1]
-    N = nrow(Xt)
+    N = ncol(Xt)
     dt = timesteps[t] - timesteps[t-1]
-    return (matrix(Xt*exp(sigma*rnorm(N,mean = 0,sd = sqrt(dt))), nrow = N))
+    return (matrix(Xt*exp(sigma*rnorm(N,mean = 0,sd = sqrt(dt))), ncol = N))
   }
   # density of the observations
   model.kangarooRandomwalk$dobs = function(Yt,Xt,t,theta,log = TRUE){
@@ -51,7 +51,7 @@ get_model_kangarooRandomwalk <- function(timesteps = data_kangaroo["time",]){
   model.kangarooRandomwalk$robs = function(Xt,t,theta){
     tau = theta[2]
     n = 1/tau
-    return (rnbinom(2,size = n,mu = Xt))
+    return (matrix(rnbinom(2,size = n,mu = Xt),nrow = model$dimY))
   }
   # OPTIONAL: lower and upper bounds of observations
   model.kangarooRandomwalk$lower = c(0,0)

@@ -3,18 +3,18 @@ filter_first_step <- function(observation1, model, thetas, trees, algorithmic_pa
   Ntheta <- algorithmic_parameters$Ntheta
   Nx <- algorithmic_parameters$Nx
   # Initialize array of particles X and associated weights
-  X = array(NA,dim = c(Nx, model$dimX, Ntheta)) #Nx particles (most recent) for each theta (size = Nx,dimX,Ntheta)
+  X = array(NA,dim = c(model$dimX, Nx, Ntheta)) #Nx particles (most recent) for each theta (size = Nx,dimX,Ntheta)
   xnormW = matrix(0, nrow = Nx, ncol = Ntheta) #matrix of corresponding normalized X-weights (size = Nx,Ntheta)
   log_z = rep(0, Ntheta) #matrix of log-likelihood estimates (size = Ntheta)
   for (itheta in 1:Ntheta){
     X[,,itheta] <- model$rinitial(thetas[,itheta],Nx) #initial step 1
-    logW <- model$dobs(observation1, X[,,itheta], 1, thetas[,itheta],log = TRUE)
+    logW <- model$dobs(observation1, X[,,itheta,drop=FALSE], 1, thetas[,itheta],log = TRUE)
     maxlogW <- max(logW)
     W <- exp(logW - maxlogW)
     log_z[itheta] <- log(mean(W)) + maxlogW #udpate likelihood estimate
     xnormW[,itheta] <- W / sum(W)
     # Store paths in tree
-    trees[[itheta]]$init(t(X[,,itheta]))
+    trees[[itheta]]$init(matrix(X[,,itheta,drop=FALSE],nrow = model$dimX))
   }
   return(list(X = X, xnormW = xnormW, log_z = log_z, trees = trees))
 }
@@ -27,8 +27,8 @@ filter_next_step <- function(observationt, t, model, thetas, X, xnormW, trees, a
   log_z_incremental = rep(0, Ntheta) #matrix of likelihood estimates
   for (itheta in 1:Ntheta){
     ancestors <- resampling(xnormW[,itheta]) #sample the ancestors' indexes
-    X_current <- X[ancestors,,itheta]
-    if (is.null(dim(X_current))) X_current <- matrix(X_current, ncol = model$dimX)
+    X_current <- X[,ancestors,itheta]
+    if (is.null(dim(X_current))) X_current <- matrix(X_current, nrow = model$dimX)
     X_current <- model$rtransition(X_current, t, thetas[,itheta])
     logW <- model$dobs(observationt, X_current, t, thetas[,itheta],log = TRUE)
     maxlogW <- max(logW)
@@ -36,7 +36,7 @@ filter_next_step <- function(observationt, t, model, thetas, X, xnormW, trees, a
     log_z_incremental[itheta] <- log(mean(W)) + maxlogW #udpate likelihood estimate
     xnormWnew[,itheta] <- W / sum(W)
     Xnew[,,itheta] <- X_current
-    trees[[itheta]]$update(t(Xnew[,,itheta]), ancestors-1)
+    trees[[itheta]]$update(X_current, ancestors-1)
   }
   return(list(X = Xnew, xnormW = xnormWnew, log_z_incremental = log_z_incremental, trees = trees))
 }
@@ -61,9 +61,9 @@ rejuvenation_step <- function(observations, t, model, thetas, thetanormw, X, xno
   trees = trees[resampled_index]
   #
   for (imove in 1:nmoves){
-    theta_new_all = fast_rmvnorm(Ntheta,mean_t,cov_t)
-    proposal_density_new_all <- fast_dmvnorm(theta_new_all, mean_t, cov_t)
-    proposal_density_current <- fast_dmvnorm(thetas, mean_t, cov_t)
+    theta_new_all = fast_rmvnorm_transpose(Ntheta,mean_t,cov_t)
+    proposal_density_new_all <- fast_dmvnorm_transpose(theta_new_all, mean_t, cov_t)
+    proposal_density_current <- fast_dmvnorm_transpose(thetas, mean_t, cov_t)
     accepts <- 0
     for (i in 1:Ntheta) {
       theta_old <- thetas[,i]
@@ -105,7 +105,7 @@ filter_predict <- function(t, model, thetas, X, algorithmic_parameters){
   Xpred = X
   for (itheta in 1:Ntheta){
     if (is.null(dim(X[,,itheta]))){
-      Xpred[,,itheta] = model$rtransition(matrix(X[,,itheta],nrow = Nx), t, thetas[,itheta])
+      Xpred[,,itheta] = model$rtransition(matrix(X[,,itheta],ncol = Nx), t, thetas[,itheta])
     }
     else{
       Xpred[,,itheta] = model$rtransition(X[,,itheta], t, thetas[,itheta])

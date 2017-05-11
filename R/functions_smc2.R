@@ -6,8 +6,8 @@ filter_step <- function(observationt, t, model, theta, X, xnormW, tree, resampli
   xnormWnew = xnormW
   log_z_incremental = NA #likelihood estimate
   ancestors <- resampling(xnormW) #sample the ancestors' indexes
-  X_current <- X[ancestors,]
-  if (is.null(dim(X_current))) X_current <- matrix(X_current, ncol = model$dimX)
+  X_current <- X[,ancestors]
+  if (is.null(dim(X_current))) X_current <- matrix(X_current, nrow = model$dimX)
   X_current <- model$rtransition(X_current, t, theta)
   logW <- model$dobs(observationt, X_current, t, theta,log = TRUE)
   maxlogW <- max(logW)
@@ -15,7 +15,7 @@ filter_step <- function(observationt, t, model, theta, X, xnormW, tree, resampli
   log_z_incremental <- log(mean(W)) + maxlogW #udpate likelihood estimate
   xnormWnew <- W / sum(W)
   Xnew <- X_current
-  tree$update(t(Xnew), ancestors-1)
+  tree$update(Xnew, ancestors-1)
   return(list(X = Xnew, xnormW = xnormWnew, log_z_incremental = log_z_incremental, tree = tree))
 }
 
@@ -26,7 +26,7 @@ increase_Nx <- function(observations, t, model, thetas, PFs, Ntheta){
   Nx = PFs[[1]]$Nx
   Nx_new <- 2*Nx #by default we multiply the number of particles by 2
   # Initialize empty arrays of larger size
-  X_new = array(NA,dim = c(Nx_new, model$dimX, Ntheta)) #Nx particles (most recent) for each theta (size = Nx,dimX,Ntheta)
+  X_new = array(NA,dim = c(model$dimX, Nx_new, Ntheta)) #Nx particles (most recent) for each theta (size = dimX,Nx,Ntheta)
   xnormW_new = matrix(NA, nrow = Nx_new, ncol = Ntheta) #matrix of corresponding normalized X-weights (size = Nx,Ntheta)
   log_z_new = rep(0, Ntheta) #matrix of log-likelihood estimates (size = Ntheta)
   # Construct list of trees to store paths (one tree for each theta)
@@ -135,9 +135,9 @@ assimilate_one_smc2 <- function(thetas, PFs, t, observations, model, Ntheta, ess
       if (nmoves > 0){
         rejuvenation_time = t
         for (imove in 1:nmoves){
-          theta_new_all = fast_rmvnorm(Ntheta,mean_t,cov_t)
-          log_proposal_density_new_all <- fast_dmvnorm(theta_new_all, mean_t, cov_t)
-          log_proposal_density_current <- fast_dmvnorm(thetas, mean_t, cov_t)
+          theta_new_all = fast_rmvnorm_transpose(Ntheta,mean_t,cov_t)
+          log_proposal_density_new_all <- fast_dmvnorm_transpose(theta_new_all, mean_t, cov_t)
+          log_proposal_density_current <- fast_dmvnorm_transpose(thetas, mean_t, cov_t)
           accepts <- 0
           for (i in 1:Ntheta) {
             theta_new <- theta_new_all[,i]

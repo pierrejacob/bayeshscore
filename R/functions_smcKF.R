@@ -61,9 +61,9 @@ assimilate_one_smcKF <- function(thetas, KFs, t, observations, model, Ntheta, es
       #
       if (nmoves > 0){
         for (imove in 1:nmoves){
-          theta_new_all = fast_rmvnorm(Ntheta,mean_t,cov_t)
-          log_proposal_density_new_all <- fast_dmvnorm(theta_new_all, mean_t, cov_t)
-          log_proposal_density_current <- fast_dmvnorm(thetas, mean_t, cov_t)
+          theta_new_all = fast_rmvnorm_transpose(Ntheta,mean_t,cov_t)
+          log_proposal_density_new_all <- fast_dmvnorm_transpose(theta_new_all, mean_t, cov_t)
+          log_proposal_density_current <- fast_dmvnorm_transpose(thetas, mean_t, cov_t)
           accepts <- 0
           for (i in 1:Ntheta) {
             theta_new <- theta_new_all[,i]

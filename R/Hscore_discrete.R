@@ -63,8 +63,8 @@ hscore_discrete_smc2 <- function(observations, model, algorithmic_parameters){
   thetas_history[[1]] = thetas
   normw_history[[1]] = normw
   # Initialize array of particles X targeting predictive distributions (most recent)
-  Xprevious = array(NA,dim = c(Nx, model$dimX, Ntheta))
-  Xpred = array(NA,dim = c(Nx, model$dimX, Ntheta))
+  Xprevious = array(NA,dim = c(model$dimX, Nx, Ntheta))
+  Xpred = array(NA,dim = c(model$dimX, Nx, Ntheta))
   XnormW_previous = matrix(1/Nx, nrow = Nx, ncol = Ntheta) #matrix of normalized weights for X at previous step
   # Initialize filters (first observation passed as argument just to initialize the fields of PF)
   for (itheta in 1:Ntheta){
@@ -78,11 +78,11 @@ hscore_discrete_smc2 <- function(observations, model, algorithmic_parameters){
     # Construct particles targeting the one-step-ahead predictive (need to reconstruct since size Nx might change)
     if (t > 1){
       Nx = PFs[[1]]$Nx
-      Xpred = array(NA,dim = c(Nx, model$dimX, Ntheta)) # (need to reconstruct since size Nx might change)
+      Xpred = array(NA,dim = c(model$dimX,Nx,Ntheta)) # (need to reconstruct since size Nx might change)
       for (itheta in 1:Ntheta){
         X = Xprevious[,,itheta]
         if (is.null(dim(X))){
-          Xpred[,,itheta] = model$rtransition(matrix(X,nrow = Nx), t, thetas[,itheta])
+          Xpred[,,itheta] = model$rtransition(matrix(X,ncol = Nx), t, thetas[,itheta])
         }
         else{
           Xpred[,,itheta] = model$rtransition(X, t, thetas[,itheta])

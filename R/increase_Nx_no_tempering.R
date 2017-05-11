@@ -9,7 +9,7 @@ increase_Nx_no_tempering <- function(observations, t, model, thetas, xnormW, tre
   Nx_new <- 2*Nx #by default we multiply the number of particles by 2
   algorithmic_parameters$Nx = Nx_new
   # Initialize empty arrays of larger size
-  X_new = array(NA,dim = c(Nx_new, model$dimX, Ntheta)) #Nx particles (most recent) for each theta (size = Nx,dimX,Ntheta)
+  X_new = array(NA,dim = c(model$dimX, Nx_new, Ntheta)) #Nx particles (most recent) for each theta (size = dimX,Nx,Ntheta)
   xnormW_new = matrix(NA, nrow = Nx_new, ncol = Ntheta) #matrix of corresponding normalized X-weights (size = Nx,Ntheta)
   log_z_new = rep(0, Ntheta) #matrix of log-likelihood estimates (size = Ntheta)
   # Construct list of trees to store paths (one tree for each theta)
