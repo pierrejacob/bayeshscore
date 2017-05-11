@@ -70,7 +70,7 @@ hscore_continuous_no_tempering <- function(observations, model, algorithmic_para
     # happens before seeing the first observation
     thetalogw <- rep(NA,Ntheta)
     for (m in 1:Ntheta) {
-      thetalogw[m] <- model$dprior(thetas[m,], log = TRUE) - algorithmic_parameters$dinitial_theta(thetas[m,], log = TRUE)
+      thetalogw[m] <- model$dprior(thetas[,m], log = TRUE) - algorithmic_parameters$dinitial_theta(thetas[m,], log = TRUE)
     }
     maxlogW <- max(thetalogw) #avoids overflow when exponentiating
     W <- exp(thetalogw - maxlogW) #computes actual unnormalized weights for theta

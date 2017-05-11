@@ -14,10 +14,10 @@ hincrementContinuous_no_tempering = function(t,model,observationt,thetas,Wtheta,
         next
       }
       if (is.null(dim(X[,,m]))){
-        dlogobs_k = model$derivativelogdobs(observationt,matrix(X[,,m],ncol = model$dimX),t,thetas[m,],k)
+        dlogobs_k = model$derivativelogdobs(observationt,matrix(X[,,m],ncol = model$dimX),t,thetas[,m],k)
       }
       else{
-        dlogobs_k = model$derivativelogdobs(observationt,X[,,m],t,thetas[m,],k)
+        dlogobs_k = model$derivativelogdobs(observationt,X[,,m],t,thetas[,m],k)
       }
       Ek_theta[m] = sum(WX[,m]*(dlogobs_k$d2log + (dlogobs_k$d1log)^2))
       Fk_theta[m] = sum(WX[,m]*dlogobs_k$d1log)
@@ -39,7 +39,7 @@ hincrementContinuous_no_tempering = function(t,model,observationt,thetas,Wtheta,
 #     if (thetanormw[m]==0){
 #       next
 #     }
-#     qy = qy + thetanormw[m]*sum(xprednormw[,m]*model$dobs(y,Xpred[,,m],t,thetas[m,],log = FALSE))
+#     qy = qy + thetanormw[m]*sum(xprednormw[,m]*model$dobs(y,Xpred[,,m],t,thetas[,m],log = FALSE))
 #   }
 #   return (qy)
 # }

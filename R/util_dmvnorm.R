@@ -4,5 +4,5 @@
 #'@export
 
 fast_dmvnorm <- function(x, mean, covariance){
-  return(dmvnorm(x, mean, covariance))
+  return(dmvnorm_transpose(x, mean, covariance))
 }

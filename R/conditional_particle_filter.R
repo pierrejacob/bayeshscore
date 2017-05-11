@@ -34,8 +34,7 @@ conditional_particle_filter <- function(observations, model, theta, Nx, path = N
       if (cpf){
         ancestors[Nx] <- Nx
       }
-      X <- X[ancestors,]
-      if (is.null(dim(X))) X <- matrix(X, ncol = model$dimX)
+      X <- X[ancestors,,drop=FALSE]
       X <- model$rtransition(X, t, theta)
       if (cpf){
         X[Nx,] <- path[,t]

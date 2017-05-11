@@ -4,5 +4,5 @@
 #'@export
 
 fast_rmvnorm <- function(nparticles, mean, covariance){
-  return(rmvnorm(nparticles, mean, covariance))
+  return(rmvnorm_transpose(nparticles, mean, covariance))
 }

@@ -1,8 +1,6 @@
-#'@rdname hscore_continuous
-#'@title hscore_continuous
-#'@description This function computes successive prequential Hyvarinen score for continuous observations by running the smc^2 algorithm. It also computes the successive log-evidence as a by-product.
-#'@export
-hscore_continuous <- function(observations, model, algorithmic_parameters){
+# This function computes successive prequential Hyvarinen score for continuous observations by running SMC^2.
+# It also computes the successive log-evidence as a by-product.
+hscore_continuous_smc2 <- function(observations, model, algorithmic_parameters){
   # Extract algorithmic parameters and set flags accordingly
   Ntheta = algorithmic_parameters$Ntheta
   nmoves = algorithmic_parameters$nmoves
@@ -31,6 +29,8 @@ hscore_continuous <- function(observations, model, algorithmic_parameters){
   if (algorithmic_parameters$progress) {
     print(paste("Started at:",Sys.time()))
     time_start = proc.time()
+    progbar = txtProgressBar(min = 0,max = nobservations,style=3)
+    count = 0
   }
   # Initialize empty arrays and lists to store the results
   ESS = array(NA,dim = c(nobservations)) #ESS at successive times t
@@ -54,20 +54,25 @@ hscore_continuous <- function(observations, model, algorithmic_parameters){
   logtargetdensities = apply(thetas, 1, model$dprior) # log target density evaluations at current particles
   normw = rep(1/Ntheta, Ntheta) # normalized weights
   logw = rep(0, Ntheta) # log normalized weights
+
+  ########## if we start from a proposal instead of the prior (e.g. improper prior)
+  ########## then the weights should be initialized differently:
+  ########## log(prior_density) - log(proposal_density) ???
+
   PFs = list() # list of particle filters (one for each theta)
   thetas_history[[1]] = thetas
   normw_history[[1]] = normw
   # Initialize filters (first observation passed as argument just to initialize the fields of PF)
   for (itheta in 1:Ntheta){
-    theta = thetas[itheta,]
+    theta = thetas[,itheta]
     PFs[[itheta]] = conditional_particle_filter(matrix(observations[,1],ncol = 1), model, theta, Nx)
     #the CPF performs a regular PF when no conditioning path is provided
   }
   # Assimilate observations one by one
   for (t in 1:nobservations){
-    results = assimilate_next(thetas, PFs, t, observations, model, Ntheta, ess_objective,
-                              nmoves, resampling, logtargetdensities, logw, normw,
-                              algorithmic_parameters$progress, adaptNx, min_acceptance_rate)
+    results = assimilate_one_smc2(thetas, PFs, t, observations, model, Ntheta, ess_objective,
+                                  nmoves, resampling, logtargetdensities, logw, normw,
+                                  algorithmic_parameters$verbose, adaptNx, min_acceptance_rate)
     thetas = results$thetas
     normw = results$normw
     logw = results$logw
@@ -75,7 +80,7 @@ hscore_continuous <- function(observations, model, algorithmic_parameters){
     logtargetdensities = results$logtargetdensities
     logevidence[t] = results$logcst
     # compute prequential H score here
-    Hscore[t] = hincrementContinuous(t, model, observations[,t], thetas, normw, PFs, Ntheta)
+    Hscore[t] = hincrementContinuous_smc2(t, model, observations[,t], thetas, normw, PFs, Ntheta)
     # do some book-keeping
     thetas_history[[t+1]] = thetas
     normw_history[[t+1]] = normw
@@ -83,9 +88,22 @@ hscore_continuous <- function(observations, model, algorithmic_parameters){
     rejuvenation_accept_rate[t] = results$rejuvenation_accept_rate #successive acceptance rates
     increase_Nx_times[t] = results$increase_Nx_times #successive times where adaptation regarding Nx is triggered
     increase_Nx_values[t] = results$increase_Nx_values #successive values of Nx
+    # Update progress bar if needed
+    if (algorithmic_parameters$progress) {
+      count = count + 1
+      setTxtProgressBar(progbar, count)
+    }
+  }
+  # Update progress bar if needed
+  if (algorithmic_parameters$progress) {
+    close(progbar)
+    time_end = proc.time()-time_start
+    cat(paste("Hscore: T = ",toString(nobservations),", Ntheta = ",toString(Ntheta),
+              ", Nx = ",toString(Nx),"\n",sep = ""))
+    print(time_end)
   }
   return(list(thetas_history = thetas_history, normw_history = normw_history, logevidence = cumsum(logevidence),
-              logtargetdensities = logtargetdensities, Hscore = cumsum(Hscore),
+              logtargetdensities = logtargetdensities, hscore = cumsum(Hscore),
               rejuvenation_times = rejuvenation_times[!is.na(rejuvenation_times)],
               rejuvenation_accept_rate = rejuvenation_accept_rate[!is.na(rejuvenation_accept_rate)],
               increase_Nx_times = increase_Nx_times[!is.na(increase_Nx_times)],

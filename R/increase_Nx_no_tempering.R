@@ -21,7 +21,7 @@ increase_Nx_no_tempering <- function(observations, t, model, thetas, xnormW, tre
   for (i in 1:Ntheta){
     current_tree = trees[[i]]
     current_path = current_tree$get_path(sample(x = 0:(Nx-1), size = 1, replace = TRUE, prob = xnormW[,i]))
-    cpf = conditional_particle_filter(matrix(observations[,1:t],ncol = t), model, thetas[i,], Nx_new, path = current_path)
+    cpf = conditional_particle_filter(matrix(observations[,1:t],ncol = t), model, thetas[,i], Nx_new, path = current_path)
     X_new[,,i] = cpf$X
     xnormW_new[,i] = cpf$xnormW
     log_z_new[i] = cpf$log_p_y_hat
