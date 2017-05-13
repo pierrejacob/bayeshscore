@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------#
-#----------- Define some useful distributions (density and sampler) -----------#
+#-----------------  Some useful distributions (density and sampler) -----------#
 #------------------------------------------------------------------------------#
 #'@rdname dinvchisq
 #'@title dinvchisq
