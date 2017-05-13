@@ -59,12 +59,10 @@ get_model_lineargaussian <- function(){
 
   # first and second partial derivatives (k-th coordinate) of the observation log-density
   model.lineargaussian$derivativelogdobs = function(Yt,Xt,t,theta,k){
-    phi = theta[1]
     psi = theta[2]
-    sigmaV2 = theta[3]
     sigmaW2 = theta[4]
     N = ncol(Xt)
-    d1 = (phi*Xt-matrix(Yt,ncol = N))/sigmaV2
+    d1 = (psi*Xt-matrix(Yt,ncol = N))/sigmaV2
     d2 = matrix(-1/sigmaV2,ncol = N)
     return (list(d1log = d1, d2log = d2))
   }

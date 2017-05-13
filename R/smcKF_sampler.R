@@ -3,14 +3,16 @@
 #'@description This function runs the SMC algorithm, using tempering.
 #'@export
 smcKF_sampler <- function(observations, model, algorithmic_parameters){
+  # Set default values for the missing fields
+  algorithmic_parameters = set_default_algorithmic_parameters(algorithmic_parameters)
+  model = set_default_model(model)
+  # Parse algorithmic parameters and set flags accordingly
   Ntheta <- algorithmic_parameters$Ntheta
   nmoves = algorithmic_parameters$nmoves
   resampling = algorithmic_parameters$resampling
   ess_objective <- algorithmic_parameters$ess_threshold*algorithmic_parameters$Ntheta
   nobservations <- ncol(observations)
-  # Set flags for progress tracking
-  if (is.null(algorithmic_parameters$progress)) algorithmic_parameters$progress = FALSE
-  if (is.null(algorithmic_parameters$verbose)) algorithmic_parameters$verbose = FALSE
+  # Monitor progress if needed
   if (algorithmic_parameters$progress) {
     print(paste("Started at:",Sys.time()))
     progbar = txtProgressBar(min = 0,max = nobservations,style=3)

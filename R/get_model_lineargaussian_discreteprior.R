@@ -68,12 +68,10 @@ get_model_lineargaussian_discreteprior <- function(){
 
   # first and second partial derivatives (k-th coordinate) of the observation log-density
   model.lineargaussian$derivativelogdobs = function(Yt,Xt,t,theta,k){
-    phi = model.lineargaussian$phi
     psi = model.lineargaussian$psi
     sigmaV2 = theta[1]
-    sigmaW2 = model.lineargaussian$sigmaW2
     N = ncol(Xt)
-    d1 = (phi*Xt-matrix(Yt,ncol = N))/sigmaV2
+    d1 = (psi*Xt-matrix(Yt,ncol = N))/sigmaV2
     d2 = matrix(-1/sigmaV2,ncol = N)
     return (list(d1log = d1, d2log = d2))
   }

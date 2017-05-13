@@ -3,28 +3,18 @@
 #'@description This function computes successive prequential Hyvarinen score for continuous observations by running the smc^2 algorithm. It also computes the successive log-evidence as a by-product.
 #'@export
 hscore_continuous_no_tempering <- function(observations, model, algorithmic_parameters){
-  # Extract algorithmic parameters and set flags accordingly
-  Ntheta <- algorithmic_parameters$Ntheta
+  # Set default values for the missing fields
+  algorithmic_parameters = set_default_algorithmic_parameters(algorithmic_parameters)
+  model = set_default_model(model)
+  # Parse algorithmic parameters and set flags accordingly
   nobservations <- ncol(observations)
-  # If no number of X-particles Nx is specified, use adaptive Nx starting with Nx = 128
-  if (is.null(algorithmic_parameters$Nx)) {
-    adaptNx = TRUE
-    Nx = 2^7
-    algorithmic_parameters$Nx = Nx
-    # Trigger increase in Nx when acceptance rate drops below threshold (default is 10%)
-    if (is.null(algorithmic_parameters$min_acceptance_rate)) {
-      min_acceptance_rate = 0.10
-    }
-    else {
-      min_acceptance_rate = algorithmic_parameters$min_acceptance_rate
-    }
-  }
-  else {
-    adaptNx = FALSE
-    Nx = algorithmic_parameters$Nx
-  }
-  if (is.null(algorithmic_parameters$progress)) algorithmic_parameters$progress <- FALSE
-  if (is.null(algorithmic_parameters$store)) algorithmic_parameters$store <- FALSE
+  Ntheta = algorithmic_parameters$Ntheta
+  Nx = algorithmic_parameters$Nx
+  nmoves = algorithmic_parameters$nmoves
+  resampling = algorithmic_parameters$resampling
+  adaptNx = algorithmic_parameters$adaptNx
+  min_acceptance_rate = algorithmic_parameters$min_acceptance_rate
+  # Monitor progress if needed
   if (algorithmic_parameters$progress) {
     print(paste("Started at:",Sys.time()))
     progbar = txtProgressBar(min = 0,max = nobservations,style=3)

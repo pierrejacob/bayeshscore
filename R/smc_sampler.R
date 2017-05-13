@@ -3,14 +3,16 @@
 #'@description This function runs the SMC algorithm, using tempering.
 #'@export
 smc_sampler <- function(observations, model, algorithmic_parameters){
-  Ntheta <- algorithmic_parameters$Ntheta
+  ## Set default values for the missing fields
+  algorithmic_parameters = set_default_algorithmic_parameters(algorithmic_parameters)
+  model = set_default_model(model)
+  # Parse algorithmic parameters and set flags accordingly
+  nobservations = ncol(observations)
+  Ntheta = algorithmic_parameters$Ntheta
   nmoves = algorithmic_parameters$nmoves
   resampling = algorithmic_parameters$resampling
-  ess_objective <- algorithmic_parameters$ess_threshold*algorithmic_parameters$Ntheta
-  nobservations <- ncol(observations)
-  # Set flags for progress tracking
-  if (is.null(algorithmic_parameters$progress)) algorithmic_parameters$progress = FALSE
-  if (is.null(algorithmic_parameters$verbose)) algorithmic_parameters$verbose = FALSE
+  ess_objective = algorithmic_parameters$ess_threshold*algorithmic_parameters$Ntheta
+  # Monitor progress if needed
   if (algorithmic_parameters$progress) {
     print(paste("Started at:",Sys.time()))
     progbar = txtProgressBar(min = 0,max = nobservations,style=3)
@@ -60,9 +62,7 @@ smc_sampler <- function(observations, model, algorithmic_parameters){
     logw <- results$logw
     logtargetdensities <- results$logtargetdensities
     logevidence[t] <- results$logcst
-    if (!is.null(byproducts)) {
-      byproducts = results$byproducts
-    }
+    if (!is.null(byproducts)) {byproducts = results$byproducts}
     thetas_history[[t+1]] <- thetas
     normw_history[[t+1]] <- normw
     # Update progress bar if needed

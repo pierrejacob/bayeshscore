@@ -34,6 +34,9 @@ get_model_kangarooLogistic <- function(timesteps = data_kangaroo["time",],range_
     return (matrix(rlnorm(N,meanlog = 5,sdlog = sqrt(10)),ncol = N))
   }
   # sampler from the transition distribution of the states
+  rtransition_logistic <- function(Xt, t, theta,timesteps){
+    return(matrix(rtransition_logistic_c(Xt[,1], timesteps[t] - timesteps[t-1], theta[1], theta[3], theta[4]), ncol = 1))
+  }
   model.kangarooLogistic$rtransition = function(Xt,t,theta){
     return (matrix(rtransition_logistic(Xt, t, theta,timesteps),nrow = model$dimX))
   }

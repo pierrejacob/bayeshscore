@@ -3,32 +3,19 @@
 #'@description This function runs the SMC^2 algorithm, using adapive Nx and tempering.
 #'@export
 smc2_sampler <- function(observations, model, algorithmic_parameters){
-  # Extract algorithmic parameters and set flags accordingly
+  # Set default values for the missing fields
+  algorithmic_parameters = set_default_algorithmic_parameters(algorithmic_parameters)
+  model = set_default_model(model)
+  # Parse algorithmic parameters and set flags accordingly
+  nobservations = ncol(observations)
   Ntheta = algorithmic_parameters$Ntheta
+  Nx = algorithmic_parameters$Nx
   nmoves = algorithmic_parameters$nmoves
   resampling = algorithmic_parameters$resampling
+  adaptNx = algorithmic_parameters$adaptNx
+  min_acceptance_rate = algorithmic_parameters$min_acceptance_rate
   ess_objective = algorithmic_parameters$ess_threshold*algorithmic_parameters$Ntheta
-  nobservations = ncol(observations)
-  # If no number of X-particles Nx is specified, use adaptive Nx starting with Nx = 128
-  if (is.null(algorithmic_parameters$Nx)) {
-    adaptNx = TRUE
-    Nx = 2^7
-    # Trigger increase in Nx when acceptance rate drops below threshold (default is 10%)
-    if (is.null(algorithmic_parameters$min_acceptance_rate)) {
-      min_acceptance_rate = 0.10
-    }
-    else {
-      min_acceptance_rate = algorithmic_parameters$min_acceptance_rate
-    }
-  }
-  else {
-    adaptNx = FALSE
-    Nx = algorithmic_parameters$Nx
-  }
-  # Set flags for progress bar and storage of particle history
-  if (is.null(algorithmic_parameters$progress)) algorithmic_parameters$progress = FALSE
-  if (is.null(algorithmic_parameters$verbose)) algorithmic_parameters$verbose = FALSE
-  if (is.null(algorithmic_parameters$store)) algorithmic_parameters$store = FALSE
+  # Monitor progress if needed
   if (algorithmic_parameters$progress) {
     print(paste("Started at:",Sys.time()))
     progbar = txtProgressBar(min = 0,max = nobservations,style=3)

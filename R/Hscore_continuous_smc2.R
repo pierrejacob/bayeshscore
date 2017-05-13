@@ -1,36 +1,23 @@
 # This function computes successive prequential Hyvarinen score for continuous observations by running SMC^2.
 # It also computes the successive log-evidence as a by-product.
 hscore_continuous_smc2 <- function(observations, model, algorithmic_parameters){
-  # Extract algorithmic parameters and set flags accordingly
+  # Set default values for the missing fields
+  algorithmic_parameters = set_default_algorithmic_parameters(algorithmic_parameters)
+  model = set_default_model(model)
+  # Parse algorithmic parameters and set flags accordingly
+  nobservations = ncol(observations)
   Ntheta = algorithmic_parameters$Ntheta
+  Nx = algorithmic_parameters$Nx
   nmoves = algorithmic_parameters$nmoves
   resampling = algorithmic_parameters$resampling
+  adaptNx = algorithmic_parameters$adaptNx
+  min_acceptance_rate = algorithmic_parameters$min_acceptance_rate
   ess_objective = algorithmic_parameters$ess_threshold*algorithmic_parameters$Ntheta
-  nobservations = ncol(observations)
-  # If no number of X-particles Nx is specified, use adaptive Nx starting with Nx = 128
-  if (is.null(algorithmic_parameters$Nx)) {
-    adaptNx = TRUE
-    Nx = 2^7
-    # Trigger increase in Nx when acceptance rate drops below threshold (default is 10%)
-    if (is.null(algorithmic_parameters$min_acceptance_rate)) {
-      min_acceptance_rate = 0.10
-    }
-    else {
-      min_acceptance_rate = algorithmic_parameters$min_acceptance_rate
-    }
-  }
-  else {
-    adaptNx = FALSE
-    Nx = algorithmic_parameters$Nx
-  }
-  # Set flags for progress bar and storage of particle history
-  if (is.null(algorithmic_parameters$progress)) algorithmic_parameters$progress = FALSE
-  if (is.null(algorithmic_parameters$store)) algorithmic_parameters$store = FALSE
+  # Monitor progress if needed
   if (algorithmic_parameters$progress) {
     print(paste("Started at:",Sys.time()))
     time_start = proc.time()
     progbar = txtProgressBar(min = 0,max = nobservations,style=3)
-    count = 0
   }
   # Initialize empty arrays and lists to store the results
   ESS = array(NA,dim = c(nobservations)) #ESS at successive times t
@@ -80,7 +67,7 @@ hscore_continuous_smc2 <- function(observations, model, algorithmic_parameters){
     logtargetdensities = results$logtargetdensities
     logevidence[t] = results$logcst
     # compute prequential H score here
-    Hscore[t] = hincrementContinuous_smc2(t, model, observations[,t], thetas, normw, PFs, Ntheta)
+    Hscore[t] = hincrementContinuous_smc2(t, model, observations[,t,drop=FALSE], thetas, normw, PFs, Ntheta)
     # do some book-keeping
     thetas_history[[t+1]] = thetas
     normw_history[[t+1]] = normw
@@ -90,16 +77,14 @@ hscore_continuous_smc2 <- function(observations, model, algorithmic_parameters){
     increase_Nx_values[t] = results$increase_Nx_values #successive values of Nx
     # Update progress bar if needed
     if (algorithmic_parameters$progress) {
-      count = count + 1
-      setTxtProgressBar(progbar, count)
+      setTxtProgressBar(progbar, t)
     }
   }
   # Update progress bar if needed
   if (algorithmic_parameters$progress) {
     close(progbar)
     time_end = proc.time()-time_start
-    cat(paste("Hscore: T = ",toString(nobservations),", Ntheta = ",toString(Ntheta),
-              ", Nx = ",toString(Nx),"\n",sep = ""))
+    cat(paste("Hscore: T = ",toString(nobservations),", Ntheta = ",toString(Ntheta),", Nx = ",toString(Nx),"\n",sep = ""))
     print(time_end)
   }
   return(list(thetas_history = thetas_history, normw_history = normw_history, logevidence = cumsum(logevidence),
