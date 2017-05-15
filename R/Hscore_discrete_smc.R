@@ -56,7 +56,7 @@ hscore_discrete_smc <- function(observations, model, algorithmic_parameters){
   # Assimilate observations one by one
   for (t in 1:nobservations){
     # compute prequential H score (with theta from time t-1, see formula in the paper)
-    Hscore[t] = Hd(t,model,observations[,t],thetas,normw,Ntheta,byproducts = byproducts)
+    Hscore[t] = Hd_smc(t,model,observations,thetas,normw,Ntheta,byproducts)
     # assimilate the next observation
     results <- assimilate_one_smc(thetas, t, observations, model, Ntheta, ess_objective,
                                   nmoves, resampling, logtargetdensities, logw, normw,

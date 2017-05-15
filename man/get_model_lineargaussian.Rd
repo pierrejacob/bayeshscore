@@ -8,5 +8,8 @@ get_model_lineargaussian()
 }
 \description{
 Univariate linear Gaussian model with 4 unknown parameters
+(\code{phi}, \code{psi}, \code{sigmaW2}, \code{sigmaV2}).
+Latent states: X[t] = \code{phi}*X[t-1] + N(0,\code{sigmaW2}).
+Observations: Y[t] = \code{psi}*X[t] + N(0,\code{sigmaV2}).
 }
 

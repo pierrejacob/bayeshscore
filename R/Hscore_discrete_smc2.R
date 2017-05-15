@@ -79,7 +79,7 @@ hscore_discrete_smc2 <- function(observations, model, algorithmic_parameters){
       }
     }
     # compute prequential H score (with theta from time t-1, see formula in the paper)
-    Hscore[t] = Hd(t,model,observations[,t],thetas,normw,Ntheta,Xpred,XnormW_previous)
+    Hscore[t] = Hd_smc2(t,model,observations[,t],thetas,normw,Ntheta,Xpred,XnormW_previous)
     # assimilate the next observation
     results = assimilate_one_smc2(thetas, PFs, t, observations, model, Ntheta, ess_objective,
                                   nmoves, resampling, logtargetdensities, logw, normw,

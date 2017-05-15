@@ -73,7 +73,7 @@ hincrementContinuous_smc = function(t,model,observations,thetas,Wtheta,byproduct
 #------------------------------ DISCRETE OBSERVATIONS -----------------------------------#
 #----------------------------------------------------------------------------------------#
 # This function computes the approximation pt_hat(y) for a given set of particles
-phat = function(t,model,y,thetas,thetanormw,Ntheta,Xpred,xprednormw) {
+phat_smc2 = function(t,model,y,thetas,thetanormw,Ntheta,Xpred,xprednormw) {
   py = 0
   for (m in 1:Ntheta){
     if (thetanormw[m]==0){
@@ -101,7 +101,7 @@ Hdk = function(k,a,b,d,y,py_minusek,py,py_plusek) {
 # This function computes the partial score term Hd
 # a,b are vectors of componentwise lower and upper bounds of the observations
 # d is the dimension of y
-Hd = function(t,model,yt,thetas,thetanormw,Ntheta,Xpred,xprednormw) {
+Hd_smc2 = function(t,model,yt,thetas,thetanormw,Ntheta,Xpred,xprednormw) {
   a = model$lower
   b = model$upper
   d = model$dimY
@@ -109,9 +109,9 @@ Hd = function(t,model,yt,thetas,thetanormw,Ntheta,Xpred,xprednormw) {
   for (k in 1:d) {
     ek = rep(0,d)
     ek[k] = 1
-    py = phat(t,model,yt,thetas,thetanormw,Ntheta,Xpred,xprednormw)
-    py_minusek = phat(t,model,yt-ek,thetas,thetanormw,Ntheta,Xpred,xprednormw)
-    py_plusek = phat(t,model,yt+ek,thetas,thetanormw,Ntheta,Xpred,xprednormw)
+    py = phat_smc2(t,model,yt,thetas,thetanormw,Ntheta,Xpred,xprednormw)
+    py_minusek = phat_smc2(t,model,yt-ek,thetas,thetanormw,Ntheta,Xpred,xprednormw)
+    py_plusek = phat_smc2(t,model,yt+ek,thetas,thetanormw,Ntheta,Xpred,xprednormw)
     result = result + Hdk(k,a,b,d,yt,py_minusek,py,py_plusek)
   }
   return (result)
