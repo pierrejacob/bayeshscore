@@ -7,6 +7,8 @@
 hscore(observations, model, algorithmic_parameters)
 }
 \description{
-This function computes successive prequential Hyvarinen score by running the SMC or SMC^2 algorithm. It also computes the successive log-evidence as a by-product.
+This function computes successive prequential Hyvarinen score by running SMC or SMC2.
+It is a wrapper of the four different cases: continuous or discrete / SMC or SMC2.
+It also computes the successive log-evidence as a by-product.
 }
 
