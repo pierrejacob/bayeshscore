@@ -29,6 +29,7 @@ hscore_continuous_smc2 <- function(observations, model, algorithmic_parameters){
   increase_Nx_values = array(NA,dim = c(nobservations)) #successive values of Nx
   thetas_history = list() #successive sets of particles theta
   normw_history = list() #successive sets of normalized weights for theta
+  PF_history = list() # successive particle filters (one for each theta at each time step)
   #
   # # Initialize SMC2 by sampling from prior (default), or from specified proposal
   # # (e.g. relevant in case the prior is vague)
@@ -45,10 +46,11 @@ hscore_continuous_smc2 <- function(observations, model, algorithmic_parameters){
   ########## if we start from a proposal instead of the prior (e.g. improper prior)
   ########## then the weights should be initialized differently:
   ########## log(prior_density) - log(proposal_density) ???
-
   PFs = list() # list of particle filters (one for each theta)
-  thetas_history[[1]] = thetas
-  normw_history[[1]] = normw
+  if (algorithmic_parameters$store_theta){
+    thetas_history[[1]] = thetas
+    normw_history[[1]] = normw
+  }
   # Initialize filters (first observation passed as argument just to initialize the fields of PF)
   for (itheta in 1:Ntheta){
     theta = thetas[,itheta]
@@ -69,12 +71,17 @@ hscore_continuous_smc2 <- function(observations, model, algorithmic_parameters){
     # compute prequential H score here
     Hscore[t] = hincrementContinuous_smc2(t, model, observations[,t,drop=FALSE], thetas, normw, PFs, Ntheta)
     # do some book-keeping
-    thetas_history[[t+1]] = thetas
-    normw_history[[t+1]] = normw
     rejuvenation_times[t] = results$rejuvenation_time #successive times where resampling is triggered
     rejuvenation_accept_rate[t] = results$rejuvenation_accept_rate #successive acceptance rates
     increase_Nx_times[t] = results$increase_Nx_times #successive times where adaptation regarding Nx is triggered
     increase_Nx_values[t] = results$increase_Nx_values #successive values of Nx
+    if (algorithmic_parameters$store_theta){
+      thetas_history[[t+1]] = thetas
+      normw_history[[t+1]] = normw
+    }
+    if (algorithmic_parameters$store_X){
+      PF_history[[t+1]] = PFs
+    }
     # Update progress bar if needed
     if (algorithmic_parameters$progress) {
       setTxtProgressBar(progbar, t)
@@ -87,7 +94,8 @@ hscore_continuous_smc2 <- function(observations, model, algorithmic_parameters){
     cat(paste("Hscore: T = ",toString(nobservations),", Ntheta = ",toString(Ntheta),", Nx = ",toString(Nx),"\n",sep = ""))
     print(time_end)
   }
-  return(list(thetas_history = thetas_history, normw_history = normw_history, logevidence = cumsum(logevidence),
+  return(list(thetas_history = thetas_history, normw_history = normw_history,
+              PF_history = PF_history, logevidence = cumsum(logevidence),
               logtargetdensities = logtargetdensities, hscore = cumsum(Hscore),
               rejuvenation_times = rejuvenation_times[!is.na(rejuvenation_times)],
               rejuvenation_accept_rate = rejuvenation_accept_rate[!is.na(rejuvenation_accept_rate)],

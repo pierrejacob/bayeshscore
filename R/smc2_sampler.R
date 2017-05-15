@@ -19,19 +19,15 @@ smc2_sampler <- function(observations, model, algorithmic_parameters){
   if (algorithmic_parameters$progress) {
     print(paste("Started at:",Sys.time()))
     progbar = txtProgressBar(min = 0,max = nobservations,style=3)
-    count = 0
     time_start = proc.time()
   }
   # Initialize empty arrays and lists to store the results
   ESS = array(NA,dim = c(nobservations)) #ESS at successive times t
   Hscore = array(NA,dim = c(nobservations)) #prequential Hyvarinen score at successive times t
   logevidence = array(NA,dim = c(nobservations)) #log-evidence at successive times t
-  rejuvenation_times = c() #successive times where resampling is triggered
-  rejuvenation_accept_rate = c() #successive acceptance rates of resampling
-  increase_Nx_times = c() #successive times where adaptation regarding Nx is triggered
-  increase_Nx_values = c() #successive values of Nx
   thetas_history = list() #successive sets of particles theta
   normw_history = list() #successive sets of normalized weights for theta
+  PF_history = list() #successive particle filters (one for each theta at each time step)
   # # Initialize SMC2 by sampling from prior (default), or from specified proposal
   # # (e.g. relevant in case the prior is vague)
   # if (is.null(algorithmic_parameters$rinitial_theta)){
@@ -64,10 +60,12 @@ smc2_sampler <- function(observations, model, algorithmic_parameters){
     logevidence[t] = results$logcst
     thetas_history[[t+1]] = thetas
     normw_history[[t+1]] = normw
+    if (algorithmic_parameters$store_X){
+      PF_history[[t+1]] = PFs
+    }
     # Update progress bar if needed
     if (algorithmic_parameters$progress) {
-      count = count + 1
-      setTxtProgressBar(progbar, count)
+      setTxtProgressBar(progbar, t)
     }
   }
   # Update progress bar if needed
@@ -77,6 +75,6 @@ smc2_sampler <- function(observations, model, algorithmic_parameters){
     cat(paste("T = ",toString(nobservations),", Ntheta = ",toString(Ntheta),", Nx = ",toString(Nx),"\n",sep=""))
     print(time_end)
   }
-  return(list(thetas_history = thetas_history, normw_history = normw_history,
+  return(list(thetas_history = thetas_history, normw_history = normw_history, PF_history = PF_history,
               logevidence = cumsum(logevidence), logtargetdensities = logtargetdensities))
 }

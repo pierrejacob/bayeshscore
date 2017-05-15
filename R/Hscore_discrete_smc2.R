@@ -1,36 +1,23 @@
 # This function computes successive prequential Hyvarinen score for discrete observations by running SMC^2.
 # It also computes the successive log-evidence as a by-product.
 hscore_discrete_smc2 <- function(observations, model, algorithmic_parameters){
-  # Extract algorithmic parameters and set flags accordingly
+  # Set default values for the missing fields
+  algorithmic_parameters = set_default_algorithmic_parameters(algorithmic_parameters)
+  model = set_default_model(model)
+  # Parse algorithmic parameters and set flags accordingly
+  nobservations = ncol(observations)
   Ntheta = algorithmic_parameters$Ntheta
+  Nx = algorithmic_parameters$Nx
   nmoves = algorithmic_parameters$nmoves
   resampling = algorithmic_parameters$resampling
+  adaptNx = algorithmic_parameters$adaptNx
+  min_acceptance_rate = algorithmic_parameters$min_acceptance_rate
   ess_objective = algorithmic_parameters$ess_threshold*algorithmic_parameters$Ntheta
-  nobservations = ncol(observations)
-  # If no number of X-particles Nx is specified, use adaptive Nx starting with Nx = 128
-  if (is.null(algorithmic_parameters$Nx)) {
-    adaptNx = TRUE
-    Nx = 2^7
-    # Trigger increase in Nx when acceptance rate drops below threshold (default is 10%)
-    if (is.null(algorithmic_parameters$min_acceptance_rate)) {
-      min_acceptance_rate = 0.10
-    }
-    else {
-      min_acceptance_rate = algorithmic_parameters$min_acceptance_rate
-    }
-  }
-  else {
-    adaptNx = FALSE
-    Nx = algorithmic_parameters$Nx
-  }
-  # Set flags for progress bar and storage of particle history
-  if (is.null(algorithmic_parameters$progress)) algorithmic_parameters$progress = FALSE
-  if (is.null(algorithmic_parameters$store)) algorithmic_parameters$store = FALSE
+  # Monitor progress if needed
   if (algorithmic_parameters$progress) {
     print(paste("Started at:",Sys.time()))
     time_start = proc.time()
     progbar = txtProgressBar(min = 0,max = nobservations,style=3)
-    count = 0
   }
   # Initialize empty arrays and lists to store the results
   ESS = array(NA,dim = c(nobservations)) #ESS at successive times t
@@ -42,6 +29,7 @@ hscore_discrete_smc2 <- function(observations, model, algorithmic_parameters){
   increase_Nx_values = array(NA,dim = c(nobservations)) #successive values of Nx
   thetas_history = list() #successive sets of particles theta
   normw_history = list() #successive sets of normalized weights for theta
+  PF_history = list() # successive particle filters (one for each theta at each time step)
   #
   # # Initialize SMC2 by sampling from prior (default), or from specified proposal
   # # (e.g. relevant in case the prior is vague)
@@ -58,10 +46,11 @@ hscore_discrete_smc2 <- function(observations, model, algorithmic_parameters){
   ########## if we start from a proposal instead of the prior (e.g. improper prior)
   ########## then the weights should be initialized differently:
   ########## log(prior_density) - log(proposal_density) ???
-
   PFs = list() # list of particle filters (one for each theta)
-  thetas_history[[1]] = thetas
-  normw_history[[1]] = normw
+  if (algorithmic_parameters$store_theta){
+    thetas_history[[1]] = thetas
+    normw_history[[1]] = normw
+  }
   # Initialize array of particles X targeting predictive distributions (most recent)
   Xprevious = array(NA,dim = c(model$dimX, Nx, Ntheta))
   Xpred = array(NA,dim = c(model$dimX, Nx, Ntheta))
@@ -111,16 +100,20 @@ hscore_discrete_smc2 <- function(observations, model, algorithmic_parameters){
       XnormW_previous[,itheta] = PFs[[itheta]]$xnormW
     }
     # do some book-keeping
-    thetas_history[[t+1]] = thetas
-    normw_history[[t+1]] = normw
     rejuvenation_times[t] = results$rejuvenation_time #successive times where resampling is triggered
     rejuvenation_accept_rate[t] = results$rejuvenation_accept_rate #successive acceptance rates
     increase_Nx_times[t] = results$increase_Nx_times #successive times where adaptation regarding Nx is triggered
     increase_Nx_values[t] = results$increase_Nx_values #successive values of Nx
+    if (algorithmic_parameters$store_theta){
+      thetas_history[[t+1]] = thetas
+      normw_history[[t+1]] = normw
+    }
+    if (algorithmic_parameters$store_X){
+      PF_history[[t+1]] = PFs
+    }
     # Update progress bar if needed
     if (algorithmic_parameters$progress) {
-      count = count + 1
-      setTxtProgressBar(progbar, count)
+      setTxtProgressBar(progbar, t)
     }
   }
   # Update progress bar if needed
@@ -131,7 +124,8 @@ hscore_discrete_smc2 <- function(observations, model, algorithmic_parameters){
               ", Nx = ",toString(Nx),"\n",sep = ""))
     print(time_end)
   }
-  return(list(thetas_history = thetas_history, normw_history = normw_history, logevidence = cumsum(logevidence),
+  return(list(thetas_history = thetas_history, normw_history = normw_history,
+              PF_history = PF_history, logevidence = cumsum(logevidence),
               logtargetdensities = logtargetdensities, hscore = cumsum(Hscore),
               rejuvenation_times = rejuvenation_times[!is.na(rejuvenation_times)],
               rejuvenation_accept_rate = rejuvenation_accept_rate[!is.na(rejuvenation_accept_rate)],

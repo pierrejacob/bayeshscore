@@ -69,7 +69,7 @@ hscore_continuous_no_tempering <- function(observations, model, algorithmic_para
   thetas_history <- list()
   weights_history <- list()
   # Store thetas and weights if needed
-  if (algorithmic_parameters$store){
+  if (algorithmic_parameters$store_theta){
     thetas_history[[1]] <- thetas
     weights_history[[1]] <- thetanormw
   }
@@ -85,7 +85,7 @@ hscore_continuous_no_tempering <- function(observations, model, algorithmic_para
   # Compute prequential H score
   Hscore[1] = hincrementContinuous_no_tempering(1,model,observations[,1],thetas,thetanormw,X,xnormW,Ntheta,Nx)
   # Store thetas and weights if needed
-  if (algorithmic_parameters$store){
+  if (algorithmic_parameters$store_theta){
     thetas_history[[2]] <- thetas
     weights_history[[2]] <- thetanormw
   }
@@ -139,7 +139,7 @@ hscore_continuous_no_tempering <- function(observations, model, algorithmic_para
     W <- exp(thetalogw - maxlogW) #computes actual unnormalized weights for theta
     thetanormw <- W / sum(W) #normalize weights for theta
     # Store thetas and weights if needed
-    if (algorithmic_parameters$store){
+    if (algorithmic_parameters$store_theta){
       thetas_history[[t+1]] <- thetas
       weights_history[[t+1]] <- thetanormw
     }
@@ -187,21 +187,11 @@ hscore_continuous_no_tempering <- function(observations, model, algorithmic_para
     print(time_end)
   }
   # Return results
-  if (algorithmic_parameters$store){
-    return (list(hscore = Hscore, logevidence = logevidence, ESS = ESS, thetas = thetas, thetanormw = thetanormw,
-                 thetas_history = thetas_history, weights_history = weights_history, trees = trees, xnormW = xnormW,
-                 rejuvenation_times = rejuvenation_times[!is.na(rejuvenation_times)],
-                 rejuvenation_accept_rate = rejuvenation_accept_rate[!is.na(rejuvenation_accept_rate)],
-                 increase_Nx_times = increase_Nx_times[!is.na(increase_Nx_times)],
-                 increase_Nx_values = increase_Nx_values[!is.na(increase_Nx_values)]))
-  }
-  else {
-    return (list(hscore = Hscore, logevidence = logevidence, ESS = ESS, thetas = thetas, thetanormw = thetanormw,
-                 trees = trees, xnormW = xnormW, rejuvenation_times = rejuvenation_times,
-                 rejuvenation_times = rejuvenation_times[!is.na(rejuvenation_times)],
-                 rejuvenation_accept_rate = rejuvenation_accept_rate[!is.na(rejuvenation_accept_rate)],
-                 increase_Nx_times = increase_Nx_times[!is.na(increase_Nx_times)],
-                 increase_Nx_values = increase_Nx_values[!is.na(increase_Nx_values)]))
-  }
+  return (list(hscore = Hscore, logevidence = logevidence, ESS = ESS, thetas_history = thetas_history,
+               weights_history = weights_history, trees = trees, xnormW = xnormW,
+               rejuvenation_times = rejuvenation_times[!is.na(rejuvenation_times)],
+               rejuvenation_accept_rate = rejuvenation_accept_rate[!is.na(rejuvenation_accept_rate)],
+               increase_Nx_times = increase_Nx_times[!is.na(increase_Nx_times)],
+               increase_Nx_values = increase_Nx_values[!is.na(increase_Nx_values)]))
 }
 
