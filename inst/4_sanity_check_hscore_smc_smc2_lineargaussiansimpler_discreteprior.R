@@ -47,7 +47,6 @@ normw_smc <- smc_results$normw_history[[nobservations+1]]
 thetas_smc2 <- smc2_results$thetas_history[[nobservations+1]]
 normw_smc2 <- smc2_results$normw_history[[nobservations+1]]
 
-
 #--------------------------------------------------------------------------------------------
 #Compute exact posterior
 phi = model$phi
