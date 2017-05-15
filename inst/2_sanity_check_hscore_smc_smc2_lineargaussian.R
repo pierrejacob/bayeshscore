@@ -15,6 +15,7 @@ theta_star <- c(0.8,1,1,1)
 sim = simulateData(model, theta = theta_star, nobservations)
 X = sim$X
 Y = sim$Y
+observations <- matrix(Y, nrow = model$dimY)
 # observations in a matrix of dimensions dimY by nobservations
 
 # set algorithmic parameters
@@ -25,12 +26,12 @@ algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$store_theta = TRUE
 algorithmic_parameters$store_X = FALSE
 algorithmic_parameters$ess_threshold = 0.5
-algorithmic_parameters$min_acceptance_rate = 0.1
+algorithmic_parameters$min_acceptance_rate = 0.3
 algorithmic_parameters$nmoves = 2
 # The remaining algorithmic parameters are set to their default values via the functions in util_default.R
 
 ### Run SMC
-smc_results = hscore(Y, model, algorithmic_parameters)
+smc_results = hscore(observations, model, algorithmic_parameters)
 
 ### Run SMC_2 (non-tempered and tempered)
 module_tree <<- Module("module_tree", PACKAGE = "HyvarinenSSM")
@@ -38,7 +39,7 @@ TreeClass <<- module_tree$Tree
 model_withoutlikelihood = model
 model_withoutlikelihood$likelihood = NULL
 model_withoutlikelihood$dpredictive = NULL
-smc2_results = hscore(Y, model_withoutlikelihood, algorithmic_parameters)
+smc2_results = hscore(observations, model_withoutlikelihood, algorithmic_parameters)
 
 
 ###############################################################################################
