@@ -2,9 +2,10 @@
 #---------------------------- CONTINUOUS OBSERVATIONS -----------------------------------#
 #----------------------------------------------------------------------------------------#
 hincrementContinuous_no_tempering = function(t,model,observationt,thetas,Wtheta,X,WX,Ntheta,Nx) {
-  d = model$dimY
   hincrement = 0
-  for (k in 1:d) {
+  d1log = list()
+  d2log = list()
+  for (k in 1:model$dimY) {
     Ek_theta = vector("numeric",Ntheta)
     Fk_theta = vector("numeric",Ntheta)
     for (m in 1:Ntheta){
@@ -13,13 +14,13 @@ hincrementContinuous_no_tempering = function(t,model,observationt,thetas,Wtheta,
       if (Wtheta[m] == 0) {
         next
       }
-      if (is.null(dim(X[,,m]))){
-        dlogobs_k = model$derivativelogdobs(observationt,matrix(X[,,m], nrow = model$dimX),t,thetas[,m],k)
-      } else{
-        dlogobs_k = model$derivativelogdobs(observationt,X[,,m],t,thetas[,m],k)
+      if (k==1){
+        derivatives = model$derivativelogdobs(observationt,matrix(X[,,m], nrow = model$dimX),t,thetas[,m],model$dimY)
+        d1log[[m]] = derivatives$jacobian
+        d2log[[m]] = derivatives$hessiandiag
       }
-      Ek_theta[m] = sum(WX[,m]*(dlogobs_k$d2log + (dlogobs_k$d1log)^2))
-      Fk_theta[m] = sum(WX[,m]*dlogobs_k$d1log)
+      Ek_theta[m] = sum(WX[,m]*(d2log[[m]][k] + (d1log[[m]][,k])^2))
+      Fk_theta[m] = sum(WX[,m]*d1log[[m]][,k])
     }
     Ek = sum(Wtheta*Ek_theta)
     Fk = (sum(Wtheta*Fk_theta))^2
@@ -27,7 +28,6 @@ hincrementContinuous_no_tempering = function(t,model,observationt,thetas,Wtheta,
   }
   return (hincrement)
 }
-
 # #----------------------------------------------------------------------------------------#
 # #------------------------------ DISCRETE OBSERVATIONS -----------------------------------#
 # #----------------------------------------------------------------------------------------#

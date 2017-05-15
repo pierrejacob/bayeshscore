@@ -3,26 +3,32 @@
 #----------------------------------------------------------------------------------------#
 # smc2 version when predictive density is intractable
 hincrementContinuous_smc2 = function(t,model,observationt,thetas,Wtheta,PFs,Ntheta) {
-  d = model$dimY
   hincrement = 0
-  for (k in 1:d) {
+  d1log = list()
+  d2log = list()
+  for (k in 1:model$dimY) {
     Ek_theta = vector("numeric",Ntheta)
     Fk_theta = vector("numeric",Ntheta)
     for (m in 1:Ntheta){
-      PF = PFs[[m]]
-      X = PF$X
-      if (is.null(dim(X))){
-        X = matrix(X,nrow = model$dimX)
-      }
-      WX = PF$xnormW
       Ek_theta[m] = 0
       Fk_theta[m] = 0
       if (Wtheta[m] == 0) {
         next
       }
-      dlogobs_k = model$derivativelogdobs(observationt,X,t,thetas[,m],k)
-      Ek_theta[m] = sum(WX*(dlogobs_k$d2log + (dlogobs_k$d1log)^2))
-      Fk_theta[m] = sum(WX*dlogobs_k$d1log)
+      PF = PFs[[m]]
+      X = PF$X
+      WX = PF$xnormW
+      if (is.null(dim(X))){
+        X = matrix(X,nrow = model$dimX)
+      }
+      # compute the derivatives for all k and all X at once during the first loop
+      if (k==1){
+        derivatives = model$derivativelogdobs(observationt,X,t,thetas[,m],model$dimY)
+        d1log[[m]] = derivatives$jacobian
+        d2log[[m]] = derivatives$hessiandiag
+      }
+      Ek_theta[m] = sum(WX*(d2log[[m]][k] + (d1log[[m]][,k])^2))
+      Fk_theta[m] = sum(WX*d1log[[m]][,k])
     }
     Ek = sum(Wtheta*Ek_theta)
     Fk = (sum(Wtheta*Fk_theta))^2
@@ -31,11 +37,11 @@ hincrementContinuous_smc2 = function(t,model,observationt,thetas,Wtheta,PFs,Nthe
   return (hincrement)
 }
 # smc version when predictive density is available
-hincrementContinuous_smc = function(t,model,observations,thetas,Wtheta,Ntheta,byproducts) {
+hincrementContinuous_smc = function(t,model,observations,thetas,Wtheta,byproducts,Ntheta) {
   d = model$dimY
   hincrement = 0
-  gradients = list()
-  hessians = list()
+  jacobian = list()
+  hessiandiag = list()
   for (k in 1:d) {
     Ek_theta = array(0,dim = Ntheta)
     Fk_theta = array(0,dim = Ntheta)
@@ -45,12 +51,16 @@ hincrementContinuous_smc = function(t,model,observations,thetas,Wtheta,Ntheta,by
       }
       # compute the derivatives for all k at once during the first loop
       if (k==1){
-        derivatives = model$derivativelogdpredictive(observations,t,thetas[,m],byproducts[[m]])
-        gradients[[m]] = derivatives$grad
-        hessians[[m]] = derivatives$hessian
+        if (!is.null(byproducts)){
+          derivatives = model$derivativelogdpredictive(observations,t,thetas[,m],byproducts[[m]],model$dimY)
+        } else {
+          derivatives = model$derivativelogdpredictive(observations,t,thetas[,m],model$dimY)
+        }
+        jacobian[[m]] = derivatives$jacobian
+        hessiandiag[[m]] = derivatives$hessiandiag
       }
-      Ek_theta[m] = hessians[[m]][k,k] + (gradients[[m]][k])^2
-      Fk_theta[m] = gradients[[m]][k]
+      Ek_theta[m] = hessiandiag[[m]][k] + (jacobian[[m]][k])^2
+      Fk_theta[m] = jacobian[[m]][k]
     }
     Ek = sum(Wtheta*Ek_theta)
     Fk = (sum(Wtheta*Fk_theta))^2
@@ -63,7 +73,7 @@ hincrementContinuous_smc = function(t,model,observations,thetas,Wtheta,Ntheta,by
 #------------------------------ DISCRETE OBSERVATIONS -----------------------------------#
 #----------------------------------------------------------------------------------------#
 # This function computes the approximation qt_hat(y) for a given set of particles
-phat = function(t,model,y,thetas,thetanormw,Xpred,xprednormw,Ntheta) {
+phat = function(t,model,y,thetas,thetanormw,Ntheta,Xpred=NULL,xprednormw=NULL) {
   py = 0
   for (m in 1:Ntheta){
     if (thetanormw[m]==0){
@@ -91,7 +101,7 @@ Hdk = function(k,a,b,d,y,py_minusek,py,py_plusek) {
 # This function computes the partial score term Hd
 # a,b are vectors of componentwise lower and upper bounds of the observations
 # d is the dimension of y
-Hd = function(t,model,yt,thetas,thetanormw,Xpred,xprednormw,Ntheta) {
+Hd = function(t,model,yt,thetas,thetanormw,Ntheta,Xpred=NULL,xprednormw=NULL) {
   a = model$lower
   b = model$upper
   d = model$dimY
@@ -99,9 +109,9 @@ Hd = function(t,model,yt,thetas,thetanormw,Xpred,xprednormw,Ntheta) {
   for (k in 1:d) {
     ek = rep(0,d)
     ek[k] = 1
-    py = phat(t,model,yt,thetas,thetanormw,Xpred,xprednormw,Ntheta)
-    py_minusek = phat(t,model,yt-ek,thetas,thetanormw,Xpred,xprednormw,Ntheta)
-    py_plusek = phat(t,model,yt+ek,thetas,thetanormw,Xpred,xprednormw,Ntheta)
+    py = phat(t,model,yt,thetas,thetanormw,Ntheta,Xpred,xprednormw)
+    py_minusek = phat(t,model,yt-ek,thetas,thetanormw,Ntheta,Xpred,xprednormw)
+    py_plusek = phat(t,model,yt+ek,thetas,thetanormw,Ntheta,Xpred,xprednormw)
     result = result + Hdk(k,a,b,d,yt,py_minusek,py,py_plusek)
   }
   return (result)
