@@ -12,7 +12,7 @@ simulateData = function(model,theta,nobservations) {
   Y[,1] <- model$robs(matrix(X[,1], nrow = 1),1,theta)
   for (t in 2:nobservations) {
     X[,t] = model$rtransition(X[,t-1,drop=FALSE], t, theta)
-    Y[,t] = model$robs(X[,t-1,drop=FALSE], t, theta)
+    Y[,t] = model$robs(X[,t,drop=FALSE], t, theta)
   }
   return (list(X = X, Y = Y))
 }

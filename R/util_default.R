@@ -6,11 +6,14 @@
 #'@description Set the missing algorithmic parameters to their default values
 #'@export
 set_default_algorithmic_parameters = function(algorithmic_parameters){
+  if (is.null(algorithmic_parameters$Ntheta)) {algorithmic_parameters$Ntheta = 128}
+  if (is.null(algorithmic_parameters$Nx)) {algorithmic_parameters$Nx = 128}
   if (is.null(algorithmic_parameters$adaptNx)) {algorithmic_parameters$adaptNx = TRUE}
   if (is.null(algorithmic_parameters$min_acceptance_rate)) {algorithmic_parameters$min_acceptance_rate = 0.20}
   if (is.null(algorithmic_parameters$ess_threshold)) {algorithmic_parameters$ess_threshold = 0.5}
   if (is.null(algorithmic_parameters$nmoves)) {algorithmic_parameters$nmoves = 1}
-  if (is.null(algorithmic_parameters$store)) {algorithmic_parameters$store = FALSE}
+  if (is.null(algorithmic_parameters$store_theta)) {algorithmic_parameters$store_theta = FALSE}
+  if (is.null(algorithmic_parameters$store_X)) {algorithmic_parameters$store_X = FALSE}
   if (is.null(algorithmic_parameters$progress)) {algorithmic_parameters$progress = FALSE}
   if (is.null(algorithmic_parameters$verbose)) {algorithmic_parameters$verbose = FALSE}
   if (is.null(algorithmic_parameters$resampling)) {
@@ -36,7 +39,7 @@ set_default_model = function(model){
     }
   }
   # Define the one-step predicitve density of the observation at time t given all the past from time 1 to (t-1)
-  # This is only relevant when the likelihood is available
+  # This is only relevant when only the likelihood is specified and available
   if (!is.null(model$likelihood)){
     if (is.null(model$dpredictive)){
       # Some models require keeping track of some byproducts (e.g. Kalman filter recursion)
@@ -67,6 +70,38 @@ set_default_model = function(model){
       }
     }
   }
+  # Define the likelihood of the observations from time 1 to t
+  # This is only relevant when only the predictive is specified and available
+  if (!is.null(model$dpredictive)){
+    if (is.null(model$likelihood)){
+      # Some models require keeping track of some byproducts (e.g. Kalman filter recursion)
+      if (is.null(model$initialize_byproducts)){
+        model$likelihood = function(observations,t,theta,log = TRUE){
+          ll = 0
+          for (i in 1:t){
+            ll = ll + model$dpredictive(observations,i,theta,log = TRUE)
+          }
+          if (log) {
+            return(ll)
+          } else {
+            return(exp(ll))
+          }
+        }
+      } else {
+        model$likelihood = function(observations,t,theta,byproduct,log = TRUE){
+          ll = 0
+          for (i in 1:t){
+            ll = ll + model$dpredictive(observations,i,theta,byproduct,log = TRUE)
+          }
+          if (log) {
+            return(ll)
+          } else {
+            return(exp(ll))
+          }
+        }
+      }
+    }
+  }
   # Define the derivatives of the predictive log-density via numerical derivation (cf. numDeriv)
   # The function outputs:
   # >> the transpose of the gradient (1 by dimY)
@@ -75,21 +110,21 @@ set_default_model = function(model){
     if (is.null(model$initialize_byproducts)){
       model$derivativelogdpredictive = function(observations,t,theta,dimY){
         if (t==1){
-          logpredictive = function(y) {model$dpredictive(y,t,theta,log = TRUE)}
+          logpred = function(y) {model$dpredictive(y,t,theta,log = TRUE)}
         } else {
-          logpredictive = function(y) {model$dpredictive(cbind(observations[1:(t-1)],y),t,theta,log = TRUE)}
+          logpred = function(y) {model$dpredictive(cbind(observations[,1:(t-1),drop=FALSE],y),t,theta,log = TRUE)}
         }
-        derivatives = get_derivatives_from_genD(genD(logdobs,observations[,t])$D,dimY)
+        derivatives = get_derivatives_from_genD(genD(logpred,observations[,t,drop=FALSE])$D,dimY)
         return (list(jacobian = derivatives$jacobian, hessiandiag = derivatives$hessiandiag))
       }
     } else {
       model$derivativelogdpredictive = function(observations,t,theta,byproduct,dimY){
         if (t==1){
-          logpredictive = function(y) {model$dpredictive(y,t,theta,byproduct,log = TRUE)}
+          logpred = function(y) {model$dpredictive(y,t,theta,byproduct,log = TRUE)}
         } else {
-          logpredictive = function(y) {model$dpredictive(cbind(observations[1:(t-1)],y),t,theta,byproduct,log = TRUE)}
+          logpred = function(y) {model$dpredictive(cbind(observations[,1:(t-1),drop=FALSE],y),t,theta,byproduct,log = TRUE)}
         }
-        derivatives = get_derivatives_from_genD(genD(logdobs,observations[,t])$D,dimY)
+        derivatives = get_derivatives_from_genD(genD(logpred,observations[,t,drop=FALSE])$D,dimY)
         return (list(jacobian = derivatives$jacobian, hessiandiag = derivatives$hessiandiag))
       }
     }
