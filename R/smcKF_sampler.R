@@ -29,7 +29,7 @@ smcKF_sampler <- function(observations, model, algorithmic_parameters){
   # thetas <- algorithmic_parameters$rinitial_theta(Ntheta)
   # }
   # log target density evaluations at current particles
-  logtargetdensities <- apply(thetas, 1, model$dprior)
+  logtargetdensities <- apply(thetas, 2, model$dprior)
   # normalized weights
   normw <- rep(1/Ntheta, Ntheta)
   logw <- rep(0, Ntheta)

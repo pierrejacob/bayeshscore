@@ -39,7 +39,7 @@ hscore_continuous_smc2 <- function(observations, model, algorithmic_parameters){
   # thetas = algorithmic_parameters$rinitial_theta(Ntheta)
   # }
   #
-  logtargetdensities = apply(thetas, 1, model$dprior) # log target density evaluations at current particles
+  logtargetdensities = apply(thetas, 2, model$dprior) # log target density evaluations at current particles
   normw = rep(1/Ntheta, Ntheta) # normalized weights
   logw = rep(0, Ntheta) # log normalized weights
 

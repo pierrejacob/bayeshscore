@@ -33,7 +33,7 @@ hscore_continuous_smc <- function(observations, model, algorithmic_parameters){
   # thetas = algorithmic_parameters$rinitial_theta(Ntheta)
   # }
   #
-  logtargetdensities = apply(thetas, 1, model$dprior) # log target density evaluations at current particles
+  logtargetdensities = apply(thetas, 2, model$dprior) # log target density evaluations at current particles
   normw = rep(1/Ntheta, Ntheta) # normalized weights
   logw = rep(0, Ntheta) # log normalized weights
 
@@ -83,7 +83,7 @@ hscore_continuous_smc <- function(observations, model, algorithmic_parameters){
   if (algorithmic_parameters$progress) {
     close(progbar)
     time_end = proc.time()-time_start
-    cat(paste("Hscore: T = ",toString(nobservations),", Ntheta = ",toString(Ntheta),", Nx = ",toString(Nx),"\n",sep = ""))
+    cat(paste("Hscore: T = ",toString(nobservations),", Ntheta = ",toString(Ntheta),"\n",sep = ""))
     print(time_end)
   }
   return(list(thetas_history = thetas_history, normw_history = normw_history, logevidence = cumsum(logevidence),
