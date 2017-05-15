@@ -14,6 +14,7 @@ Y = sim$Y
 observations <- matrix(Y, nrow = model$dimY)
 # observations in a matrix of dimensions dimY by nobservations
 
+#--------------------------------------------------------------------------------------------
 # set algorithmic parameters
 algorithmic_parameters <- list()
 algorithmic_parameters$Ntheta = 2^10
@@ -22,14 +23,14 @@ algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$store_theta = TRUE
 algorithmic_parameters$store_X = FALSE
 algorithmic_parameters$ess_threshold = 0.5
-algorithmic_parameters$min_acceptance_rate = 0.3
+algorithmic_parameters$min_acceptance_rate = 0.5
 algorithmic_parameters$nmoves = 2
 # The remaining algorithmic parameters are set to their default values via the functions in util_default.R
 
+#--------------------------------------------------------------------------------------------
 ### Run SMC
 smc_results <- hscore(observations, model, algorithmic_parameters)
-
-### Run SMC_2 (non-tempered and tempered)
+### Run SMC_2
 module_tree <<- Module("module_tree", PACKAGE = "HyvarinenSSM")
 TreeClass <<- module_tree$Tree
 model_withoutlikelihood = model
@@ -37,13 +38,14 @@ model_withoutlikelihood$likelihood = NULL # this forces the use of SMC2
 model_withoutlikelihood$dpredictive = NULL # this forces the use of SMC2
 smc2_results <- hscore(observations, model_withoutlikelihood, algorithmic_parameters)
 
-
+########### BE CAREFUL, SMC starts with the prior sample at t = 1 #######################
 thetas_smc <- smc_results$thetas_history[[nobservations+1]]
 normw_smc <- smc_results$normw_history[[nobservations+1]]
 thetas_smc2 <- smc2_results$thetas_history[[nobservations+1]]
 normw_smc2 <- smc2_results$normw_history[[nobservations+1]]
-###############################################################################################
-###############################################################################################
+#--------------------------------------------------------------------------------------------
+###########################################################################################
+###########################################################################################
 #### Sanity check: sample posterior via naive MH
 # Computes the posterior density (target)
 psi = model$psi
@@ -104,8 +106,7 @@ index = (burnin+1):M
 plot(index,thetas_MH[1,index],type='l')
 plot(index,thetas_MH[2,index],type='l')
 par(mfrow=c(1,1))
-
-########### BE CAREFUL, SMC starts with the prior sample at t = 1 #######################
+#--------------------------------------------------------------------------------------------
 thetas_MH = thetas_MH[,index]
 
 # Checking sample from the posterior distribution (marginal histogram)
@@ -114,17 +115,19 @@ post = data.frame(from = factor(rep(c("smc","smc2","MH"),each = Ntheta)))
 post$theta1 = c(thetas_smc[1,],thetas_smc2[1,],thetas_MH[1,])
 post$theta2 = c(thetas_smc[2,],thetas_smc2[2,],thetas_MH[2,])
 post$weight = c(normw_smc,normw_smc2,rep(1/Ntheta,Ntheta))
-#
+# plot posterior marginals
 plot_theta1 = ggplot(post) +  geom_density(aes(theta1, weight = weight, fill = from), alpha = 0.6) + theme(legend.position="none")
 plot_theta2 = ggplot(post) +  geom_density(aes(theta2, weight = weight, fill = from), alpha = 0.6)
 grid.arrange(plot_theta1, plot_theta2, ncol = 2, widths=c(1,1.35))
 
+#--------------------------------------------------------------------------------------------
 # Check the log-evidence (RESCALED BY 1/t)
 results = data.frame(from = factor(rep(c("smc","smc2"),each = nobservations)))
 results$time = rep(1:nobservations, 2)
 results$logevidence = c(smc_results$logevidence, smc2_results$logevidence)
 ggplot(results) + geom_line(aes(time, logevidence/time, color = from), size = 1)
 
+#--------------------------------------------------------------------------------------------
 # Check the hscore (RESCALED BY 1/t)
 results$hscore = c(smc_results$hscore, smc2_results$hscore)
 ggplot(results) + geom_line(aes(time, hscore/time, color = from), size = 1)

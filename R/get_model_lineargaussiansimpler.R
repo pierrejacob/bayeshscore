@@ -54,10 +54,10 @@ get_model_simplerlineargaussian <- function(){
     return (dnorm(Yt,mean = psi*Xt,sd = sqrt(sigmaV2), log))
   }
 
-  # first and second partial derivatives (k-th coordinate) of the observation log-density
-  # The function outputs:
-  # >> the transpose of the gradient (1 by dimY)
-  # >> the Hessian diagonal coefficients (1 by dimY)
+  # first and second partial derivatives of the observation log-density
+  # The function is vectorized with respect to the states Xt (dimX by Nx), so that it outputs:
+  # >> the jacobian (Nx by dimY matrix: each row is the transpose of the corresponding gradients row-wise)
+  # >> the Hessian diagonals (Nx by dimY matrix: each row is the diagonal coeffs of the corresponding Hessian)
   model$derivativelogdobs = function(Yt,Xt,t,theta,dimY){
     psi = theta[3]
     sigmaV2 = theta[4]

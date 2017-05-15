@@ -1,12 +1,38 @@
-library(doParallel)
+rm(list = ls())
 library(HyvarinenSSM)
+library(ggplot2)
 library(gridExtra)
+set.seed(29)
+
+# create data
+nobservations <- 50
+model <- get_model_lineargaussian_iid()
+true_sigmav2 = 1
+sim = simulateData(model, theta = true_sigmav2, nobservations)
+X = sim$X
+Y = sim$Y
+observations <- matrix(Y, nrow = model$dimY)
+# observations in a matrix of dimensions dimY by nobservations
+
+# set algorithmic parameters
+algorithmic_parameters <- list()
+algorithmic_parameters$Ntheta = 2^10
+algorithmic_parameters$Nx = 2^7
+algorithmic_parameters$verbose = TRUE
+algorithmic_parameters$store_theta = TRUE
+algorithmic_parameters$store_X = FALSE
+algorithmic_parameters$ess_threshold = 0.5
+algorithmic_parameters$min_acceptance_rate = 0.5
+algorithmic_parameters$nmoves = 2
+# The remaining algorithmic parameters are set to their default values via the functions in util_default.R
+
+
 
 # Define model and data
 nobservations <- 100
 model <- get_model_lineargaussian_iid()
 true_sigmav2 = 1
-sim = simulateData(model, theta = c(true_sigmav2), nobservations)
+sim = simulateData(model, theta = true_sigmav2, nobservations)
 X = sim$X
 Y = sim$Y
 observations <- matrix(Y, nrow = model$dimY)# observations in a matrix of dimensions dimy x nobservations
