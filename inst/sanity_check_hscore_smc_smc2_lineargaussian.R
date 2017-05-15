@@ -2,14 +2,15 @@ rm(list = ls());gc()
 library(HyvarinenSSM)
 library(ggplot2)
 library(gridExtra)
-# set.seed(29)
+set.seed(9) #the hscore goes wrong after the move steps
+# set.seed(4) #no move steps, seems to work
 
 # create data
-nobservations <- 20
-model <- get_model_simplerlineargaussian()
-theta_star <- c(0.8,1,model$psi,model$sigmaV2)
-# model <- get_model_lineargaussian()
-# theta_star <- c(0.8,1,1,1)
+nobservations <- 5
+# model <- get_model_simplerlineargaussian()
+# theta_star <- c(0.8,1,model$psi,model$sigmaV2)
+model <- get_model_lineargaussian()
+theta_star <- c(0.8,1,1,1)
 
 sim = simulateData(model, theta = theta_star, nobservations)
 X = sim$X

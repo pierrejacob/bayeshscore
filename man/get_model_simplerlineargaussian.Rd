@@ -7,6 +7,6 @@
 get_model_simplerlineargaussian()
 }
 \description{
-This implements the univariate linear Gaussian model
+Univariate linear Gaussian model with only 2 unknown parameters
 }
 
