@@ -11,15 +11,16 @@ theta_star <- c(0.8,1)
 sim = simulateData(model, theta = theta_star, nobservations)
 X = sim$X
 Y = sim$Y
-observations <- matrix(Y, nrow = model$dimY) # observations in a matrix of dimensions dimy x nobservations
+observations <- matrix(Y, nrow = model$dimY)
+# observations in a matrix of dimensions dimY by nobservations
 
 # set algorithmic parameters
 algorithmic_parameters <- list()
 algorithmic_parameters$Ntheta = 1024
 algorithmic_parameters$Nx = 128
-algorithmic_parameters$observation_type = 'continuous'
 algorithmic_parameters$verbose = TRUE
-algorithmic_parameters$store = TRUE
+algorithmic_parameters$store_theta = TRUE
+algorithmic_parameters$store_X = FALSE
 algorithmic_parameters$ess_threshold = 0.5
 algorithmic_parameters$min_acceptance_rate = 0.45
 algorithmic_parameters$nmoves = 2
@@ -38,6 +39,7 @@ smc2_results <- hscore_continuous_no_tempering(observations, model, algorithmic_
 algorithmic_parameters$progress = FALSE
 model_withoutlikelihood = model
 model_withoutlikelihood$likelihood = NULL
+model_withoutlikelihood$dpredictive = NULL
 smc2_results_temp <- hscore(observations, model_withoutlikelihood, algorithmic_parameters)
 
 ###############################################################################################
@@ -135,11 +137,6 @@ results = data.frame(from = factor(rep(c("smc","smcKF","smc2","smc2temp"),each =
 results$time = rep(1:time_t, 4)
 results$logevidence = c(smc_results$logevidence,smcKF_results$logevidence, smc2_results$logevidence, smc2_results_temp$logevidence)
 ggplot(results) + geom_line(aes(time, logevidence/time, color = from), size = 1)
-
-# Check the h-score (RESCALED BY 1/t)
-ggplot() +
-  geom_line(aes(1:time_t,smc2_results$hscore[1:time_t]/1:time_t), color = "purple", size = 1) +
-  geom_line(aes(1:time_t,smc2_results_temp$hscore[1:time_t]/1:time_t), color = "blue", size = 1)
 
 # # Checking sample from the posterior distribution (contour)
 # ### Visual (qualitative) diagnostic
