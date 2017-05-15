@@ -36,6 +36,7 @@ hincrementContinuous_smc2 = function(t,model,observationt,thetas,Wtheta,PFs,Nthe
   }
   return (hincrement)
 }
+#-------------------------------------------------------------------------------------------
 # smc version when predictive density is available
 hincrementContinuous_smc = function(t,model,observations,thetas,Wtheta,byproducts,Ntheta) {
   d = model$dimY
@@ -72,8 +73,8 @@ hincrementContinuous_smc = function(t,model,observations,thetas,Wtheta,byproduct
 #----------------------------------------------------------------------------------------#
 #------------------------------ DISCRETE OBSERVATIONS -----------------------------------#
 #----------------------------------------------------------------------------------------#
-# This function computes the approximation qt_hat(y) for a given set of particles
-phat = function(t,model,y,thetas,thetanormw,Ntheta,Xpred=NULL,xprednormw=NULL) {
+# This function computes the approximation pt_hat(y) for a given set of particles
+phat = function(t,model,y,thetas,thetanormw,Ntheta,Xpred,xprednormw) {
   py = 0
   for (m in 1:Ntheta){
     if (thetanormw[m]==0){
@@ -101,7 +102,7 @@ Hdk = function(k,a,b,d,y,py_minusek,py,py_plusek) {
 # This function computes the partial score term Hd
 # a,b are vectors of componentwise lower and upper bounds of the observations
 # d is the dimension of y
-Hd = function(t,model,yt,thetas,thetanormw,Ntheta,Xpred=NULL,xprednormw=NULL) {
+Hd = function(t,model,yt,thetas,thetanormw,Ntheta,Xpred,xprednormw) {
   a = model$lower
   b = model$upper
   d = model$dimY
@@ -113,6 +114,50 @@ Hd = function(t,model,yt,thetas,thetanormw,Ntheta,Xpred=NULL,xprednormw=NULL) {
     py_minusek = phat(t,model,yt-ek,thetas,thetanormw,Ntheta,Xpred,xprednormw)
     py_plusek = phat(t,model,yt+ek,thetas,thetanormw,Ntheta,Xpred,xprednormw)
     result = result + Hdk(k,a,b,d,yt,py_minusek,py,py_plusek)
+  }
+  return (result)
+}
+#-------------------------------------------------------------------------------------------
+# smc version when predictive density is available
+# This function computes the approximation qt_hat(y) for a given set of particles
+phat_smc = function(t,model,observations,thetas,thetanormw,Ntheta,byproducts) {
+  py = 0
+  if (!is.null(byproducts)){
+    for (m in 1:Ntheta){
+      if (thetanormw[m]==0){
+        next
+      }
+      py = py + thetanormw[m]*model$dpredictive(observations,t,thetas[,m],byproducts[[m]],log = FALSE)
+    }
+  } else {
+    for (m in 1:Ntheta){
+      if (thetanormw[m]==0){
+        next
+      }
+      py = py + thetanormw[m]*model$dpredictive(observations,t,thetas[,m],log = FALSE)
+    }
+  }
+  return (py)
+}
+# This function computes the partial score term Hd
+# a,b are vectors of componentwise lower and upper bounds of the observations
+# d is the dimension of y
+Hd_smc = function(t,model,observations,thetas,thetanormw,Ntheta,byproducts) {
+  a = model$lower
+  b = model$upper
+  d = model$dimY
+  result = 0
+  for (k in 1:d) {
+    ek = rep(0,d)
+    ek[k] = 1
+    obsminusek = observations
+    obsplusek = observations
+    obsminusek[,t] = obsminusek[,t]-ek
+    obsplusek[,t] = obsplusek[,t]+ek
+    py = phat_smc(t,model,observations,thetas,thetanormw,Ntheta,byproducts)
+    py_minusek = phat_smc(t,model,obsminusek,thetas,thetanormw,Ntheta,byproducts)
+    py_plusek = phat_smc(t,model,obsplusek,thetas,thetanormw,Ntheta,byproducts)
+    result = result + Hdk(k,a,b,d,observations[,t],py_minusek,py,py_plusek)
   }
   return (result)
 }

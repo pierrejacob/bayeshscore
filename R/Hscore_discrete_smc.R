@@ -1,17 +1,14 @@
-# This function computes successive prequential Hyvarinen score for discrete observations by running SMC^2.
+# This function computes successive prequential Hyvarinen score for discrete observations by running SMC
 # It also computes the successive log-evidence as a by-product.
-hscore_discrete_smc2 <- function(observations, model, algorithmic_parameters){
+hscore_discrete_smc <- function(observations, model, algorithmic_parameters){
   # Set default values for the missing fields
   algorithmic_parameters = set_default_algorithmic_parameters(algorithmic_parameters)
   model = set_default_model(model)
   # Parse algorithmic parameters and set flags accordingly
   nobservations = ncol(observations)
   Ntheta = algorithmic_parameters$Ntheta
-  Nx = algorithmic_parameters$Nx
   nmoves = algorithmic_parameters$nmoves
   resampling = algorithmic_parameters$resampling
-  adaptNx = algorithmic_parameters$adaptNx
-  min_acceptance_rate = algorithmic_parameters$min_acceptance_rate
   ess_objective = algorithmic_parameters$ess_threshold*algorithmic_parameters$Ntheta
   # Monitor progress if needed
   if (algorithmic_parameters$progress) {
@@ -25,11 +22,8 @@ hscore_discrete_smc2 <- function(observations, model, algorithmic_parameters){
   logevidence = array(NA,dim = c(nobservations)) #log-evidence at successive times t
   rejuvenation_times = array(NA,dim = c(nobservations)) #successive times where resampling is triggered
   rejuvenation_accept_rate = array(NA,dim = c(nobservations)) #successive acceptance rates of resampling
-  increase_Nx_times = array(NA,dim = c(nobservations)) #successive times where adaptation regarding Nx is triggered
-  increase_Nx_values = array(NA,dim = c(nobservations)) #successive values of Nx
   thetas_history = list() #successive sets of particles theta
   normw_history = list() #successive sets of normalized weights for theta
-  PF_history = list() # successive particle filters (one for each theta at each time step)
   #
   # # Initialize SMC2 by sampling from prior (default), or from specified proposal
   # # (e.g. relevant in case the prior is vague)
@@ -46,40 +40,23 @@ hscore_discrete_smc2 <- function(observations, model, algorithmic_parameters){
   ########## if we start from a proposal instead of the prior (e.g. improper prior)
   ########## then the weights should be initialized differently:
   ########## log(prior_density) - log(proposal_density) ???
-  PFs = list() # list of particle filters (one for each theta)
   if (algorithmic_parameters$store_theta){
     thetas_history[[1]] = thetas
     normw_history[[1]] = normw
   }
-  # Initialize array of particles X targeting predictive distributions (most recent)
-  Xprevious = array(NA,dim = c(model$dimX, Nx, Ntheta))
-  Xpred = array(NA,dim = c(model$dimX, Nx, Ntheta))
-  XnormW_previous = matrix(1/Nx, nrow = Nx, ncol = Ntheta) #matrix of normalized weights for X at previous step
-  # Initialize filters (first observation passed as argument just to initialize the fields of PF)
-  for (itheta in 1:Ntheta){
-    theta = thetas[,itheta]
-    PFs[[itheta]] = conditional_particle_filter(matrix(observations[,1],ncol = 1), model, theta, Nx)
-    #the CPF performs a regular PF when no conditioning path is provided
-    Xpred[,,itheta] = PFs[[itheta]]$X
+  # initialize possible byproducts (e.g. Kalman filters, etc ...)
+  byproducts = list()
+  if (!is.null(model$initialize_byproducts)) {
+    for (itheta in 1:Ntheta){
+      byproducts[[itheta]] = model$initialize_byproducts(thetas[,itheta], observations)
+    }
+  } else {
+    byproducts = NULL
   }
   # Assimilate observations one by one
   for (t in 1:nobservations){
-    # Construct particles targeting the one-step-ahead predictive (need to reconstruct since size Nx might change)
-    if (t > 1){
-      Nx = PFs[[1]]$Nx
-      Xpred = array(NA,dim = c(model$dimX,Nx,Ntheta)) # (need to reconstruct since size Nx might change)
-      for (itheta in 1:Ntheta){
-        X = Xprevious[,,itheta]
-        if (is.null(dim(X))){
-          Xpred[,,itheta] = model$rtransition(matrix(X,ncol = Nx), t, thetas[,itheta])
-        }
-        else{
-          Xpred[,,itheta] = model$rtransition(X, t, thetas[,itheta])
-        }
-      }
-    }
     # compute prequential H score (with theta from time t-1, see formula in the paper)
-    Hscore[t] = Hd(t,model,observations[,t],thetas,normw,Ntheta,Xpred,XnormW_previous)
+    Hscore[t] = Hd(t,model,observations[,t],thetas,normw,Ntheta,byproducts = byproducts)
     # assimilate the next observation
     results = assimilate_one_smc2(thetas, PFs, t, observations, model, Ntheta, ess_objective,
                                   nmoves, resampling, logtargetdensities, logw, normw,
@@ -91,25 +68,13 @@ hscore_discrete_smc2 <- function(observations, model, algorithmic_parameters){
     PFs = results$PFs
     logtargetdensities = results$logtargetdensities
     logevidence[t] = results$logcst
-    #matrix of normalized weights for X at previous step (need to reconstruct since size Nx might change)
-    Nx = PFs[[1]]$Nx
-    Xprevious = array(NA,dim = c(Nx, model$dimX, Ntheta))
-    XnormW_previous = matrix(NA, nrow = PFs[[1]]$Nx, ncol = Ntheta)
-    for (itheta in 1:Ntheta){
-      Xprevious[,,itheta] = PFs[[itheta]]$X
-      XnormW_previous[,itheta] = PFs[[itheta]]$xnormW
-    }
+    if (!is.null(byproducts)) {byproducts = results$byproducts}
     # do some book-keeping
     rejuvenation_times[t] = results$rejuvenation_time #successive times where resampling is triggered
     rejuvenation_accept_rate[t] = results$rejuvenation_accept_rate #successive acceptance rates
-    increase_Nx_times[t] = results$increase_Nx_times #successive times where adaptation regarding Nx is triggered
-    increase_Nx_values[t] = results$increase_Nx_values #successive values of Nx
     if (algorithmic_parameters$store_theta){
       thetas_history[[t+1]] = thetas
       normw_history[[t+1]] = normw
-    }
-    if (algorithmic_parameters$store_X){
-      PF_history[[t+1]] = PFs
     }
     # Update progress bar if needed
     if (algorithmic_parameters$progress) {
@@ -120,15 +85,11 @@ hscore_discrete_smc2 <- function(observations, model, algorithmic_parameters){
   if (algorithmic_parameters$progress) {
     close(progbar)
     time_end = proc.time()-time_start
-    cat(paste("Hscore: T = ",toString(nobservations),", Ntheta = ",toString(Ntheta),
-              ", Nx = ",toString(Nx),"\n",sep = ""))
+    cat(paste("Hscore: T = ",toString(nobservations),", Ntheta = ",toString(Ntheta),"\n",sep = ""))
     print(time_end)
   }
-  return(list(thetas_history = thetas_history, normw_history = normw_history,
-              PF_history = PF_history, logevidence = cumsum(logevidence),
+  return(list(thetas_history = thetas_history, normw_history = normw_history, logevidence = cumsum(logevidence),
               logtargetdensities = logtargetdensities, hscore = cumsum(Hscore),
               rejuvenation_times = rejuvenation_times[!is.na(rejuvenation_times)],
-              rejuvenation_accept_rate = rejuvenation_accept_rate[!is.na(rejuvenation_accept_rate)],
-              increase_Nx_times = increase_Nx_times[!is.na(increase_Nx_times)],
-              increase_Nx_values = increase_Nx_values[!is.na(increase_Nx_values)]))
+              rejuvenation_accept_rate = rejuvenation_accept_rate[!is.na(rejuvenation_accept_rate)]))
 }
