@@ -58,9 +58,9 @@ hscore_discrete_smc <- function(observations, model, algorithmic_parameters){
     # compute prequential H score (with theta from time t-1, see formula in the paper)
     Hscore[t] = Hd(t,model,observations[,t],thetas,normw,Ntheta,byproducts = byproducts)
     # assimilate the next observation
-    results = assimilate_one_smc2(thetas, PFs, t, observations, model, Ntheta, ess_objective,
+    results <- assimilate_one_smc(thetas, t, observations, model, Ntheta, ess_objective,
                                   nmoves, resampling, logtargetdensities, logw, normw,
-                                  algorithmic_parameters$verbose, adaptNx, min_acceptance_rate)
+                                  byproducts, algorithmic_parameters$verbose)
     # Update the particles theta and compute the log-evidence
     thetas = results$thetas
     normw = results$normw

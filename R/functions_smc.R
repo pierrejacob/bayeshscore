@@ -110,7 +110,7 @@ assimilate_one_smc <- function(thetas, t, observations, model, Ntheta, ess_objec
                 thetas[,i] <- theta_new
                 logtargetdensities[i] <- logtarget_new
                 logw_incremental[i] <- logw_incremental_new
-                byproducts[[i]] = byproduct
+                if (!is.null(byproducts)) {byproducts[[i]] = byproduct}
               }
               else {
                 # do nothing

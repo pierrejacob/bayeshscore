@@ -27,7 +27,7 @@ hincrementContinuous_smc2 = function(t,model,observationt,thetas,Wtheta,PFs,Nthe
         d1log[[m]] = derivatives$jacobian
         d2log[[m]] = derivatives$hessiandiag
       }
-      Ek_theta[m] = sum(WX*(d2log[[m]][k] + (d1log[[m]][,k])^2))
+      Ek_theta[m] = sum(WX*(d2log[[m]][,k] + (d1log[[m]][,k])^2))
       Fk_theta[m] = sum(WX*d1log[[m]][,k])
     }
     Ek = sum(Wtheta*Ek_theta)
@@ -39,11 +39,10 @@ hincrementContinuous_smc2 = function(t,model,observationt,thetas,Wtheta,PFs,Nthe
 #-------------------------------------------------------------------------------------------
 # smc version when predictive density is available
 hincrementContinuous_smc = function(t,model,observations,thetas,Wtheta,byproducts,Ntheta) {
-  d = model$dimY
   hincrement = 0
-  jacobian = list()
-  hessiandiag = list()
-  for (k in 1:d) {
+  d1log = list()
+  d2log = list()
+  for (k in 1:model$dimY) {
     Ek_theta = array(0,dim = Ntheta)
     Fk_theta = array(0,dim = Ntheta)
     for (m in 1:Ntheta){
@@ -57,11 +56,11 @@ hincrementContinuous_smc = function(t,model,observations,thetas,Wtheta,byproduct
         } else {
           derivatives = model$derivativelogdpredictive(observations,t,thetas[,m],model$dimY)
         }
-        jacobian[[m]] = derivatives$jacobian
-        hessiandiag[[m]] = derivatives$hessiandiag
+        d1log[[m]] = derivatives$jacobian
+        d2log[[m]] = derivatives$hessiandiag
       }
-      Ek_theta[m] = hessiandiag[[m]][k] + (jacobian[[m]][k])^2
-      Fk_theta[m] = jacobian[[m]][k]
+      Ek_theta[m] = d2log[[m]][k] + (d1log[[m]][k])^2
+      Fk_theta[m] = d1log[[m]][k]
     }
     Ek = sum(Wtheta*Ek_theta)
     Fk = (sum(Wtheta*Fk_theta))^2
