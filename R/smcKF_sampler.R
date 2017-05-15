@@ -46,7 +46,7 @@ smcKF_sampler <- function(observations, model, algorithmic_parameters){
   for (itheta in 1:Ntheta){
     theta <- thetas[,itheta]
     Kalman <- new(kalman_module$Kalman)
-    Kalman$set_parameters(list(rho = theta[1], sigma = sqrt(theta[2]), eta = 1, tau = sqrt(0.8)))
+    Kalman$set_parameters(list(rho = theta[1], sigma = sqrt(theta[2]), eta = theta[3], tau = sqrt(theta[4])))
     Kalman$set_observations(matrix(observations, ncol = 1))
     Kalman$first_step()
     KFs[[itheta]] <- Kalman

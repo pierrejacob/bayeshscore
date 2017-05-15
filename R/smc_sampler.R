@@ -16,14 +16,11 @@ smc_sampler <- function(observations, model, algorithmic_parameters){
   if (algorithmic_parameters$progress) {
     print(paste("Started at:",Sys.time()))
     progbar = txtProgressBar(min = 0,max = nobservations,style=3)
-    count = 0
     time_start = proc.time()
   }
   # Initialize empty arrays and lists to store the results
   ESS = array(NA,dim = c(nobservations)) #ESS at successive times t
   logevidence = array(NA,dim = c(nobservations)) #log-evidence at successive times t
-  rejuvenation_times <- c() #successive times where resampling is triggered
-  rejuvenation_accept_rate <- c() #successive acceptance rates of resampling
   thetas_history = list() #successive sets of particles theta
   normw_history = list() #successive sets of normalized weights for theta
   # if (is.null(algorithmic_parameters$rinitial_theta)){
@@ -47,7 +44,7 @@ smc_sampler <- function(observations, model, algorithmic_parameters){
   byproducts = list()
   if (!is.null(model$initialize_byproducts)) {
     for (itheta in 1:Ntheta){
-      byproducts[[itheta]] = model$initialize_byproducts(thetas[,itheta], observations, Ntheta)
+      byproducts[[itheta]] = model$initialize_byproducts(thetas[,itheta], observations)
     }
   } else {
     byproducts = NULL
@@ -67,8 +64,7 @@ smc_sampler <- function(observations, model, algorithmic_parameters){
     normw_history[[t+1]] <- normw
     # Update progress bar if needed
     if (algorithmic_parameters$progress) {
-      count = count + 1
-      setTxtProgressBar(progbar, count)
+      setTxtProgressBar(progbar, t)
     }
   }
   # Update progress bar if needed

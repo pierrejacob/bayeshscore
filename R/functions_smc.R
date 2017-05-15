@@ -4,11 +4,14 @@ assimilate_one_smc <- function(thetas, t, observations, model, Ntheta, ess_objec
   current_gamma <- 0
   logcst <- 0
   logw_incremental <- rep(NA, Ntheta)
+  rejuvenation_time = NA
+  rejuvenation_accept_rate = NA
   # compute the log-incremental weight using byproduct (e.g. Kalman filter) or analytically via the model
   if (!is.null(byproducts)){
     for (itheta in 1:Ntheta){
       byproduct = model$update_byproduct(byproducts[[itheta]], t, thetas[,itheta], observations)
       logw_incremental[itheta] = model$dpredictive(observations,t,thetas[,itheta],byproduct,log = TRUE)
+      byproducts[[itheta]] = byproduct
     }
   } else {
     for (itheta in 1:Ntheta){
@@ -65,6 +68,7 @@ assimilate_one_smc <- function(thetas, t, observations, model, Ntheta, ess_objec
       normw <- rep(1/Ntheta, Ntheta)
       #
       if (nmoves > 0){
+        rejuvenation_time = t
         for (imove in 1:nmoves){
           theta_new_all = fast_rmvnorm_transpose(Ntheta,mean_t,cov_t)
           log_proposal_density_new_all <- fast_dmvnorm_transpose(theta_new_all, mean_t, cov_t)
@@ -78,9 +82,9 @@ assimilate_one_smc <- function(thetas, t, observations, model, Ntheta, ess_objec
             } else {
               # compute the log-likelihood of proposed theta using byproduct (e.g. Kalman filter) or analytically via the model
               if (!is.null(byproducts)){
-                byproduct = model$initialize_byproducts(theta_new, observations, Ntheta)
-                for (time_index in 1:t){
-                  byproduct = model$update_byproduct(byproduct, time_index, theta_new, observations)
+                byproduct = model$initialize_byproducts(theta_new, observations)
+                for (i in 1:t){
+                  byproduct = model$update_byproduct(byproduct, i, theta_new, observations)
                 }
                 incremental_ll_new = model$dpredictive(observations,t,theta_new,byproduct,log = TRUE)
               } else {
@@ -113,13 +117,15 @@ assimilate_one_smc <- function(thetas, t, observations, model, Ntheta, ess_objec
               }
             }
           }
+          rejuvenation_accept_rate = accepts/Ntheta
           if (verbose){
-            cat("Acceptance rate (independent proposal): ", 100*accepts/Ntheta, "%\n")
+            cat("Acceptance rate (independent proposal): ", 100*rejuvenation_accept_rate, "%\n")
           }
         }
       }
     }
   }
   return(list(thetas = thetas, normw = normw, logw = logw, logtargetdensities = logtargetdensities,
-              logcst = logcst, byproducts = byproducts))
+              logcst = logcst, byproducts = byproducts, rejuvenation_time = rejuvenation_time,
+              rejuvenation_accept_rate = rejuvenation_accept_rate))
 }
