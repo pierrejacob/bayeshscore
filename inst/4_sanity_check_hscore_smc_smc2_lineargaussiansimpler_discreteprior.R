@@ -6,7 +6,7 @@ set.seed(29)
 
 # Define model and data
 nobservations <- 30
-model <- get_model_iid_gaussian_unknown_variance()
+model <- get_model_lineargaussiansimpler_discreteprior()
 true_sigmav2 = 1
 sim = simulateData(model, theta = true_sigmav2, nobservations)
 X = sim$X
@@ -17,13 +17,13 @@ observations <- matrix(Y, nrow = model$dimY)# observations in a matrix of dimens
 # set algorithmic parameters
 algorithmic_parameters <- list()
 algorithmic_parameters$Ntheta = 2^10
-algorithmic_parameters$Nx = 2^0
+algorithmic_parameters$Nx = 2^7
 algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$store_theta = TRUE
 algorithmic_parameters$store_X = FALSE
-algorithmic_parameters$ess_threshold = 0.9 # purposely set high to force some resample-move steps
-algorithmic_parameters$min_acceptance_rate = 0.5
-algorithmic_parameters$nmoves = 2
+algorithmic_parameters$ess_threshold = 0.5 # purposely set high to force some resample-move steps
+algorithmic_parameters$min_acceptance_rate = 0.0
+algorithmic_parameters$nmoves = 1
 # The remaining algorithmic parameters are set to their default values via the functions in util_default.R
 
 #--------------------------------------------------------------------------------------------
@@ -50,26 +50,66 @@ normw_smc2 <- smc2_results$weights_history[[nobservations+1]]
 
 #--------------------------------------------------------------------------------------------
 #Compute exact posterior
-nu = model$df
-nu_post = nu + nobservations
-s2_post = (nu+sum(Y^2))/nu_post
+phi = model$phi
+psi = model$psi
+sigmaW2 = model$sigmaW2
+initial_mean = 0
+initial_var = (sigmaW2)/(1-phi^2)
+X_t_t_1 = matrix(NA,nrow = length(model$supportprior),ncol = nobservations)
+P_t_t_1 = matrix(NA,nrow = length(model$supportprior),ncol = nobservations)
+for (i in 1:length(model$supportprior)){
+  kalman = KF_filtering(Y,phi,psi,model$supportprior[i],sigmaW2,initial_mean,initial_var)
+  X_t_t_1[i,] = sapply(1:nobservations,function(t)kalman[[t]]$muX_t_t_1)
+  P_t_t_1[i,] = sapply(1:nobservations,function(t)kalman[[t]]$PX_t_t_1)
+}
+posterior_exact = matrix(NA,nrow = length(model$supportprior), ncol = nobservations)
+for (i in 1:length(model$supportprior)){
+  sigV2 =  model$supportprior[i]
+  posterior_exact[i,1] = dnorm(Y[,1],psi*X_t_t_1[i,1],sqrt(sigV2 + (psi^2)*P_t_t_1[i,1]))
+}
+posterior_exact[,1] = (posterior_exact[,1])/sum(posterior_exact[,1])
+for (t in 2:nobservations){
+  for (i in 1:length(model$supportprior)){
+    sigV2 =  model$supportprior[i]
+    posterior_exact[i,t] = posterior_exact[i,t-1]*dnorm(Y[,t],psi*X_t_t_1[i,t],sqrt(sigV2 + (psi^2)*P_t_t_1[i,t]))
+  }
+  posterior_exact[,t] = (posterior_exact[,t])/sum(posterior_exact[,t])
+}
 # Checking sample from the posterior distribution (marginal histogram)
 Ntheta = algorithmic_parameters$Ntheta
 post = data.frame(from = factor(rep(c("smc","smc2"),each = Ntheta)))
 post$theta = c(thetas_smc[1,],thetas_smc2[1,])
 post$weight = c(normw_smc,normw_smc2)
+dx = c(model$supportprior[1],diff(model$supportprior)) #used to renormalize discrete exact posterior (by approximating area by riemann sum)
 ggplot(post) +  geom_density(aes(theta, weight = weight, fill = from), alpha = 0.6) +
-  stat_function(fun = function(y)dinvchisq(y,nu_post,s2_post,FALSE),colour="blue",size=1.5,linetype=1)
+  geom_line(aes(x,y/dx),data = data.frame(x=model$supportprior,y=posterior_exact[,nobservations]),colour="blue",size=1.5,linetype=1)
 
 #--------------------------------------------------------------------------------------------
-#compute exact log-evidence
-logevidence_exact = rep(NA,nobservations)
-for (t in 1:nobservations) {
-  nu_t = nu + (t-1)
-  st2 = (nu + sum(Y[,1:(t-1)]^2))/nu_t
-  logevidence_exact[t] = dtscaled(Y[,t],nu_t,st2,TRUE)
+#Compute exact log-predictive and evidence
+log_py_t_t_1 = rep(NA,nobservations)
+log_py_t_t_1_func = list()
+log_py_t_t_1_func[[1]] = function(y){
+  temp = 0
+  for (i in 1:length(model$supportprior)){
+    sigV2 =  model$supportprior[i]
+    temp = temp + (1/length(model$supportprior))*dnorm(y,phi*X_t_t_1[i,1],sqrt(sigV2 + (psi^2)*P_t_t_1[i,1]))
+  }
+  return (log(temp))
 }
-logevidence_exact = cumsum(logevidence_exact)
+log_py_t_t_1[1] = log_py_t_t_1_func[[1]](Y[,1])
+for (t in 2:nobservations){
+  log_py_t_t_1_func[[t]] = function(y){
+    temp = 0
+    for (i in 1:length(model$supportprior)){
+      sigV2 =  model$supportprior[i]
+      temp = temp + posterior_exact[i,t-1]*dnorm(y,phi*X_t_t_1[i,t],sqrt(sigV2 + (psi^2)*P_t_t_1[i,t]))
+    }
+    return (log(temp))
+  }
+  log_py_t_t_1[t] = log_py_t_t_1_func[[t]](Y[,t])
+}
+logevidence_exact = cumsum(log_py_t_t_1)
+
 # Check the log-evidence (RESCALED BY 1/t)
 results = data.frame(from = factor(rep(c("smc","smc2"),each = nobservations)))
 results$time = rep(1:nobservations, 2)
@@ -78,15 +118,14 @@ ggplot() +
   geom_line(aes(1:nobservations, logevidence_exact/(1:nobservations)),color="blue",size=2,linetype=2) +
   geom_line(data = results,aes(time, logevidence/time, color = from), size = 1)
 
-
 #--------------------------------------------------------------------------------------------
-#Compute exact h-score
-hscore_exact = rep(NA,nobservations)
+#Compute exact (numerically via NumDeriv) hscore
+incr_hscore = rep(NA,nobservations)
 for (t in 1:nobservations){
-  s = sum(Y[,1:t]^2)
-  hscore_exact[t] = ((nu+t)/((nu+s)^2))*((nu+t+4)*Y[,t]^2-2*(nu+s))
+  incr_hscore[t] = 2*hessian(log_py_t_t_1_func[[t]],Y[,t]) + (grad(log_py_t_t_1_func[[t]],Y[,t]))^2
 }
-hscore_exact = cumsum(hscore_exact)
+hscore_exact = cumsum(incr_hscore)
+
 # Check the h-score (RESCALED BY 1/t)
 results$hscore = c(smc_results$hscore,smc2_results$hscore)
 ggplot() +

@@ -7,6 +7,9 @@
 get_model_simplerlineargaussian()
 }
 \description{
-Univariate linear Gaussian model with only 2 unknown parameters
+Univariate linear Gaussian model with 2 unknown parameters
+(\code{phi}, \code{sigmaW2}).
+Latent states: X[t] = \code{phi}*X[t-1] + N(0,\code{sigmaW2}).
+Observations: Y[t] = \code{psi}*X[t] + N(0,\code{sigmaV2}).
 }
 
