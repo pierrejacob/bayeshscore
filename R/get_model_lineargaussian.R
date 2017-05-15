@@ -1,85 +1,154 @@
 #'@rdname get_model_lineargaussian
 #'@title get_model_lineargaussian
-#'@description This implements the univariate linear Gaussian model
+#'@description Univariate linear Gaussian model with 4 unknown parameters
 #'@export
 get_model_lineargaussian <- function(){
-  model.lineargaussian = list()
+  model = list()
+  model$observation_type = 'continuous'
 
   # dimension of parameter
-  model.lineargaussian$dimtheta = 4
-  model.lineargaussian$dimY = 1
-  model.lineargaussian$dimX = 1
+  model$dimtheta = 4
+  model$dimY = 1
+  model$dimX = 1
 
-  # sampler from the prior distribution on parameters
-  model.lineargaussian$rprior = function(Ntheta){
+    # sampler from the prior distribution on parameters
+  model$rprior = function(Ntheta){
     phi = runif(Ntheta,0.1,0.9)
     psi = runif(Ntheta,0.5,1.5)
-    sigmaV2 = runif(Ntheta,0.1,10)
     sigmaW2 = runif(Ntheta,0.1,10)
-    return (rbind(phi,psi,sigmaV2,sigmaW2))
+    sigmaV2 = runif(Ntheta,0.1,10)
+    return (rbind(phi,sigmaW2,psi,sigmaV2))
   }
 
   # prior distribution density on parameters
-  model.lineargaussian$dprior = function(theta, log = TRUE){
+  model$dprior = function(theta, log = TRUE){
     phi = theta[1]
-    psi = theta[2]
-    sigmaV2 = theta[3]
-    sigmaW2 = theta[4]
+    sigmaW2 = theta[2]
+    psi = theta[3]
+    sigmaV2 = theta[4]
+    logd = dunif(phi,0.1,0.9,log)+dunif(psi,0.5,1.5,log)+dunif(sigmaW2,0.1,10,log)+dunif(sigmaV2,0.1,10,log)
     if (log==TRUE){
-      return (dunif(phi,0.1,0.9,log)+dunif(psi,0.5,1.5,log)+dunif(sigmaV2,0.1,10,log)+dunif(sigmaW2,0.1,10,log))
+      return (logd)
     }
     else{
-      return (dunif(phi,0.1,0.9,log)*dunif(psi,0.5,1.5,log)*dunif(sigmaV2,0.1,10,log)*dunif(sigmaW2,0.1,10,log))
+      return (exp(logd))
     }
   }
 
   # sampler from the initial distribution of the states
-  model.lineargaussian$rinitial = function(theta,N){
+  model$rinitial = function(theta,N){
     phi = theta[1]
-    sigmaW2 = theta[4]
+    sigmaW2 = theta[2]
     return (matrix(rnorm(N, mean = 0, sd = sqrt((sigmaW2)/(1-phi^2))), ncol = N))
   }
 
   # sampler from the transition density of the states
-  model.lineargaussian$rtransition = function(Xt,t,theta){
+  model$rtransition = function(Xt,t,theta){
     phi = theta[1]
-    sigmaW2 = theta[4]
+    sigmaW2 = theta[2]
     N = ncol(Xt)
     return (matrix(phi*Xt + rnorm(N, mean = 0, sd = sqrt(sigmaW2)), ncol = N))
   }
 
   # density of the observations
-  model.lineargaussian$dobs = function(Yt,Xt,t,theta,log = TRUE){
-    psi = theta[2]
-    sigmaV2 = theta[3]
+  model$dobs = function(Yt,Xt,t,theta,log = TRUE){
+    psi = theta[3]
+    sigmaV2 = theta[4]
     return (dnorm(Yt,mean = psi*Xt,sd = sqrt(sigmaV2), log))
   }
 
-
-
   # first and second partial derivatives (k-th coordinate) of the observation log-density
-  model.lineargaussian$derivativelogdobs = function(Yt,Xt,t,theta,k){
-    psi = theta[2]
-    sigmaW2 = theta[4]
+  # The function outputs:
+  # >> the transpose of the gradient (1 by dimY)
+  # >> the Hessian diagonal coefficients (1 by dimY)
+  model$derivativelogdobs = function(Yt,Xt,t,theta,dimY){
+    psi = theta[3]
+    sigmaV2 = theta[4]
     N = ncol(Xt)
-    d1 = (psi*Xt-matrix(Yt,ncol = N))/sigmaV2
-    d2 = matrix(-1/sigmaV2,ncol = N)
-    return (list(d1log = d1, d2log = d2))
+    d1 = matrix((psi*Xt-repeat_column(N,Yt))/sigmaV2,nrow = N, ncol = dimY)
+    d2 = matrix(-1/sigmaV2,nrow = N, ncol = dimY)
+    return (list(jacobian = d1, hessiandiag = d2))
+  }
+
+  # OPTIONAL: likelihood of the observations from time 1 to t
+  # This relies on some Kalman filter (passed as a byproduct)
+  model$likelihood = function(observations,t,theta,KF,log = TRUE){
+    phi = theta[1]
+    sigmaW2 = theta[2]
+    psi = theta[3]
+    sigmaV2 = theta[4]
+    initial_mean = 0
+    initial_var = (sigmaW2)/(1-phi^2)
+    # we make the likelihood an explicit function of the observation at time t
+    # to allow the computation of the derivative of the log-predictive density
+    KF = KF_assimilate_one(observations[,t,drop=FALSE],t,phi,psi,sigmaV2,sigmaW2,initial_mean,initial_var,KF)
+    ll = 0
+    for (i in 1:t){
+      ll = ll + KF_logdpredictive(observations[,i,drop=FALSE],i,KF)
+    }
+    if (log) {
+      return(ll)
+    } else {
+      return(exp(ll))
+    }
+  }
+
+  # OPTIONAL: one-step predicitve density of the observation at time t given all the past from 1 to (t-1)
+  # This relies on some Kalman filter (passed as a byproduct)
+  model$dpredictive = function(observations,t,theta,KF,log = TRUE){
+    phi = theta[1]
+    sigmaW2 = theta[2]
+    psi = theta[3]
+    sigmaV2 = theta[4]
+    initial_mean = 0
+    initial_var = (sigmaW2)/(1-phi^2)
+    # we make it an explicit function of the observation at time t to allow computation of the derivative
+    KF = KF_assimilate_one(observations[,t,drop=FALSE],t,phi,psi,sigmaV2,sigmaW2,initial_mean,initial_var,KF)
+    incremental_ll = KF_logdpredictive(observations[,t,drop=FALSE],t,KF)
+    if (log) {
+      return(incremental_ll)
+    } else {
+      return(exp(incremental_ll))
+    }
+  }
+
+  # OPTIONAL: derivatives of the predicitve density
+  # The function outputs:
+  # >> the transpose of the gradient (1 by dimY)
+  # >> the Hessian diagonal coefficients (1 by dimY)
+  model$derivativelogdpredictive = function(observations,t,theta,KF,dimY) {
+    m = KF[[t]]$muY_t_t_1
+    V = KF[[t]]$PY_t_t_1
+    d1 = matrix((m-observations[,t])/V)
+    d2 = matrix(-1/V)
+    return (list(jacobian = d1, hessiandiag = d2))
+  }
+
+  # OPTIONAL: initialize byproducts (e.g. Kalman filters, etc ...)
+  model$initialize_byproducts = function(theta, observations){
+    KF = vector("list",ncol(observations))
+    return(KF)
+  }
+
+  # OPTIONAL: update byproducts (e.g. Kalman filters, etc ...)
+  model$update_byproduct = function(KF, t, theta, observations){
+    phi = theta[1]
+    sigmaW2 = theta[2]
+    psi = theta[3]
+    sigmaV2 = theta[4]
+    initial_mean = 0
+    initial_var = (sigmaW2)/(1-phi^2)
+    KF_updated = KF_assimilate_one(observations[,t,drop=FALSE],t,phi,psi,sigmaV2,sigmaW2,initial_mean,initial_var, KF)
+    return(KF_updated)
   }
 
   # OPTIONAL: simulate observations
-  model.lineargaussian$robs = function(Xt,t,theta){
-    psi = theta[2]
-    sigmaV2 = theta[3]
+  model$robs = function(Xt,t,theta){
+    psi = theta[3]
+    sigmaV2 = theta[4]
     N = ncol(Xt)
-    return (psi*Xt + rnorm(N, mean = 0, sd = sqrt(sigmaV2)))
+    return (matrix(psi*Xt + rnorm(N, mean = 0, sd = sqrt(sigmaV2)),ncol = N))
   }
 
-  # OPTIONAL: fixed parameter for simulation
-  model.lineargaussian$theta = c(0.8,0.7,1,0.9)
-
-  # OPTIONAL: initial mean and variance for state (for linear gaussian model only)
-  model.lineargaussian$initialmean = 0
-  model.lineargaussian$initialvar = (model.lineargaussian$theta[4])/(1-model.lineargaussian$theta[1]^2)
-  return(model.lineargaussian)
+  return(model)
 }

@@ -1,14 +1,15 @@
 #'@rdname get_model_simplerlineargaussian
 #'@title get_model_simplerlineargaussian
-#'@description This implements the univariate linear Gaussian model
+#'@description Univariate linear Gaussian model with only 2 unknown parameters
 #'@export
 get_model_simplerlineargaussian <- function(){
   model = list()
+  model$observation_type = 'continuous'
   model$psi = 1
-  model$sigmaV2 = 0.8
+  model$sigmaV2 = 1
 
   # dimension of parameter
-  model$dimtheta = 2
+  model$dimtheta = 4
   model$dimY = 1
   model$dimX = 1
 
@@ -16,7 +17,7 @@ get_model_simplerlineargaussian <- function(){
   model$rprior = function(Ntheta){
     phi = runif(Ntheta,0.1,0.9)
     sigmaW2 = runif(Ntheta,0.1,10)
-    return (rbind(phi,sigmaW2))
+    return (rbind(phi,sigmaW2,model$psi,model$sigmaV2))
   }
 
   # prior distribution density on parameters
@@ -48,72 +49,143 @@ get_model_simplerlineargaussian <- function(){
 
   # density of the observations
   model$dobs = function(Yt,Xt,t,theta,log = TRUE){
-    return (dnorm(Yt,mean = model$psi*Xt,sd = sqrt(model$sigmaV2), log))
+    psi = theta[3]
+    sigmaV2 = theta[4]
+    return (dnorm(Yt,mean = psi*Xt,sd = sqrt(sigmaV2), log))
   }
 
   # first and second partial derivatives (k-th coordinate) of the observation log-density
+  # The function outputs:
+  # >> the transpose of the gradient (1 by dimY)
+  # >> the Hessian diagonal coefficients (1 by dimY)
   model$derivativelogdobs = function(Yt,Xt,t,theta,dimY){
+    psi = theta[3]
+    sigmaV2 = theta[4]
     N = ncol(Xt)
-    d1 = matrix((model$psi*Xt-repeat_column(N,Yt))/model$sigmaV2,nrow = N, ncol = dimY)
-    d2 = matrix(-1/model$sigmaV2,nrow = N, ncol = dimY)
+    d1 = matrix((psi*Xt-repeat_column(N,Yt))/sigmaV2,nrow = N, ncol = dimY)
+    d2 = matrix(-1/sigmaV2,nrow = N, ncol = dimY)
     return (list(jacobian = d1, hessiandiag = d2))
   }
 
   # OPTIONAL: likelihood of the observations from time 1 to t
   # This relies on some Kalman filter (passed as a byproduct)
-  model$likelihood = function(observations,t,theta,byproduct,log = TRUE){
-    incremental_ll <- byproduct$get_incremental_ll()
+  model$likelihood = function(observations,t,theta,KF,log = TRUE){
+    phi = theta[1]
+    sigmaW2 = theta[2]
+    psi = theta[3]
+    sigmaV2 = theta[4]
+    initial_mean = 0
+    initial_var = (sigmaW2)/(1-phi^2)
+    # we make the likelihood an explicit function of the observation at time t
+    # to allow the computation of the derivative of the log-predictive density
+    KF = KF_assimilate_one(observations[,t,drop=FALSE],t,phi,psi,sigmaV2,sigmaW2,initial_mean,initial_var,KF)
+    ll = 0
+    for (i in 1:t){
+      ll = ll + KF_logdpredictive(observations[,i,drop=FALSE],i,KF)
+    }
     if (log) {
-      return(sum(incremental_ll[1:t]))
+      return(ll)
     } else {
-      return(exp(sum(incremental_ll[1:t])))
+      return(exp(ll))
     }
   }
 
-  # # OPTIONAL: one-step predicitve density of the observation at time t given all the past from time 1 to (t-1)
-  # model$dpredictive = function(observations,t,theta,byproduct,log = TRUE){
-  #   if (t==1) {
-  #     return(model$likelihood(observations,t,theta,byproduct,log))
-  #   } else {
-  #     if (log) {
-  #       return(model$likelihood(observations,t,theta,byproduct,log)-model$likelihood(observations,t-1,theta,byproduct,log))
-  #     } else {
-  #       return(model$likelihood(observations,t,theta,byproduct,log)/model$likelihood(observations,t-1,theta,byproduct,log))
-  #     }
-  #   }
-  # }
+  # OPTIONAL: one-step predicitve density of the observation at time t given all the past from 1 to (t-1)
+  # This relies on some Kalman filter (passed as a byproduct)
+  model$dpredictive = function(observations,t,theta,KF,log = TRUE){
+    phi = theta[1]
+    sigmaW2 = theta[2]
+    psi = theta[3]
+    sigmaV2 = theta[4]
+    initial_mean = 0
+    initial_var = (sigmaW2)/(1-phi^2)
+    # we make it an explicit function of the observation at time t to allow computation of the derivative
+    KF = KF_assimilate_one(observations[,t,drop=FALSE],t,phi,psi,sigmaV2,sigmaW2,initial_mean,initial_var,KF)
+    incremental_ll = KF_logdpredictive(observations[,t,drop=FALSE],t,KF)
+    if (log) {
+      return(incremental_ll)
+    } else {
+      return(exp(incremental_ll))
+    }
+  }
 
-  # # first and second partial derivatives (k-th coordinate) of the one-step predictive log-density
-  # model$derivativelogdpredictive = function(observations,t,theta,byproduct){
-  #   if (t==1){
-  #     logpredictive = function(y) {model$dpredictive(y,t,theta,byproduct,log = TRUE)}
-  #   } else {
-  #     logpredictive = function(y) {model$dpredictive(cbind(observations[1:(t-1)],y),t,theta,byproduct,log = TRUE)}
-  #   }
-  #   gradient_logdpredictive = grad(logpredictive,observations[,t])
-  #   hessian_logdpredictive = hessian(logpredictive,observations[,t])
-  #   return (list(grad = gradient_logdpredictive, hessian = hessian_logdpredictive))
-  # }
+  # OPTIONAL: derivatives of the predicitve density
+  # The function outputs:
+  # >> the transpose of the gradient (1 by dimY)
+  # >> the Hessian diagonal coefficients (1 by dimY)
+  model$derivativelogdpredictive = function(observations,t,theta,KF,dimY) {
+    m = KF[[t]]$muY_t_t_1
+    V = KF[[t]]$PY_t_t_1
+    d1 = matrix((m-observations[,t])/V)
+    d2 = matrix(-1/V)
+    return (list(jacobian = d1, hessiandiag = d2))
+  }
 
   # OPTIONAL: initialize byproducts (e.g. Kalman filters, etc ...)
-  model$initialize_byproducts = function(theta, observations, Ntheta){
-    KF <- new(kalman_module$Kalman)
-    KF$set_parameters(list(rho = theta[1], sigma = sqrt(theta[2]), eta = 1, tau = sqrt(0.8)))
-    KF$set_observations(matrix(observations, ncol = 1))
-    KF$first_step()
+  model$initialize_byproducts = function(theta, observations){
+    KF = vector("list",ncol(observations))
     return(KF)
   }
+
   # OPTIONAL: update byproducts (e.g. Kalman filters, etc ...)
-  model$update_byproduct = function(KF, t, thetas, observations){
-    KF$filtering_step(t-1)
-    return(KF)
+  model$update_byproduct = function(KF, t, theta, observations){
+    phi = theta[1]
+    sigmaW2 = theta[2]
+    psi = theta[3]
+    sigmaV2 = theta[4]
+    initial_mean = 0
+    initial_var = (sigmaW2)/(1-phi^2)
+    KF_updated = KF_assimilate_one(observations[,t,drop=FALSE],t,phi,psi,sigmaV2,sigmaW2,initial_mean,initial_var, KF)
+    return(KF_updated)
   }
 
   # OPTIONAL: simulate observations
   model$robs = function(Xt,t,theta){
+    psi = theta[3]
+    sigmaV2 = theta[4]
     N = ncol(Xt)
-    return (matrix(model$psi*Xt + rnorm(N, mean = 0, sd = sqrt(model$sigmaV2)),ncol = N))
+    return (matrix(psi*Xt + rnorm(N, mean = 0, sd = sqrt(sigmaV2)),ncol = N))
   }
 
+  # # OPTIONAL: likelihood of the observations from time 1 to t
+  # # This relies on some Kalman filter (passed as a byproduct)
+  # model$likelihood = function(observations,t,theta,KF,log = TRUE){
+  #   incremental_ll <- byproduct$get_incremental_ll()
+  #   if (log) {
+  #     return(sum(incremental_ll[1:t]))
+  #   } else {
+  #     return(exp(sum(incremental_ll[1:t])))
+  #   }
+  # }
+  # # # OPTIONAL: one-step-ahead predictive distribution of the observationt t given past from time 1 to t-1
+  # # This relies on some Kalman filter (passed as a byproduct containing the likelihood of the past)
+  # # It should be a function of the observation at time t
+  # model$dpredictive = function(observations,t,theta,byproduct,log = TRUE){
+  #   if (t==1){
+  #     byproduct$set_observations(matrix(observations, ncol = 1))
+  #     byproduct$first_step()
+  #     byproduct$filtering_step(t-1)
+  #     return(byproduct$get_incremental_ll()[t])
+  #   } else {
+  #     past_ll = sum(byproduct$get_incremental_ll()[1:(t-1)])
+  #     byproduct$set_observations(matrix(observations, ncol = 1))
+  #     byproduct$filtering_step(t-1)
+  #     return(byproduct$get_incremental_ll()[t])
+  #   }
+  # }
+
+  # # OPTIONAL: initialize byproducts (e.g. Kalman filters, etc ...)
+  # model$initialize_byproducts = function(theta, observations, Ntheta){
+  #   KF <- new(kalman_module$Kalman)
+  #   KF$set_parameters(list(rho = theta[1], sigma = sqrt(theta[2]),eta = model$psi,tau=sqrt(model$sigmaV2)))
+  #   KF$set_observations(matrix(observations, ncol = 1))
+  #   KF$first_step()
+  #   return(KF)
+  # }
+  # # OPTIONAL: update byproducts (e.g. Kalman filters, etc ...)
+  # model$update_byproduct = function(KF, t, thetas, observations){
+  #   KF$filtering_step(t-1)
+  #   return(KF)
+  # }
   return(model)
 }
