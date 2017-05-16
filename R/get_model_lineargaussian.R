@@ -14,12 +14,16 @@ get_model_lineargaussian <- function(){
   model$dimY = 1
   model$dimX = 1
 
-    # sampler from the prior distribution on parameters
+  # sampler from the prior distribution on parameters
+  rangephi = c(0.1,0.9)
+  rangepsi = c(0.99,1.01)
+  rangesigmaV2 = c(0.99,1.01)
+  rangesigmaW2 = c(0.1,10)
   model$rprior = function(Ntheta){
-    phi = runif(Ntheta,0.1,0.9)
-    psi = runif(Ntheta,0.5,1.5)
-    sigmaW2 = runif(Ntheta,0.1,10)
-    sigmaV2 = runif(Ntheta,0.1,10)
+    phi = runif(Ntheta,rangephi[1],rangephi[2])
+    psi = runif(Ntheta,rangepsi[1],rangepsi[2])
+    sigmaW2 = runif(Ntheta,rangesigmaV2[1],rangesigmaV2[2])
+    sigmaV2 = runif(Ntheta,rangesigmaW2[1],rangesigmaW2[2])
     return (rbind(phi,sigmaW2,psi,sigmaV2))
   }
 
@@ -29,13 +33,12 @@ get_model_lineargaussian <- function(){
     sigmaW2 = theta[2]
     psi = theta[3]
     sigmaV2 = theta[4]
-    logd = dunif(phi,0.1,0.9,log)+dunif(psi,0.5,1.5,log)+dunif(sigmaW2,0.1,10,log)+dunif(sigmaV2,0.1,10,log)
-    if (log==TRUE){
-      return (logd)
-    }
-    else{
-      return (exp(logd))
-    }
+    logd = dunif(phi,rangephi[1],rangephi[2],log = TRUE) +
+      dunif(psi,rangepsi[1],rangepsi[2],log = TRUE) +
+      dunif(sigmaW2,rangesigmaV2[1],rangesigmaV2[2],log = TRUE) +
+      dunif(sigmaV2,rangesigmaW2[1],rangesigmaW2[2],log = TRUE)
+    if (log==TRUE) {return (logd)}
+    else {return (exp(logd))}
   }
 
   # sampler from the initial distribution of the states

@@ -1,10 +1,10 @@
 library(HyvarinenSSM)
 
 #create data
-nobs <- 100
+nobservations <- 100
 model <- get_model_lineargaussian()
 theta = c(0.5,1,1,1)
-sim = simulateData(model, theta = theta, nobs)
+sim = simulateData(model, theta = theta, nobservations)
 X = sim$X
 Y = sim$Y
 
@@ -40,21 +40,21 @@ CPF = conditional_particle_filter(Y,model,theta,algorithmic_parameters$Nx)
 
 # Check log-likelihood
 ggplot() +
-  geom_line(aes(1:nobs,cumsum(sapply(1:nobs,function(t)KF_logdpredictive(Y[,t,drop=FALSE],t, KF)))),col='blue',size=2,linetype=2,alpha=0.6) +
-  geom_line(aes(1:nobs,cumsum(Kalman$get_incremental_ll())),col='red',size=1) +
-  geom_point(aes(1:nobs,cumsum(BPF$incremental_ll)),size=2) +
-  geom_point(aes(1:nobs,cumsum(CPF$incremental_ll)),size=3,shape=3)
+  geom_line(aes(1:nobservations,cumsum(sapply(1:nobservations,function(t)KF_logdpredictive(Y[,t,drop=FALSE],t, KF)))),col='blue',size=2,linetype=2,alpha=0.6) +
+  geom_line(aes(1:nobservations,cumsum(Kalman$get_incremental_ll())),col='red',size=1) +
+  geom_point(aes(1:nobservations,cumsum(BPF$incremental_ll)),size=2) +
+  geom_point(aes(1:nobservations,cumsum(CPF$incremental_ll)),size=3,shape=3)
 
 # Check filtering means
 ggplot() +
-  geom_line(aes(1:nobs,sapply(1:nobs,function(t)KF[[t]]$muX_t_t)),col='blue',size=2,linetype=2,alpha=0.6)+
-  geom_line(aes(1:nobs,sapply(1:nobs,function(t)Kalman$get_filtering_mean(t))),col='red',size=1)+
-  geom_point(aes(1:nobs,sapply(1:nobs,function(t)sum(BPF$X_history[[t]]*BPF$weight_history[[t]]))),size=3)
+  geom_line(aes(1:nobservations,sapply(1:nobservations,function(t)KF[[t]]$muX_t_t)),col='blue',size=2,linetype=2,alpha=0.6)+
+  geom_line(aes(1:nobservations,sapply(1:nobservations,function(t)Kalman$get_filtering_mean(t))),col='red',size=1)+
+  geom_point(aes(1:nobservations,sapply(1:nobservations,function(t)sum(BPF$X_history[[t]]*BPF$weight_history[[t]]))),size=3)
 
 # # Plot some paths
 # path.df = data.frame()
 # for (i in 1:algorithmic_parameters$Nx) {
-#   path.df = rbind(path.df,data.frame(x=c(CPF$tree$get_path(i-1)),time=1:nobs,index=i))
+#   path.df = rbind(path.df,data.frame(x=c(CPF$tree$get_path(i-1)),time=1:nobservations,index=i))
 # }
 # ggplot(path.df) + geom_line(aes(time,x,group=index))
 
