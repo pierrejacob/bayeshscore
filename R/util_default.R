@@ -48,11 +48,8 @@ set_default_model = function(model){
           if (t==1){
             return(model$likelihood(observations,t,theta,log))
           } else {
-            if (log){
-              return(model$likelihood(observations,t,theta,log)-model$likelihood(observations,t-1,theta,log))
-            } else {
-              return(model$likelihood(observations,t,theta,log)/model$likelihood(observations,t-1,theta,log))
-            }
+            if (log){return(model$likelihood(observations,t,theta,log)-model$likelihood(observations,t-1,theta,log))}
+            else {return(model$likelihood(observations,t,theta,log)/model$likelihood(observations,t-1,theta,log))}
           }
         }
       } else {
@@ -60,11 +57,8 @@ set_default_model = function(model){
           if (t==1){
             return(model$likelihood(observations,t,theta,byproduct,log))
           } else {
-            if (log){
-              return(model$likelihood(observations,t,theta,byproduct,log)-model$likelihood(observations,t-1,theta,byproduct,log))
-            } else {
-              return(model$likelihood(observations,t,theta,byproduct,log)/model$likelihood(observations,t-1,theta,byproduct,log))
-            }
+            if (log){return(model$likelihood(observations,t,theta,byproduct,log)-model$likelihood(observations,t-1,theta,byproduct,log))}
+            else {return(model$likelihood(observations,t,theta,byproduct,log)/model$likelihood(observations,t-1,theta,byproduct,log))}
           }
         }
       }
@@ -78,26 +72,16 @@ set_default_model = function(model){
       if (is.null(model$initialize_byproducts)){
         model$likelihood = function(observations,t,theta,log = TRUE){
           ll = 0
-          for (i in 1:t){
-            ll = ll + model$dpredictive(observations,i,theta,log = TRUE)
-          }
-          if (log) {
-            return(ll)
-          } else {
-            return(exp(ll))
-          }
+          for (i in 1:t) {ll = ll + model$dpredictive(observations,i,theta,log = TRUE)}
+          if (log) {return(ll)}
+          else {return(exp(ll))}
         }
       } else {
         model$likelihood = function(observations,t,theta,byproduct,log = TRUE){
           ll = 0
-          for (i in 1:t){
-            ll = ll + model$dpredictive(observations,i,theta,byproduct,log = TRUE)
-          }
-          if (log) {
-            return(ll)
-          } else {
-            return(exp(ll))
-          }
+          for (i in 1:t){ll = ll + model$dpredictive(observations,i,theta,byproduct,log = TRUE)}
+          if (log) {return(ll)}
+          else {return(exp(ll))}
         }
       }
     }
