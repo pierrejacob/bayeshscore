@@ -18,7 +18,7 @@ hscore_discrete_smc <- function(observations, model, algorithmic_parameters){
   }
   # Initialize empty arrays and lists to store the results
   ESS = array(NA,dim = c(nobservations)) #ESS at successive times t
-  Hscore = array(NA,dim = c(nobservations)) #prequential Hyvarinen score at successive times t
+  incr_hscore = array(NA,dim = c(nobservations)) #prequential Hyvarinen score at successive times t
   logevidence = array(NA,dim = c(nobservations)) #log-evidence at successive times t
   rejuvenation_times = array(NA,dim = c(nobservations)) #successive times where resampling is triggered
   rejuvenation_accept_rate = array(NA,dim = c(nobservations)) #successive acceptance rates of resampling
@@ -56,7 +56,7 @@ hscore_discrete_smc <- function(observations, model, algorithmic_parameters){
   # Assimilate observations one by one
   for (t in 1:nobservations){
     # compute prequential H score (with theta from time t-1, see formula in the paper)
-    Hscore[t] = Hd_smc(t,model,observations,thetas,normw,Ntheta,byproducts)
+    incr_hscore[t] = Hd_smc(t,model,observations,thetas,normw,Ntheta,byproducts)
     # assimilate the next observation
     results <- assimilate_one_smc(thetas, t, observations, model, Ntheta, ess_objective,
                                   nmoves, resampling, logtargetdensities, logw, normw,
@@ -89,7 +89,7 @@ hscore_discrete_smc <- function(observations, model, algorithmic_parameters){
     print(time_end)
   }
   return(list(thetas_history = thetas_history, normw_history = normw_history, logevidence = cumsum(logevidence),
-              logtargetdensities = logtargetdensities, hscore = cumsum(Hscore),
+              logtargetdensities = logtargetdensities, hscore = cumsum(incr_hscore),
               rejuvenation_times = rejuvenation_times[!is.na(rejuvenation_times)],
               rejuvenation_accept_rate = rejuvenation_accept_rate[!is.na(rejuvenation_accept_rate)]))
 }

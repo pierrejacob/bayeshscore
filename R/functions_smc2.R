@@ -6,8 +6,7 @@ filter_step <- function(observationt, t, model, theta, X, xnormW, tree, resampli
   xnormWnew = xnormW
   log_z_incremental = NA #likelihood estimate
   ancestors <- resampling(xnormW) #sample the ancestors' indexes
-  X_current <- X[,ancestors]
-  if (is.null(dim(X_current))) X_current <- matrix(X_current, nrow = model$dimX)
+  X_current <- X[,ancestors,drop=FALSE]
   X_current <- model$rtransition(X_current, t, theta)
   logW <- model$dobs(observationt, X_current, t, theta,log = TRUE)
   maxlogW <- max(logW)
@@ -25,10 +24,6 @@ filter_step <- function(observationt, t, model, theta, X, xnormW, tree, resampli
 increase_Nx <- function(observations, t, model, thetas, PFs, Ntheta){
   Nx = PFs[[1]]$Nx
   Nx_new <- 2*Nx #by default we multiply the number of particles by 2
-  # Initialize empty arrays of larger size
-  X_new = array(NA,dim = c(model$dimX, Nx_new, Ntheta)) #Nx particles (most recent) for each theta (size = dimX,Nx,Ntheta)
-  xnormW_new = matrix(NA, nrow = Nx_new, ncol = Ntheta) #matrix of corresponding normalized X-weights (size = Nx,Ntheta)
-  log_z_new = rep(0, Ntheta) #matrix of log-likelihood estimates (size = Ntheta)
   # Construct list of trees to store paths (one tree for each theta)
   trees_new = list()
   for (i in 1:Ntheta){
@@ -36,11 +31,8 @@ increase_Nx <- function(observations, t, model, thetas, PFs, Ntheta){
   }
   # Perform a conditional particle filter for each theta
   for (i in 1:Ntheta){
-    PF = PFs[[i]]
-    xnormW = PF$xnormW
-    current_tree = PF$tree
-    current_path = current_tree$get_path(sample(x = 0:(Nx-1), size = 1, replace = TRUE, prob = xnormW))
-    CPF = conditional_particle_filter(matrix(observations[,1:t],ncol = t), model, thetas[,i], Nx_new, path = current_path)
+    current_path = (PFs[[i]]$tree)$get_path(sample(x = 0:(Nx-1), size = 1, replace = TRUE, prob = PFs[[i]]$xnormW))
+    CPF = conditional_particle_filter(observations[,1:t,drop=FALSE], model, thetas[,i], Nx_new, current_path)
     PFs[[i]] = CPF
   }
   return (PFs)
@@ -62,9 +54,9 @@ assimilate_one_smc2 <- function(thetas, PFs, t, observations, model, Ntheta, ess
   increase_Nx_times = NA
   increase_Nx_values = NA
   if (t == 1){
-    for (itheta in 1:Ntheta){
-      logw_incremental[itheta] <- PFs[[itheta]]$incremental_ll[1]
-      trees[[itheta]] <- PFs[[itheta]]$tree
+    for (i in 1:Ntheta){
+      logw_incremental[i] = PFs[[i]]$incremental_ll[1]
+      trees[[i]] = PFs[[i]]$tree
       ######################################################################################
       # the argument PFs was initialized externally using the first observation, so it
       # already contains all the correct values
@@ -72,15 +64,13 @@ assimilate_one_smc2 <- function(thetas, PFs, t, observations, model, Ntheta, ess
     }
   }
   else {
-    for (itheta in 1:Ntheta){
-      PF = PFs[[itheta]]
-      PF_next = filter_step(observations[,t], t, model, thetas[,itheta], PF$X, PF$xnormW, PF$tree, resampling)
-      # perform one step of filtering and update the current particle filter for particle itheta
-      logw_incremental[itheta] <- PF_next$log_z_incremental
-      PF$X = PF_next$X
-      PF$xnormW = PF_next$xnormW
-      PF$tree = PF_next$tree
-      PFs[[itheta]] <- PF
+    for (i in 1:Ntheta){
+      PF_next = filter_step(observations[,t,drop=FALSE],t,model,thetas[,i],PFs[[i]]$X,PFs[[i]]$xnormW,PFs[[i]]$tree,resampling)
+      # perform one step of filtering and update the current particle filter for particle theta i
+      logw_incremental[i] = PF_next$log_z_incremental
+      PFs[[i]]$X = PF_next$X
+      PFs[[i]]$xnormW = PF_next$xnormW
+      PFs[[i]]$tree = PF_next$tree
     }
   }
   while (current_gamma < 1){
@@ -146,8 +136,8 @@ assimilate_one_smc2 <- function(thetas, PFs, t, observations, model, Ntheta, ess
               next
             } else {
               #the CPF function performs a regular PF when no conditioning path is provided
-              PF <- conditional_particle_filter(matrix(observations[,1:t],ncol = t), model, theta_new, Nx)
-              incremental_ll_new <- PF$incremental_ll
+              PF_new <- conditional_particle_filter(observations[,1:t,drop=FALSE], model, theta_new, Nx)
+              incremental_ll_new <- PF_new$incremental_ll
               loglikelihood_new <- gamma * incremental_ll_new[t]
               logw_incremental_new <- incremental_ll_new[t]
               if (t > 1){
@@ -163,11 +153,9 @@ assimilate_one_smc2 <- function(thetas, PFs, t, observations, model, Ntheta, ess
                 thetas[,i] <- theta_new
                 logtargetdensities[i] <- logtarget_new
                 logw_incremental[i] <- logw_incremental_new
-                PFs[[i]] = PF
+                PFs[[i]] = PF_new
               }
-              else {
-                # do nothing
-              }
+              # otherwise do nothing (i.e. keep the current particles)
             }
           }
           rejuvenation_accept_rate = accepts/Ntheta

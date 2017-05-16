@@ -21,7 +21,7 @@ hscore_continuous_smc2 <- function(observations, model, algorithmic_parameters){
   }
   # Initialize empty arrays and lists to store the results
   ESS = array(NA,dim = c(nobservations)) #ESS at successive times t
-  Hscore = array(NA,dim = c(nobservations)) #prequential Hyvarinen score at successive times t
+  incr_hscore = array(NA,dim = c(nobservations)) #incremental Hyvarinen score at successive times t
   logevidence = array(NA,dim = c(nobservations)) #log-evidence at successive times t
   rejuvenation_times = array(NA,dim = c(nobservations)) #successive times where resampling is triggered
   rejuvenation_accept_rate = array(NA,dim = c(nobservations)) #successive acceptance rates of resampling
@@ -54,7 +54,7 @@ hscore_continuous_smc2 <- function(observations, model, algorithmic_parameters){
   # Initialize filters (first observation passed as argument just to initialize the fields of PF)
   for (itheta in 1:Ntheta){
     theta = thetas[,itheta]
-    PFs[[itheta]] = conditional_particle_filter(matrix(observations[,1],ncol = 1), model, theta, Nx)
+    PFs[[itheta]] = conditional_particle_filter(observations[,1,drop=FALSE], model, theta, Nx)
     #the CPF performs a regular PF when no conditioning path is provided
   }
   # Assimilate observations one by one
@@ -69,7 +69,7 @@ hscore_continuous_smc2 <- function(observations, model, algorithmic_parameters){
     logtargetdensities = results$logtargetdensities
     logevidence[t] = results$logcst
     # compute prequential H score here
-    Hscore[t] = hincrementContinuous_smc2(t, model, observations[,t,drop=FALSE], thetas, normw, PFs, Ntheta)
+    incr_hscore[t] = hincrementContinuous_smc2(t, model, observations[,t,drop=FALSE], thetas, normw, PFs, Ntheta)
     # do some book-keeping
     rejuvenation_times[t] = results$rejuvenation_time #successive times where resampling is triggered
     rejuvenation_accept_rate[t] = results$rejuvenation_accept_rate #successive acceptance rates
@@ -96,7 +96,7 @@ hscore_continuous_smc2 <- function(observations, model, algorithmic_parameters){
   }
   return(list(thetas_history = thetas_history, normw_history = normw_history,
               PF_history = PF_history, logevidence = cumsum(logevidence),
-              logtargetdensities = logtargetdensities, hscore = cumsum(Hscore),
+              logtargetdensities = logtargetdensities, hscore = cumsum(incr_hscore),
               rejuvenation_times = rejuvenation_times[!is.na(rejuvenation_times)],
               rejuvenation_accept_rate = rejuvenation_accept_rate[!is.na(rejuvenation_accept_rate)],
               increase_Nx_times = increase_Nx_times[!is.na(increase_Nx_times)],
