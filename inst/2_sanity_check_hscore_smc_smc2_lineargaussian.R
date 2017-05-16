@@ -1,13 +1,16 @@
-rm(list = ls());gc()
+rm(list = ls())
 library(HyvarinenSSM)
 library(ggplot2)
 library(gridExtra)
-set.seed(9) #the hscore goes wrong after the move steps (e.g. Nx = 2^7, Ntheta = 2^10)
-# set.seed(4) #no move steps, seems to work (e.g. Nx = 2^7, Ntheta = 2^10)
+set.seed(9) #the hscore goes wrong after the rejuvenation steps (e.g. Nx = 2^6, Ntheta = 2^10)
+# however, things work fine when the rejuvenation triggers the increase Nx step .... weird ....
+# And also: when no rejuvenation involved, things work fine ...
+# e.g. CHANGE THE MINIMUM ACCEPTANCE RATE from 0.2 (fails) to 0.3 (works) TO SEE WHAT HAPPENS
+# ... the hscore suddenly JUMPS every time there is a rejuvenation without Nx increase ... WHY ?????
 
 #--------------------------------------------------------------------------------------------
 # create data
-nobservations <- 5
+nobservations <- 15
 # model <- get_model_simplerlineargaussian()
 # theta_star <- c(0.8,1,model$psi,model$sigmaV2)
 model <- get_model_lineargaussian()
@@ -22,13 +25,13 @@ observations <- matrix(Y, nrow = model$dimY)
 #--------------------------------------------------------------------------------------------
 # set algorithmic parameters
 algorithmic_parameters <- list()
-algorithmic_parameters$Ntheta = 2^10
-algorithmic_parameters$Nx = 2^7
+algorithmic_parameters$Ntheta = 2^4
+algorithmic_parameters$Nx = 2^5
 algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$store_theta = TRUE
-algorithmic_parameters$store_X = FALSE
+algorithmic_parameters$store_X = TRUE
 algorithmic_parameters$ess_threshold = 0.5
-algorithmic_parameters$min_acceptance_rate = 0.3
+algorithmic_parameters$min_acceptance_rate = 0.2
 algorithmic_parameters$nmoves = 2
 # The remaining algorithmic parameters are set to their default values via the functions in util_default.R
 #--------------------------------------------------------------------------------------------

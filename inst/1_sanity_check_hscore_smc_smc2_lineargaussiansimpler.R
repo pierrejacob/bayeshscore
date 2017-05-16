@@ -67,7 +67,7 @@ dpost = function(theta, log = TRUE){
   }
 }
 # Set parameters for Metropolis-Hastings
-burnin = 500
+burnin = 3000
 M = burnin + algorithmic_parameters$Ntheta
 MH_cov = (cov.wt(t(thetas_smc[1:2,]),wt=smc_results$normw_history[[nobservations+1]])$cov)/5
 thetas_MH = matrix(NA,nrow = 2,ncol = M)
