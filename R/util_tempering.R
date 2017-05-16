@@ -15,9 +15,9 @@ search_gamma <- function(current_gamma, f, objective, maxsteps = 1000, tolerance
   current_size <- (1 - current_gamma)/2
   fattempt <- f(attempt)
   istep <- 0
-  while (!(fattempt > objective-tolerance && fattempt < objective+tolerance) && (istep < maxsteps)){
+  while (!(fattempt >= objective && fattempt < objective+tolerance) && (istep < maxsteps)){
     istep <- istep + 1
-    if (fattempt > objective-tolerance){
+    if (fattempt > objective){
       attempt <- attempt + current_size
       fattempt <- f(attempt)
       current_size <- current_size / 2
