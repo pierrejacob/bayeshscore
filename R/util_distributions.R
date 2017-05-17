@@ -2,6 +2,50 @@
 #-----------------  Some useful distributions (density and sampler) -----------#
 #------------------------------------------------------------------------------#
 #------------------------------------------------------------------------------#
+#'@rdname fast_dmvnorm
+#'@title fast_dmvnorm
+#'@description Fast Normal log-density using Rcpp (observations row-wise, dimensions column-wise)
+#'@export
+fast_dmvnorm <- function(x, mean, covariance){
+  return(dmvnorm(x, mean, covariance))
+}
+#'@rdname fast_rmvnorm
+#'@title fast_rmvnorm
+#'@description Fast samples from Normal using Rcpp (observations row-wise, dimensions column-wise)
+#'@export
+fast_rmvnorm <- function(nparticles, mean, covariance){
+  return(rmvnorm(nparticles, mean, covariance))
+}
+#------------------------------------------------------------------------------#
+#'@rdname fast_dmvnorm_transpose
+#'@title fast_dmvnorm_transpose
+#'@description Fast Normal log-density using Rcpp (dimensions row-wise, observations column-wise)
+#'@export
+fast_dmvnorm_transpose <- function(x, mean, chol_covariance){
+  return(dmvnorm_transpose(x, mean, chol_covariance))
+}
+#'@rdname fast_dmvnorm_transpose_cholesky
+#'@title fast_dmvnorm_transpose_cholesky
+#'@description fast_dmvnorm_transpose_cholesky
+#'@export
+fast_dmvnorm_transpose_cholesky <- function(x, mean, cholcovariance){
+  return(dmvnorm_transpose_cholesky(x, mean, cholcovariance))
+}
+#'@rdname fast_rmvnorm_transpose
+#'@title fast_rmvnorm_transpose
+#'@description Fast samples from  Normal using Rcpp (dimensions row-wise, observations column-wise)
+#'@export
+fast_rmvnorm_transpose <- function(nparticles, mean, covariance){
+  return(rmvnorm_transpose(nparticles, mean, covariance))
+}
+#'@rdname fast_rmvnorm_transpose_cholesky
+#'@title fast_rmvnorm_transpose_cholesky
+#'@description fast_rmvnorm_transpose_cholesky
+#'@export
+fast_rmvnorm_transpose_cholesky <- function(nparticles, mean, cholcovariance){
+  return(rmvnorm_transpose_cholesky(nparticles, mean, cholcovariance))
+}
+#------------------------------------------------------------------------------#
 #'@rdname dinvgamma
 #'@title dinvgamma
 #'@description Density of inverse gamma distribution
@@ -102,48 +146,5 @@ rtscaled = function(N,df,s2){
 #   stat_function(fun = function(y)dtscaled(y,df,s2,FALSE), colour = "red",size=1.5,linetype=2)
 # grid.arrange(g11,ncol = 1, nrow = 1)
 #------------------------------------------------------------------------------#
-#'@rdname fast_dmvnorm
-#'@title fast_dmvnorm
-#'@description Fast Normal log-density using Rcpp (observations row-wise, dimensions column-wise)
-#'@export
-fast_dmvnorm <- function(x, mean, covariance){
-  return(dmvnorm(x, mean, covariance))
-}
-#'@rdname fast_rmvnorm
-#'@title fast_rmvnorm
-#'@description Fast samples from Normal using Rcpp (observations row-wise, dimensions column-wise)
-#'@export
-fast_rmvnorm <- function(nparticles, mean, covariance){
-  return(rmvnorm(nparticles, mean, covariance))
-}
-#------------------------------------------------------------------------------#
-#'@rdname fast_dmvnorm_transpose
-#'@title fast_dmvnorm_transpose
-#'@description Fast Normal log-density using Rcpp (dimensions row-wise, observations column-wise)
-#'@export
-fast_dmvnorm_transpose <- function(x, mean, chol_covariance){
-  return(dmvnorm_transpose(x, mean, chol_covariance))
-}
-#'@rdname fast_dmvnorm_transpose_cholesky
-#'@title fast_dmvnorm_transpose_cholesky
-#'@description fast_dmvnorm_transpose_cholesky
-#'@export
-fast_dmvnorm_transpose_cholesky <- function(x, mean, cholcovariance){
-  return(dmvnorm_transpose_cholesky(x, mean, cholcovariance))
-}
-#'@rdname fast_rmvnorm_transpose
-#'@title fast_rmvnorm_transpose
-#'@description Fast samples from  Normal using Rcpp (dimensions row-wise, observations column-wise)
-#'@export
-fast_rmvnorm_transpose <- function(nparticles, mean, covariance){
-  return(rmvnorm_transpose(nparticles, mean, covariance))
-}
-#'@rdname fast_rmvnorm_transpose_cholesky
-#'@title fast_rmvnorm_transpose_cholesky
-#'@description fast_rmvnorm_transpose_cholesky
-#'@export
-fast_rmvnorm_transpose_cholesky <- function(nparticles, mean, cholcovariance){
-  return(rmvnorm_transpose_cholesky(nparticles, mean, cholcovariance))
-}
-#------------------------------------------------------------------------------#
+
 

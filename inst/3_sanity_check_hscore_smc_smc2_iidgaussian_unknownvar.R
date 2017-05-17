@@ -1,3 +1,7 @@
+##################################################################################################
+# This checks that the outputs using SMC and SMC2 match the exact results
+# in an iid Normal case (with conjugate prior so that everything can be computed analytically)
+##################################################################################################
 rm(list = ls())
 library(HyvarinenSSM)
 library(ggplot2)

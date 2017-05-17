@@ -1,11 +1,16 @@
+##################################################################################################
+# This checks that the outputs using SMC and SMC2 for continuous  observations
+# match the exact results from Metropolis-Hastings in a linear gaussian example (with 2 parameters)
+# where exact computation are achievable by using Kalman filters.
+##################################################################################################
 rm(list = ls())
 library(HyvarinenSSM)
 library(ggplot2)
 library(gridExtra)
-set.seed(29)
+set.seed(19)
 
 # create data
-nobservations <- 50
+nobservations <- 30
 model <- get_model_simplerlineargaussian()
 theta_star <- c(0.8,1,model$psi,model$sigmaV2)
 sim = simulateData(model, theta = theta_star, nobservations)
@@ -17,7 +22,7 @@ observations <- matrix(Y, nrow = model$dimY)
 #--------------------------------------------------------------------------------------------
 # set algorithmic parameters
 algorithmic_parameters <- list()
-algorithmic_parameters$Ntheta = 2^10
+algorithmic_parameters$Ntheta = 2^11
 algorithmic_parameters$Nx = 2^6
 algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$store_theta = TRUE

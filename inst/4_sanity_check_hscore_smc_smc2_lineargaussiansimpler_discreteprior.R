@@ -1,3 +1,8 @@
+##################################################################################################
+# This checks that the outputs using SMC and SMC2 match the exact results
+# in a linear gaussian case with 1 parameter (with discrete prior so that everything can be
+# computed exactly).
+##################################################################################################
 rm(list = ls())
 library(HyvarinenSSM)
 library(ggplot2)

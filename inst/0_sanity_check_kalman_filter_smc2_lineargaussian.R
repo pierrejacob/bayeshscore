@@ -1,3 +1,7 @@
+##################################################################################################
+# This checks that the particles in X produced by the SMC2 agree with the output of the exact
+# Kalman filter by comparing the filtering means at each time step.
+##################################################################################################
 rm(list = ls())
 library(HyvarinenSSM)
 library(ggplot2)

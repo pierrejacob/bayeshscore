@@ -1,3 +1,9 @@
+##################################################################################################
+# This implements example 3.1. in O'Hagan (1995).
+# The model is N(theta,1) with conjugate prior on theta, i.e. theta follows N(0,sigma2prior).
+# We compute the logevidence and the prequential Hyvarinen score for increasing vagueness
+# (i.e. increasing values of sigma2prior).
+##################################################################################################
 rm(list = ls())
 library(HyvarinenSSM)
 library(ggplot2)
@@ -23,7 +29,6 @@ algorithmic_parameters$ess_threshold = 0.5
 algorithmic_parameters$min_acceptance_rate = 0.5
 algorithmic_parameters$nmoves = 2
 # The remaining algorithmic parameters are set to their default values via the functions in util_default.R
-
 #--------------------------------------------------------------------------------------------
 repl = 5 #number of replications
 registerDoParallel(cores=5) #number of workers in parallel
@@ -50,18 +55,14 @@ for (s in 1:length(sigma2prior_all)){
                                                    repl = r))
   }
 }
-
 #--------------------------------------------------------------------------------------------
 # Checking sample from the posterior distribution (marginal histogram)
 ggplot(post_all) +
   geom_density(aes(theta,weight=W,fill=factor(sigma2prior),group=interaction(sigma2prior,repl)),alpha=0.6)
-
 #--------------------------------------------------------------------------------------------
 # Check the log-evidence (RESCALED BY 1/t)
 ggplot(results_all) +
   geom_line(aes(time, -logevidence, color = factor(sigma2prior),group=interaction(sigma2prior,repl)))
-
-
 #--------------------------------------------------------------------------------------------
 # Check the h-score (RESCALED BY 1/t)
 ggplot(results_all) +

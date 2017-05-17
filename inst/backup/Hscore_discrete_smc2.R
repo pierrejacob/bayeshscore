@@ -18,7 +18,7 @@ hscore_discrete_smc2 <- function(observations, model, algorithmic_parameters){
   }
   # Initialize empty arrays and lists to store the results
   ESS = array(NA,dim = c(nobservations)) #ESS at successive times t
-  incr_hscore = array(NA,dim = c(nobservations)) #prequential Hyvarinen score at successive times t
+  incr_hscore = array(NA,dim = c(nobservations)) #incremental Hyvarinen score at successive times t
   logevidence = array(NA,dim = c(nobservations)) #log-evidence at successive times t
   rejuvenation_times = array(NA,dim = c(nobservations)) #successive times where resampling is triggered
   rejuvenation_accept_rate = array(NA,dim = c(nobservations)) #successive acceptance rates of resampling
@@ -117,8 +117,7 @@ hscore_discrete_smc2 <- function(observations, model, algorithmic_parameters){
   if (algorithmic_parameters$progress) {
     close(progbar)
     time_end = proc.time()-time_start
-    cat(paste("Hscore: T = ",toString(nobservations),", Ntheta = ",toString(Ntheta),
-              ", Nx = ",toString(Nx),"\n",sep = ""))
+    cat(paste("Hscore: T = ",toString(nobservations),", Ntheta = ",toString(Ntheta),", Nx = ",toString(Nx),"\n",sep = ""))
     print(time_end)
   }
   return(list(thetas_history = thetas_history, normw_history = normw_history,

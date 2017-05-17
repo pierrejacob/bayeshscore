@@ -1,3 +1,8 @@
+##################################################################################################
+# This checks that the outputs using SMC and SMC2 for discrete observations match the exact
+# results in a poisson hidden markov model (with only 2 states so that everything can be
+# computed exactly).
+##################################################################################################
 rm(list = ls())
 library(HyvarinenSSM)
 library(ggplot2)

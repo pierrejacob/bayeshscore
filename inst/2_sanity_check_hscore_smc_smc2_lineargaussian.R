@@ -1,3 +1,6 @@
+##################################################################################################
+# This checks that the outputs from SMC and SMC2 agree in a linear gaussian case (4 parameters)
+##################################################################################################
 rm(list = ls())
 library(HyvarinenSSM)
 library(ggplot2)
@@ -71,10 +74,6 @@ ggplot(results) + geom_line(aes(time, logevidence/time, color = from), size = 1)
                              incrNx = factor(smc2_results$rejuvenation_times %in% smc2_results$increase_Nx_times)),
              aes(xintercept = rejuvenationtime, group = i, linetype = incrNx))
 #--------------------------------------------------------------------------------------------
-
-#############################################################################################
-###############################        DIAGNOSTICS      #####################################
-#############################################################################################
 # Check the h-score (RESCALED BY 1/t)
 results$hscore = c(smc_results$hscore,smc2_results$hscore)
 ggplot(results) + geom_line(aes(time, hscore/time, color = from), size = 1) +
@@ -84,6 +83,7 @@ ggplot(results) + geom_line(aes(time, hscore/time, color = from), size = 1) +
              aes(xintercept = rejuvenationtime, group = i, linetype = incrNx))
 
 
+#--------------------------------------------------------------------------------------------
 # estimate (marginal) filtering means from SMC2
 xmean = rep(0,nobservations)
 for (t in 1:nobservations) {
@@ -115,7 +115,6 @@ ggplot(data.frame(time = rep(1:nobservations,2), marginalfiltermean = c(xmean,xm
                              i = 1:length(smc2_results$rejuvenation_times),
                              incrNx = factor(smc2_results$rejuvenation_times %in% smc2_results$increase_Nx_times)),
              aes(xintercept = rejuvenationtime, group = i, linetype = incrNx))
-
 
 
 # result = data.frame()

@@ -1,3 +1,8 @@
+##################################################################################################
+# Sanity check for the function set_default_model (util_default.R).
+# This checks that the automatic definitions of the missing fields of the model (e.g. using
+# numerical differentiation) agree with the output using analytical definitions
+##################################################################################################
 rm(list = ls())
 library(HyvarinenSSM)
 library(ggplot2)
@@ -60,6 +65,9 @@ for (i in 1:length(model_all)) {
                                            logevidence = result$logevidence,
                                            hscore = result$hscore,
                                            index = i))
+  #########################################################################################
+  ########### BE CAREFUL, SMC starts with the prior sample at t = 1 #######################
+  #########################################################################################
   post.df = rbind(post.df,data.frame(theta1 = result$thetas_history[[nobservations+1]][1,],
                                      theta2 = result$thetas_history[[nobservations+1]][2,],
                                      theta3 = result$thetas_history[[nobservations+1]][3,],
@@ -67,10 +75,6 @@ for (i in 1:length(model_all)) {
                                      weight = result$normw_history[[nobservations+1]],
                                      index = i))
 }
-#--------------------------------------------------------------------------------------------
-#########################################################################################
-########### BE CAREFUL, SMC starts with the prior sample at t = 1 #######################
-#########################################################################################
 #--------------------------------------------------------------------------------------------
 # plot posterior marginals
 plot_theta1 = ggplot(post.df) +  geom_density(aes(theta1, weight = weight, group = index, fill = factor(index)), alpha = 0.6) + theme(legend.position="none")
@@ -81,7 +85,6 @@ grid.arrange(plot_theta1, plot_theta2, plot_theta3, plot_theta4, ncol = 4, width
 #--------------------------------------------------------------------------------------------
 # Check the log-evidence (RESCALED BY 1/t)
 ggplot(results.df) + geom_line(aes(time, logevidence/time, group = index, color = factor(index)), size = 1)
-
 #--------------------------------------------------------------------------------------------
 # Check the h-score (RESCALED BY 1/t)
 ggplot(results.df) + geom_line(aes(time, hscore/time, group = index, color = factor(index)), size = 1)

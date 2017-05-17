@@ -1,3 +1,8 @@
+##################################################################################################
+# This checks that our R implementation of the Kalman filter, the Rcpp Kalman filter,
+# the bootstrap particle filter, and the conditional particle filter (with no conditionning path)
+# all produce the same results.
+##################################################################################################
 library(HyvarinenSSM)
 
 #create data
