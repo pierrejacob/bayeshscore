@@ -13,8 +13,6 @@ conditional_particle_filter <- function(observations, model, theta, Nx, path = N
   nobservations <- ncol(observations)
   log_p_y_hat <- 0 #initialize estimate of log-evidence
   incremental_ll = rep(NA,nobservations)
-  X = matrix(NA,nrow = model$dimX, ncol = Nx) # matrix of Nx particles column-wise
-  normW = rep(1/Nx, Nx) #vector of normalized weights
   X <- model$rinitial(theta,Nx) #initial step 1
   logW <- model$dobs(observations[,1],X,1,theta)
   maxlogW <- max(logW)
