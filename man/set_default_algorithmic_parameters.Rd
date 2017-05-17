@@ -4,7 +4,7 @@
 \alias{set_default_algorithmic_parameters}
 \title{set_default_algorithmic_parameters}
 \usage{
-set_default_algorithmic_parameters(algorithmic_parameters)
+set_default_algorithmic_parameters(observations, model, algorithmic_parameters)
 }
 \description{
 Set the missing algorithmic parameters to their default values

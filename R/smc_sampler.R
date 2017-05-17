@@ -4,7 +4,7 @@
 #'@export
 smc_sampler <- function(observations, model, algorithmic_parameters){
   ## Set default values for the missing fields
-  algorithmic_parameters = set_default_algorithmic_parameters(algorithmic_parameters)
+  algorithmic_parameters = set_default_algorithmic_parameters(observations, model, algorithmic_parameters)
   model = set_default_model(model)
   # Parse algorithmic parameters and set flags accordingly
   nobservations = ncol(observations)
