@@ -87,7 +87,7 @@ assimilate_one_smc2 <- function(thetas, PFs, t, observations, model, Ntheta, ess
     } else {
       if (ess_given_gamma(current_gamma) < ess_objective){
         gamma <- current_gamma
-        print("warning! ESS at current gamma too low; something went wrong.")
+        cat(">>>>>> WARNING: ESS at current gamma too low; something went wrong <<<<<<\n")
       } else {
         gamma <- search_gamma(current_gamma, ess_given_gamma, objective = ess_objective)$x
       }

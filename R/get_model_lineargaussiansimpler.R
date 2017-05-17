@@ -65,7 +65,7 @@ get_model_simplerlineargaussian <- function(){
     psi = theta[3]
     sigmaV2 = theta[4]
     N = ncol(Xt)
-    d1 = matrix((psi*Xt-repeat_column(N,Yt))/sigmaV2,nrow = N, ncol = dimY)
+    d1 = t((psi*Xt-repeat_column(N,Yt))/sigmaV2)
     d2 = matrix(-1/sigmaV2,nrow = N, ncol = dimY)
     return (list(jacobian = d1, hessiandiag = d2))
   }
@@ -119,7 +119,7 @@ get_model_simplerlineargaussian <- function(){
   model$derivativelogdpredictive = function(observations,t,theta,KF,dimY) {
     m = KF[[t]]$muY_t_t_1
     V = KF[[t]]$PY_t_t_1
-    d1 = matrix((m-observations[,t])/V)
+    d1 = t(matrix((m-observations[,t])/V))
     d2 = matrix(-1/V)
     return (list(jacobian = d1, hessiandiag = d2))
   }
