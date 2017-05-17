@@ -10,18 +10,18 @@ library(gridExtra)
 set.seed(19)
 
 # create data
-nobservations <- 30
-model <- get_model_simplerlineargaussian()
-theta_star <- c(0.8,1,model$psi,model$sigmaV2)
+nobservations = 30
+model = get_model_simplerlineargaussian()
+theta_star = c(0.8,1,model$psi,model$sigmaV2)
 sim = simulateData(model, theta = theta_star, nobservations)
 X = sim$X
 Y = sim$Y
-observations <- matrix(Y, nrow = model$dimY)
+observations = matrix(Y, nrow = model$dimY)
 # observations in a matrix of dimensions dimY by nobservations
 
 #--------------------------------------------------------------------------------------------
 # set algorithmic parameters
-algorithmic_parameters <- list()
+algorithmic_parameters = list()
 algorithmic_parameters$Ntheta = 2^11
 algorithmic_parameters$Nx = 2^6
 algorithmic_parameters$verbose = TRUE
@@ -34,20 +34,20 @@ algorithmic_parameters$nmoves = 2
 
 #--------------------------------------------------------------------------------------------
 ### Run SMC
-smc_results <- hscore(observations, model, algorithmic_parameters)
+smc_results = hscore(observations, model, algorithmic_parameters)
 ### Run SMC_2
 module_tree <<- Module("module_tree", PACKAGE = "HyvarinenSSM")
 TreeClass <<- module_tree$Tree
 model_withoutlikelihood = model
 model_withoutlikelihood$likelihood = NULL # this forces the use of SMC2
 model_withoutlikelihood$dpredictive = NULL # this forces the use of SMC2
-smc2_results <- hscore(observations, model_withoutlikelihood, algorithmic_parameters)
+smc2_results = hscore(observations, model_withoutlikelihood, algorithmic_parameters)
 
 ########### BE CAREFUL, SMC starts with the prior sample at t = 1 #######################
-thetas_smc <- smc_results$thetas_history[[nobservations+1]]
-normw_smc <- smc_results$normw_history[[nobservations+1]]
-thetas_smc2 <- smc2_results$thetas_history[[nobservations+1]]
-normw_smc2 <- smc2_results$normw_history[[nobservations+1]]
+thetas_smc = smc_results$thetas_history[[nobservations+1]]
+normw_smc = smc_results$normw_history[[nobservations+1]]
+thetas_smc2 = smc2_results$thetas_history[[nobservations+1]]
+normw_smc2 = smc2_results$normw_history[[nobservations+1]]
 #--------------------------------------------------------------------------------------------
 ###########################################################################################
 ###########################################################################################
@@ -57,7 +57,7 @@ psi = model$psi
 sigmaV2 = model$sigmaV2
 kalman_module <<- Module( "kalman_mod", PACKAGE = "HyvarinenSSM")
 dpost = function(theta, log = TRUE){
-  Kalman <- new(kalman_module$Kalman)
+  Kalman <<- new(kalman_module$Kalman)
   Kalman$set_parameters(list(rho = theta[1], sigma = sqrt(theta[2]), eta = psi, tau = sqrt(sigmaV2)))
   Kalman$set_observations(matrix(observations, ncol = 1))
   Kalman$first_step()

@@ -3,16 +3,11 @@
 #'@description This function runs the SMC2 algorithm, using adapive Nx and tempering.
 #'It also computes the log-evidence and the prequential Hyvarinen score (optional).
 #'@export
-smc2 <- function(observations, model, algorithmic_parameters){
+smc2 = function(observations, model, algorithmic_parameters){
   # Parse algorithmic parameters and set flags accordingly
   nobservations = ncol(observations)
   Ntheta = algorithmic_parameters$Ntheta
   Nx = algorithmic_parameters$Nx
-  nmoves = algorithmic_parameters$nmoves
-  resampling = algorithmic_parameters$resampling
-  adaptNx = algorithmic_parameters$adaptNx
-  min_acceptance_rate = algorithmic_parameters$min_acceptance_rate
-  ess_objective = algorithmic_parameters$ess_threshold*algorithmic_parameters$Ntheta
   if (algorithmic_parameters$hscore) {observation_type = tolower(model$observation_type)}
   # Monitor progress if needed
   if (algorithmic_parameters$progress) {
@@ -85,9 +80,7 @@ smc2 <- function(observations, model, algorithmic_parameters){
       incr_hscore[t] = Hd_smc2(t,model,observations[,t],thetas,normw,Ntheta,Xpred,XnormW_previous)
     }
     # Assimilate the next observation
-    results = assimilate_one_smc2(thetas, PFs, t, observations, model, Ntheta, ess_objective,
-                                  nmoves, resampling, logtargetdensities, logw, normw,
-                                  algorithmic_parameters$verbose, adaptNx, min_acceptance_rate)
+    results = assimilate_one_smc2(thetas,PFs,t,observations,model,logtargetdensities,logw,normw,algorithmic_parameters)
     # Update the particles theta and compute the log-evidence
     thetas = results$thetas
     normw = results$normw

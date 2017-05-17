@@ -10,18 +10,18 @@ library(gridExtra)
 set.seed(19)
 
 # Define model and data
-nobservations <- 5
-model <- get_model_poissonhmm()
+nobservations = 5
+model = get_model_poissonhmm()
 true_theta = 0.3
 sim = simulateData(model, theta = true_theta, nobservations)
 X = sim$X
 Y = sim$Y
-observations <- matrix(Y, nrow = model$dimY)
+observations = matrix(Y, nrow = model$dimY)
 # observations in a matrix of dimensions dimy x nobservations
 
 #--------------------------------------------------------------------------------------------
 # set algorithmic parameters
-algorithmic_parameters <- list()
+algorithmic_parameters = list()
 algorithmic_parameters$Ntheta = 2^6
 algorithmic_parameters$Nx = 2^5
 algorithmic_parameters$verbose = TRUE
@@ -51,11 +51,11 @@ smc2_results = hscore(observations, model_withoutlikelihood, algorithmic_paramet
 #########################################################################################
 #########################################################################################
 ########### BE CAREFUL, SMC starts with the prior sample at t = 1 #######################
-thetas_smc <- smc_results$thetas_history[[nobservations+1]]
-normw_smc <- smc_results$normw_history[[nobservations+1]]
+thetas_smc = smc_results$thetas_history[[nobservations+1]]
+normw_smc = smc_results$normw_history[[nobservations+1]]
 #
-thetas_smc2 <- smc2_results$thetas_history[[nobservations+1]]
-normw_smc2 <- smc2_results$normw_history[[nobservations+1]]
+thetas_smc2 = smc2_results$thetas_history[[nobservations+1]]
+normw_smc2 = smc2_results$normw_history[[nobservations+1]]
 
 #Compute exact likelihood
 l = model$lambda

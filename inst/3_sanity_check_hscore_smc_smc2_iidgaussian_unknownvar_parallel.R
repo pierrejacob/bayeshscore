@@ -12,18 +12,18 @@ library(foreach)
 set.seed(29)
 
 # Define model and data
-nobservations <- 30
-model <- get_model_iid_gaussian_unknown_variance()
+nobservations = 30
+model = get_model_iid_gaussian_unknown_variance()
 true_sigmav2 = 1
 sim = simulateData(model, theta = true_sigmav2, nobservations)
 X = sim$X
 Y = sim$Y
-observations <- matrix(Y, nrow = model$dimY)
+observations = matrix(Y, nrow = model$dimY)
 # observations in a matrix of dimensions dimy x nobservations
 
 #--------------------------------------------------------------------------------------------
 # set algorithmic parameters
-algorithmic_parameters <- list()
+algorithmic_parameters = list()
 algorithmic_parameters$Ntheta = 2^10
 algorithmic_parameters$Nx = 2^0
 algorithmic_parameters$verbose = FALSE

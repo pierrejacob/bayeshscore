@@ -13,13 +13,13 @@ library(foreach)
 set.seed(29)
 
 # Define model and data
-nobservations <- 20
+nobservations = 20
 Y = rnorm(nobservations,0,1)
-observations <- matrix(Y, nrow = 1)# observations in a matrix of dimensions dimy x nobservations
+observations = matrix(Y, nrow = 1)# observations in a matrix of dimensions dimy x nobservations
 
 #--------------------------------------------------------------------------------------------
 # set algorithmic parameters
-algorithmic_parameters <- list()
+algorithmic_parameters = list()
 algorithmic_parameters$Ntheta = 2^10
 algorithmic_parameters$Nx = 2^0
 algorithmic_parameters$verbose = TRUE

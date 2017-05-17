@@ -9,17 +9,17 @@ library(gridExtra)
 set.seed(19)
 
 # create data
-nobservations <- 30
-model <- get_model_simplerlineargaussian()
-theta_star <- c(0.8,1,model$psi,model$sigmaV2)
+nobservations = 30
+model = get_model_simplerlineargaussian()
+theta_star = c(0.8,1,model$psi,model$sigmaV2)
 sim = simulateData(model, theta = theta_star, nobservations)
 X = sim$X
 Y = sim$Y
-observations <- matrix(Y, nrow = model$dimY)
+observations = matrix(Y, nrow = model$dimY)
 # observations in a matrix of dimensions dimY by nobservations
 
 # set algorithmic parameters
-algorithmic_parameters <- list()
+algorithmic_parameters = list()
 algorithmic_parameters$Ntheta = 2^10
 algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$store_theta = TRUE
@@ -34,7 +34,7 @@ module_tree <<- Module("module_tree", PACKAGE = "HyvarinenSSM")
 TreeClass <<- module_tree$Tree
 model$likelihood = NULL # this forces the use of SMC2
 model$dpredictive = NULL # this forces the use of SMC2
-smc2_results <- hscore(observations, model, algorithmic_parameters)
+smc2_results = hscore(observations, model, algorithmic_parameters)
 
 #-------------------------------------------------------------------------------------------------
 # Plot the filtering means (and some particles X for one theta, e.g. the one with largest weight)

@@ -10,17 +10,17 @@ library(gridExtra)
 set.seed(29)
 
 # Define model and data
-nobservations <- 30
-model <- get_model_lineargaussiansimpler_discreteprior()
+nobservations = 30
+model = get_model_lineargaussiansimpler_discreteprior()
 true_sigmav2 = 1
 sim = simulateData(model, theta = true_sigmav2, nobservations)
 X = sim$X
 Y = sim$Y
-observations <- matrix(Y, nrow = model$dimY)# observations in a matrix of dimensions dimy x nobservations
+observations = matrix(Y, nrow = model$dimY)# observations in a matrix of dimensions dimy x nobservations
 
 #--------------------------------------------------------------------------------------------
 # set algorithmic parameters
-algorithmic_parameters <- list()
+algorithmic_parameters = list()
 algorithmic_parameters$Ntheta = 2^10
 algorithmic_parameters$Nx = 2^7
 algorithmic_parameters$verbose = TRUE
@@ -46,11 +46,11 @@ smc2_results = hscore(observations, model_withoutlikelihood, algorithmic_paramet
 #########################################################################################
 #########################################################################################
 ########### BE CAREFUL, SMC starts with the prior sample at t = 1 #######################
-thetas_smc <- smc_results$thetas_history[[nobservations+1]]
-normw_smc <- smc_results$normw_history[[nobservations+1]]
+thetas_smc = smc_results$thetas_history[[nobservations+1]]
+normw_smc = smc_results$normw_history[[nobservations+1]]
 #
-thetas_smc2 <- smc2_results$thetas_history[[nobservations+1]]
-normw_smc2 <- smc2_results$normw_history[[nobservations+1]]
+thetas_smc2 = smc2_results$thetas_history[[nobservations+1]]
+normw_smc2 = smc2_results$normw_history[[nobservations+1]]
 
 #--------------------------------------------------------------------------------------------
 #Compute exact posterior

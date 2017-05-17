@@ -3,7 +3,7 @@
 #'@description This function runs the SMC algorithm, using tempering.
 #'It also computes the log-evidence and the prequential Hyvarinen score (optional).
 #'@export
-smc <- function(observations, model, algorithmic_parameters){
+smc = function(observations, model, algorithmic_parameters){
   # Parse algorithmic parameters and set flags accordingly
   nobservations = ncol(observations)
   Ntheta = algorithmic_parameters$Ntheta
@@ -26,13 +26,13 @@ smc <- function(observations, model, algorithmic_parameters){
   thetas_history = list() #successive sets of particles theta
   normw_history = list() #successive sets of normalized weights for theta
   # if (is.null(algorithmic_parameters$rinitial_theta)){
-  thetas <- model$rprior(Ntheta)
+  thetas = model$rprior(Ntheta)
   # } else {
-  # thetas <- algorithmic_parameters$rinitial_theta(Ntheta)
+  # thetas = algorithmic_parameters$rinitial_theta(Ntheta)
   # }
-  logtargetdensities <- apply(thetas, 2, model$dprior) # log target density evaluations at current particles
-  normw <- rep(1/Ntheta, Ntheta) # normalized weights
-  logw <- rep(0, Ntheta) # log normalized weights
+  logtargetdensities = apply(thetas, 2, model$dprior) # log target density evaluations at current particles
+  normw = rep(1/Ntheta, Ntheta) # normalized weights
+  logw = rep(0, Ntheta) # log normalized weights
 
   ########## if we start from a proposal instead of the prior (e.g. improper prior)
   ########## then the weights should be initialized differently:
@@ -58,15 +58,13 @@ smc <- function(observations, model, algorithmic_parameters){
       incr_hscore[t] = Hd_smc(t,model,observations,thetas,normw,Ntheta,byproducts)
     }
     # Assimilate the next observation
-    results <- assimilate_one_smc(thetas, t, observations, model, Ntheta, ess_objective,
-                                  nmoves, resampling, logtargetdensities, logw, normw,
-                                  byproducts, algorithmic_parameters$verbose)
+    results = assimilate_one_smc(thetas,byproducts,t,observations,model,logtargetdensities,logw,normw,algorithmic_parameters)
     # Update the particles theta and compute the log-evidence
-    thetas <- results$thetas
-    normw <- results$normw
-    logw <- results$logw
-    logtargetdensities <- results$logtargetdensities
-    logevidence[t] <- results$logcst
+    thetas = results$thetas
+    normw = results$normw
+    logw = results$logw
+    logtargetdensities = results$logtargetdensities
+    logevidence[t] = results$logcst
     if (!is.null(byproducts)) {byproducts = results$byproducts}
     # OPTIONAL: compute the incremental hscore for continuous observations
     if (algorithmic_parameters$hscore && (observation_type=="continuous")) {

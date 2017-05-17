@@ -6,8 +6,8 @@
 library(HyvarinenSSM)
 
 #create data
-nobservations <- 100
-model <- get_model_lineargaussian()
+nobservations = 100
+model = get_model_lineargaussian()
 theta = c(0.5,1,1,1)
 sim = simulateData(model, theta = theta, nobservations)
 X = sim$X
@@ -25,8 +25,8 @@ initial_var = (sigmaW2)/(1-phi^2)
 KF = KF_filtering(Y,phi,psi,sigmaV2,sigmaW2,initial_mean,initial_var)
 
 # run Kalman filter Rcpp
-kalman_module <- Module( "kalman_mod", PACKAGE = "HyvarinenSSM")
-Kalman <- new(kalman_module$Kalman)
+kalman_module <<- Module( "kalman_mod", PACKAGE = "HyvarinenSSM")
+Kalman <<- new(kalman_module$Kalman)
 Kalman$set_parameters(list(rho = phi, sigma = sqrt(sigmaW2), eta = psi, tau = sqrt(sigmaV2)))
 Kalman$set_observations(matrix(Y, ncol = 1))
 Kalman$filtering()
