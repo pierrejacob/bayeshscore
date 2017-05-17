@@ -62,6 +62,7 @@ assimilate_one_smc <- function(thetas, t, observations, model, Ntheta, ess_objec
       # (increased a little bit the diagonal to prevent degeneracy effects)
       resampled_index = resampling(normw)
       thetas = thetas[,resampled_index,drop=FALSE]
+      if (!is.null(byproducts)) {byproducts = byproducts[resampled_index]}
       logtargetdensities <- logtargetdensities[resampled_index]
       logw_incremental <- logw_incremental[resampled_index]
       logw <- rep(0, Ntheta)
