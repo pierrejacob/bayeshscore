@@ -16,8 +16,8 @@ get_model_lineargaussian <- function(){
 
   # sampler from the prior distribution on parameters
   rangephi = c(0.1,0.9)
-  rangepsi = c(0.99,1.01)
-  rangesigmaV2 = c(0.99,1.01)
+  rangepsi = c(0.5,1.5)
+  rangesigmaV2 = c(0.1,10)
   rangesigmaW2 = c(0.1,10)
   model$rprior = function(Ntheta){
     phi = runif(Ntheta,rangephi[1],rangephi[2])
