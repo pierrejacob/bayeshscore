@@ -2,18 +2,15 @@
 # This function performs one step of particle filter for a given theta
 #######################################################################################################
 filter_step <- function(observationt, t, model, theta, X, xnormW, tree, resampling){
-  Xnew = X
-  xnormWnew = xnormW
   log_z_incremental = NA #likelihood estimate
   ancestors <- resampling(xnormW) #sample the ancestors' indexes
   X_current <- X[,ancestors,drop=FALSE]
-  X_current <- model$rtransition(X_current, t, theta)
-  logW <- model$dobs(observationt, X_current, t, theta,log = TRUE)
+  Xnew <- model$rtransition(X_current, t, theta)
+  logW <- model$dobs(observationt, Xnew, t, theta,log = TRUE)
   maxlogW <- max(logW)
   W <- exp(logW - maxlogW)
   log_z_incremental <- log(mean(W)) + maxlogW #udpate likelihood estimate
   xnormWnew <- W / sum(W)
-  Xnew <- X_current
   tree$update(Xnew, ancestors-1)
   return(list(X = Xnew, xnormW = xnormWnew, log_z_incremental = log_z_incremental, tree = tree))
 }
@@ -24,11 +21,6 @@ filter_step <- function(observationt, t, model, theta, X, xnormW, tree, resampli
 increase_Nx <- function(observations, t, model, thetas, PFs, Ntheta){
   Nx = PFs[[1]]$Nx
   Nx_new <- 2*Nx #by default we multiply the number of particles by 2
-  # Construct list of trees to store paths (one tree for each theta)
-  trees_new = list()
-  for (i in 1:Ntheta){
-    trees_new[[i]] = new(TreeClass, Nx_new, 10*Nx_new, model$dimX)
-  }
   # Perform a conditional particle filter for each theta
   for (i in 1:Ntheta){
     current_path = (PFs[[i]]$tree)$get_path(sample(x = 0:(Nx-1), size = 1, replace = TRUE, prob = PFs[[i]]$xnormW))
@@ -47,7 +39,6 @@ assimilate_one_smc2 <- function(thetas, PFs, t, observations, model, Ntheta, ess
   Nx = PFs[[1]]$Nx
   current_gamma <- 0
   logcst <- 0
-  trees = list()
   logw_incremental = rep(NA, Ntheta)
   rejuvenation_time = NA
   rejuvenation_accept_rate = NA
@@ -56,7 +47,6 @@ assimilate_one_smc2 <- function(thetas, PFs, t, observations, model, Ntheta, ess
   if (t == 1){
     for (i in 1:Ntheta){
       logw_incremental[i] = PFs[[i]]$incremental_ll[1]
-      trees[[i]] = PFs[[i]]$tree
       ######################################################################################
       # the argument PFs was initialized externally using the first observation, so it
       # already contains all the correct values
@@ -113,10 +103,11 @@ assimilate_one_smc2 <- function(thetas, PFs, t, observations, model, Ntheta, ess
       # resampling step
       covariance = cov.wt(t(thetas), wt = normw, method = "ML")
       mean_t = covariance$center
-      cov_t = matrix(covariance$cov,nrow = model$dimtheta) + diag(rep(10^(-4)/model$dimtheta),model$dimtheta)
+      cov_t = covariance$cov + diag(rep(10^(-4)/model$dimtheta),model$dimtheta)
       #(increased a little bit the diagonal to prevent degeneracy effects)
       resampled_index = resampling(normw)
       thetas = thetas[,resampled_index,drop=FALSE]
+      PFs = PFs[resampled_index]
       logtargetdensities <- logtargetdensities[resampled_index]
       logw_incremental <- logw_incremental[resampled_index]
       logw <- rep(0, Ntheta)
