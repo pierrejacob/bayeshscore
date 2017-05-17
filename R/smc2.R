@@ -19,10 +19,10 @@ smc2 = function(observations, model, algorithmic_parameters){
   ESS = array(NA,dim = c(nobservations)) #ESS at successive times t
   logevidence = array(NA,dim = c(nobservations)) #log-evidence at successive times t
   if (algorithmic_parameters$hscore) {incr_hscore = array(NA,dim = c(nobservations))} # OPTIONAL: incremental Hyvarinen score at successive times t
-  rejuvenation_times = array(NA,dim = c(nobservations)) #successive times where resampling is triggered
-  rejuvenation_accept_rate = array(NA,dim = c(nobservations)) #successive acceptance rates of resampling
-  increase_Nx_times = array(NA,dim = c(nobservations)) #successive times where increasing Nx is triggered
-  increase_Nx_values = array(NA,dim = c(nobservations)) #successive values of Nx
+  rejuvenation_times = c() #successive times where resampling is triggered
+  rejuvenation_rate = c() #successive acceptance rates of resampling
+  increase_Nx_times = c() #successive times where increasing Nx is triggered
+  increase_Nx_values = c() #successive values of Nx
   thetas_history = list() #successive sets of particles theta
   normw_history = list() #successive sets of normalized weights for theta
   PF_history = list() #successive particle filters (one for each theta at each time step)
@@ -104,10 +104,11 @@ smc2 = function(observations, model, algorithmic_parameters){
       }
     }
     # do some book-keeping
-    rejuvenation_times[t] = results$rejuvenation_time #successive times where resampling is triggered
-    rejuvenation_accept_rate[t] = results$rejuvenation_accept_rate #successive acceptance rates
-    increase_Nx_times[t] = results$increase_Nx_times #successive times where adaptation regarding Nx is triggered
-    increase_Nx_values[t] = results$increase_Nx_values #successive values of Nx
+    ESS[t] = results$ESS
+    if (!is.na(results$rejuvenation_time)) {rejuvenation_times = c(rejuvenation_times, results$rejuvenation_time)}
+    if (!is.na(results$rejuvenation_rate)) {rejuvenation_rate = c(rejuvenation_rate, results$rejuvenation_rate)}
+    if (!is.na(results$increase_Nx_times)) {increase_Nx_times = c(increase_Nx_times, results$increase_Nx_times)}
+    if (!is.na(results$increase_Nx_values)) {increase_Nx_values = c(increase_Nx_values, results$increase_Nx_values)}
     if (algorithmic_parameters$store_theta){
       thetas_history[[t+1]] = thetas
       normw_history[[t+1]] = normw
@@ -127,11 +128,8 @@ smc2 = function(observations, model, algorithmic_parameters){
     cat(paste("SMC2: T = ",toString(nobservations),", Ntheta = ",toString(Ntheta),", Nx (last) = ",toString(PFs[[1]]$Nx),"\n",sep=""))
     print(time_end)
   }
-  return(list(thetas_history = thetas_history, normw_history = normw_history,
-              PF_history = PF_history, logevidence = cumsum(logevidence),
-              logtargetdensities = logtargetdensities, hscore = cumsum(incr_hscore),
-              rejuvenation_times = rejuvenation_times[!is.na(rejuvenation_times)],
-              rejuvenation_accept_rate = rejuvenation_accept_rate[!is.na(rejuvenation_accept_rate)],
-              increase_Nx_times = increase_Nx_times[!is.na(increase_Nx_times)],
-              increase_Nx_values = increase_Nx_values[!is.na(increase_Nx_values)]))
+  return(list(thetas_history = thetas_history, normw_history = normw_history, logevidence = cumsum(logevidence),
+              logtargetdensities = logtargetdensities, hscore = cumsum(incr_hscore), ESS = ESS,
+              rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
+              PF_history = PF_history, increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values))
 }

@@ -21,8 +21,8 @@ smc = function(observations, model, algorithmic_parameters){
   ESS = array(NA,dim = c(nobservations)) #ESS at successive times t
   logevidence = array(NA,dim = c(nobservations)) #log-evidence at successive times t
   if (algorithmic_parameters$hscore) {incr_hscore = array(NA,dim = c(nobservations))} # OPTIONAL: incremental Hyvarinen score at successive times t
-  rejuvenation_times = array(NA,dim = c(nobservations)) #successive times where resampling is triggered
-  rejuvenation_accept_rate = array(NA,dim = c(nobservations)) #successive acceptance rates of resampling
+  rejuvenation_times = c() #successive times where resampling is triggered
+  rejuvenation_rate = c() #successive acceptance rates of resampling
   thetas_history = list() #successive sets of particles theta
   normw_history = list() #successive sets of normalized weights for theta
   # if (is.null(algorithmic_parameters$rinitial_theta)){
@@ -71,8 +71,9 @@ smc = function(observations, model, algorithmic_parameters){
       incr_hscore[t] = hincrementContinuous_smc(t, model, observations,thetas,normw,byproducts,Ntheta)
     }
     # do some book-keeping
-    rejuvenation_times[t] = results$rejuvenation_time #successive times where resampling is triggered
-    rejuvenation_accept_rate[t] = results$rejuvenation_accept_rate #successive acceptance rates
+    ESS[t] = results$ESS
+    if (!is.na(results$rejuvenation_time)) {rejuvenation_times = c(rejuvenation_times, results$rejuvenation_time)}
+    if (!is.na(results$rejuvenation_rate)) {rejuvenation_rate = c(rejuvenation_rate, results$rejuvenation_rate)}
     if (algorithmic_parameters$store_theta){
       thetas_history[[t+1]] = thetas
       normw_history[[t+1]] = normw
@@ -90,8 +91,7 @@ smc = function(observations, model, algorithmic_parameters){
     print(time_end)
   }
   return (list(thetas_history = thetas_history, normw_history = normw_history, logevidence = cumsum(logevidence),
-               logtargetdensities = logtargetdensities, hscore = cumsum(incr_hscore),
-               rejuvenation_times = rejuvenation_times[!is.na(rejuvenation_times)],
-               rejuvenation_accept_rate = rejuvenation_accept_rate[!is.na(rejuvenation_accept_rate)]))
+               logtargetdensities = logtargetdensities, hscore = cumsum(incr_hscore), ESS = ESS,
+               rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate))
 }
 

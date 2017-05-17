@@ -49,7 +49,7 @@ assimilate_one_smc2 = function(thetas, PFs, t, observations, model,
   logcst = 0
   logw_incremental = rep(NA, Ntheta)
   rejuvenation_time = NA
-  rejuvenation_accept_rate = NA
+  rejuvenation_rate = NA
   increase_Nx_times = NA
   increase_Nx_values = NA
   if (t == 1){
@@ -102,9 +102,10 @@ assimilate_one_smc2 = function(thetas, PFs, t, observations, model,
     logw = logw + logw_incremental_gamma
     w = exp(logw - max(logw))
     normw = w / sum(w)
-    ##
+    ESS = 1/(sum(normw^2))
+    # display diagnostic
     if (verbose){
-      cat("Step", t, ", gamma = ", gamma, ", ESS = ", 1/(sum(normw^2)), "\n")
+      cat("Step", t, ", gamma = ", gamma, ", ESS = ", ESS, "\n")
     }
     if (gamma<1){
       # we need to resample and move
@@ -158,13 +159,13 @@ assimilate_one_smc2 = function(thetas, PFs, t, observations, model,
               # otherwise do nothing (i.e. keep the current particles)
             }
           }
-          rejuvenation_accept_rate = accepts/Ntheta
+          rejuvenation_rate = accepts/Ntheta
           if (verbose){
-            cat("Acceptance rate (independent proposal): ", 100*rejuvenation_accept_rate, "%\n")
+            cat("Acceptance rate (independent proposal): ", 100*rejuvenation_rate, "%\n")
           }
           if (adaptNx){
             Nx_new = 2*(PFs[[1]]$Nx)
-            if ((Nx_new <= algorithmic_parameters$Nx_max)&&(rejuvenation_accept_rate < min_acceptance_rate)){
+            if ((Nx_new <= algorithmic_parameters$Nx_max)&&(rejuvenation_rate < min_acceptance_rate)){
               # Increase the number Nx of particles for each theta
               PFs = increase_Nx(observations, t, model, thetas, PFs, Ntheta)
               Nx = PFs[[1]]$Nx
@@ -179,9 +180,9 @@ assimilate_one_smc2 = function(thetas, PFs, t, observations, model,
       }
     }
   }
-  return(list(PFs = PFs, thetas = thetas, normw = normw, logw = logw,
-              logtargetdensities = logtargetdensities, logcst = logcst,
-              rejuvenation_time = rejuvenation_time, rejuvenation_accept_rate = rejuvenation_accept_rate,
+  return(list(thetas = thetas, normw = normw, logw = logw, logtargetdensities = logtargetdensities,
+              logcst = logcst, PFs = PFs, rejuvenation_time = rejuvenation_time,
+              rejuvenation_rate = rejuvenation_rate, ESS = ESS,
               increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values))
 }
 

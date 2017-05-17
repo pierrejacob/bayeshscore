@@ -15,14 +15,13 @@ hscore <- function(observations, model, algorithmic_parameters){
     algorithmic_parameters$hscore = TRUE
     # set missing fields to automatic values (e.g. numerical derivatives)
     model = set_default_model(model)
-    cat(paste("Hscore: type = ",tolower(model$observation_type),", Method = ",sep=""))
+    cat("Hscore: type = ",tolower(model$observation_type),", Method = ",sep="")
     # Compute hscore using SMC2 (likelihood unavailable) or SMC (likelihood available)
     if (intractable_likelihood) {
-      cat(paste("SMC2", ", Ntheta = ",toString(algorithmic_parameters$Ntheta),
-                ", Nx (initial) = ",toString(algorithmic_parameters$Nx),"\n",sep = ""))
+      cat("SMC2",", Ntheta = ",algorithmic_parameters$Ntheta,", Nx (initial) = ",algorithmic_parameters$Nx,"\n",sep = "")
       return (smc2(observations, model, algorithmic_parameters))
     } else {
-      cat(paste("SMC", ", Ntheta = ",toString(algorithmic_parameters$Ntheta),"\n",sep = ""))
+      cat("SMC",", Ntheta = ",algorithmic_parameters$Ntheta,"\n",sep = "")
       return (smc(observations, model, algorithmic_parameters))
     }
   }

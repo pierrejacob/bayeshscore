@@ -14,7 +14,7 @@ assimilate_one_smc = function(thetas, byproducts, t, observations, model,
   logcst = 0
   logw_incremental = rep(NA, Ntheta)
   rejuvenation_time = NA
-  rejuvenation_accept_rate = NA
+  rejuvenation_rate = NA
   # compute the log-incremental weight using byproduct (e.g. Kalman filter) or analytically via the model
   if (!is.null(byproducts)){
     for (itheta in 1:Ntheta){
@@ -58,9 +58,10 @@ assimilate_one_smc = function(thetas, byproducts, t, observations, model,
     logw = logw + logw_incremental_gamma
     w = exp(logw - max(logw))
     normw = w / sum(w)
+    ESS = 1/(sum(normw^2))
     # display diagnostic
     if (verbose){
-      cat("Step", t, ", gamma = ", gamma, ", ESS = ", 1/(sum(normw^2)), "\n")
+      cat("Step", t, ", gamma = ", gamma, ", ESS = ", ESS, "\n")
     }
     if (gamma<1){
       # we need to resample and move
@@ -128,9 +129,9 @@ assimilate_one_smc = function(thetas, byproducts, t, observations, model,
               }
             }
           }
-          rejuvenation_accept_rate = accepts/Ntheta
+          rejuvenation_rate = accepts/Ntheta
           if (verbose){
-            cat("Acceptance rate (independent proposal): ", 100*rejuvenation_accept_rate, "%\n")
+            cat("Acceptance rate (independent proposal): ", 100*rejuvenation_rate, "%\n")
           }
         }
       }
@@ -138,5 +139,5 @@ assimilate_one_smc = function(thetas, byproducts, t, observations, model,
   }
   return(list(thetas = thetas, normw = normw, logw = logw, logtargetdensities = logtargetdensities,
               logcst = logcst, byproducts = byproducts, rejuvenation_time = rejuvenation_time,
-              rejuvenation_accept_rate = rejuvenation_accept_rate))
+              rejuvenation_rate = rejuvenation_rate, ESS = ESS))
 }
