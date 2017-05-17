@@ -18,7 +18,7 @@ observations <- matrix(Y, nrow = model$dimY)
 # set algorithmic parameters
 algorithmic_parameters <- list()
 algorithmic_parameters$Ntheta = 2^6
-algorithmic_parameters$Nx = 2^7
+algorithmic_parameters$Nx = 2^5
 algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$store_theta = TRUE
 algorithmic_parameters$store_X = FALSE

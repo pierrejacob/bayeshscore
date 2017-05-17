@@ -18,12 +18,12 @@ observations <- matrix(Y, nrow = model$dimY)
 # set algorithmic parameters
 algorithmic_parameters <- list()
 algorithmic_parameters$Ntheta = 2^10
-algorithmic_parameters$Nx = 2^7
+algorithmic_parameters$Nx = 2^6
 algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$store_theta = TRUE
 algorithmic_parameters$store_X = FALSE
 algorithmic_parameters$ess_threshold = 0.5
-algorithmic_parameters$min_acceptance_rate = 0.5
+algorithmic_parameters$min_acceptance_rate = 0.5 # purposely set high to trigger some increase Nx steps
 algorithmic_parameters$nmoves = 2
 # The remaining algorithmic parameters are set to their default values via the functions in util_default.R
 

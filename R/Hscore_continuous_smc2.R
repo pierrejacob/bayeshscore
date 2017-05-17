@@ -1,9 +1,6 @@
 # This function computes successive prequential Hyvarinen score for continuous observations by running SMC^2.
 # It also computes the successive log-evidence as a by-product.
 hscore_continuous_smc2 <- function(observations, model, algorithmic_parameters){
-  # Set default values for the missing fields
-  algorithmic_parameters = set_default_algorithmic_parameters(algorithmic_parameters)
-  model = set_default_model(model)
   # Parse algorithmic parameters and set flags accordingly
   nobservations = ncol(observations)
   Ntheta = algorithmic_parameters$Ntheta

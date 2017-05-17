@@ -5,9 +5,9 @@
 #'@title set_default_algorithmic_parameters
 #'@description Set the missing algorithmic parameters to their default values
 #'@export
-set_default_algorithmic_parameters = function(algorithmic_parameters){
-  if (is.null(algorithmic_parameters$Ntheta)) {algorithmic_parameters$Ntheta = 128}
-  if (is.null(algorithmic_parameters$Nx)) {algorithmic_parameters$Nx = 128}
+set_default_algorithmic_parameters = function(observations, model, algorithmic_parameters){
+  if (is.null(algorithmic_parameters$Ntheta)) {algorithmic_parameters$Ntheta = model$dimtheta*(2^7)}
+  if (is.null(algorithmic_parameters$Nx)) {algorithmic_parameters$Nx = 2^ceiling(log2(ncol(observations)*model$dimY))}
   if (is.null(algorithmic_parameters$adaptNx)) {algorithmic_parameters$adaptNx = TRUE}
   if (is.null(algorithmic_parameters$min_acceptance_rate)) {algorithmic_parameters$min_acceptance_rate = 0.20}
   if (is.null(algorithmic_parameters$ess_threshold)) {algorithmic_parameters$ess_threshold = 0.5}
@@ -27,17 +27,6 @@ set_default_algorithmic_parameters = function(algorithmic_parameters){
 #'@description Set the missing field of a model to their default values
 #'@export
 set_default_model = function(model){
-  # Define the derivatives of the observation log-density via numerical derivation (cf. numDeriv)
-  # The function is vectorized with respect to the states Xt (dimX by Nx), so that it outputs:
-  # >> the jacobian (Nx by dimY matrix: each row is the transpose of the corresponding gradients row-wise)
-  # >> the Hessian diagonals (Nx by dimY matrix: each row is the diagonal coeffs of the corresponding Hessian)
-  if (is.null(model$derivativelogdobs)){
-    model$derivativelogdobs = function(Yt,Xt,t,theta,dimY){
-      logdobs = function(y){model$dobs(y,Xt,t,theta,log = TRUE)}
-      derivatives = get_derivatives_from_genD(genD(logdobs,Yt)$D,dimY)
-      return (list(jacobian = derivatives$jacobian, hessiandiag = derivatives$hessiandiag))
-    }
-  }
   # Define the one-step predicitve density of the observation at time t given all the past from time 1 to (t-1)
   # This is only relevant when only the likelihood is specified and available
   if (!is.null(model$likelihood)){
@@ -86,30 +75,43 @@ set_default_model = function(model){
       }
     }
   }
-  # Define the derivatives of the predictive log-density via numerical derivation (cf. numDeriv)
-  # The function outputs:
-  # >> the transpose of the gradient (1 by dimY)
-  # >> the Hessian diagonal coefficients (1 by dimY)
-  if (is.null(model$derivativelogdpredictive)){
-    if (is.null(model$initialize_byproducts)){
-      model$derivativelogdpredictive = function(observations,t,theta,dimY){
-        if (t==1){
-          logpred = function(y) {model$dpredictive(y,t,theta,log = TRUE)}
-        } else {
-          logpred = function(y) {model$dpredictive(cbind(observations[,1:(t-1),drop=FALSE],y),t,theta,log = TRUE)}
-        }
-        derivatives = get_derivatives_from_genD(genD(logpred,observations[,t,drop=FALSE])$D,dimY)
+  if (tolower(model$observation_type) == 'continuous') {
+    # Define the derivatives of the observation log-density via numerical derivation (cf. numDeriv)
+    # The function is vectorized with respect to the states Xt (dimX by Nx), so that it outputs:
+    # >> the jacobian (Nx by dimY matrix: each row is the transpose of the corresponding gradients row-wise)
+    # >> the Hessian diagonals (Nx by dimY matrix: each row is the diagonal coeffs of the corresponding Hessian)
+    if (is.null(model$derivativelogdobs)){
+      model$derivativelogdobs = function(Yt,Xt,t,theta,dimY){
+        logdobs = function(y){model$dobs(y,Xt,t,theta,log = TRUE)}
+        derivatives = get_derivatives_from_genD(genD(logdobs,Yt)$D,dimY)
         return (list(jacobian = derivatives$jacobian, hessiandiag = derivatives$hessiandiag))
       }
-    } else {
-      model$derivativelogdpredictive = function(observations,t,theta,byproduct,dimY){
-        if (t==1){
-          logpred = function(y) {model$dpredictive(y,t,theta,byproduct,log = TRUE)}
-        } else {
-          logpred = function(y) {model$dpredictive(cbind(observations[,1:(t-1),drop=FALSE],y),t,theta,byproduct,log = TRUE)}
+    }
+    # Define the derivatives of the predictive log-density via numerical derivation (cf. numDeriv)
+    # The function outputs:
+    # >> the transpose of the gradient (1 by dimY)
+    # >> the Hessian diagonal coefficients (1 by dimY)
+    if (is.null(model$derivativelogdpredictive)){
+      if (is.null(model$initialize_byproducts)){
+        model$derivativelogdpredictive = function(observations,t,theta,dimY){
+          if (t==1){
+            logpred = function(y) {model$dpredictive(y,t,theta,log = TRUE)}
+          } else {
+            logpred = function(y) {model$dpredictive(cbind(observations[,1:(t-1),drop=FALSE],y),t,theta,log = TRUE)}
+          }
+          derivatives = get_derivatives_from_genD(genD(logpred,observations[,t,drop=FALSE])$D,dimY)
+          return (list(jacobian = derivatives$jacobian, hessiandiag = derivatives$hessiandiag))
         }
-        derivatives = get_derivatives_from_genD(genD(logpred,observations[,t,drop=FALSE])$D,dimY)
-        return (list(jacobian = derivatives$jacobian, hessiandiag = derivatives$hessiandiag))
+      } else {
+        model$derivativelogdpredictive = function(observations,t,theta,byproduct,dimY){
+          if (t==1){
+            logpred = function(y) {model$dpredictive(y,t,theta,byproduct,log = TRUE)}
+          } else {
+            logpred = function(y) {model$dpredictive(cbind(observations[,1:(t-1),drop=FALSE],y),t,theta,byproduct,log = TRUE)}
+          }
+          derivatives = get_derivatives_from_genD(genD(logpred,observations[,t,drop=FALSE])$D,dimY)
+          return (list(jacobian = derivatives$jacobian, hessiandiag = derivatives$hessiandiag))
+        }
       }
     }
   }
