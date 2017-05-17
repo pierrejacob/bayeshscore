@@ -7,8 +7,6 @@ set.seed(19)
 #--------------------------------------------------------------------------------------------
 # create data
 nobservations <- 15
-# model <- get_model_simplerlineargaussian()
-# theta_star <- c(0.8,1,model$psi,model$sigmaV2)
 model <- get_model_lineargaussian()
 theta_star <- c(0.8,1,1,1)
 #--------------------------------------------------------------------------------------------
@@ -120,7 +118,6 @@ ggplot(data.frame(time = rep(1:nobservations,2), marginalfiltermean = c(xmean,xm
 
 
 
-#
 # result = data.frame()
 # for (t in 1:nobservations) {
 #   PF = smc2_results$PF_history[[t+1]]
