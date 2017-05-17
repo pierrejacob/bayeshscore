@@ -22,9 +22,9 @@ observations = matrix(Y, nrow = 1)# observations in a matrix of dimensions dimy 
 algorithmic_parameters = list()
 algorithmic_parameters$Ntheta = 2^10
 algorithmic_parameters$Nx = 2^0
+algorithmic_parameters$adaptNx = FALSE
 algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$store_theta = TRUE
-algorithmic_parameters$store_X = FALSE
 algorithmic_parameters$ess_threshold = 0.5
 algorithmic_parameters$min_acceptance_rate = 0.5
 algorithmic_parameters$nmoves = 2

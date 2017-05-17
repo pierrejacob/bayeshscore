@@ -23,11 +23,12 @@ observations = matrix(Y, nrow = model$dimY)
 algorithmic_parameters = list()
 algorithmic_parameters$Ntheta = 2^10
 algorithmic_parameters$Nx = 2^5
+algorithmic_parameters$Nx_max = 2^6
 algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$store_theta = TRUE
 algorithmic_parameters$store_X = TRUE
 algorithmic_parameters$ess_threshold = 0.5
-algorithmic_parameters$min_acceptance_rate = 0.2
+algorithmic_parameters$min_acceptance_rate = 0.8 # purposely set high to trigger increase Nx step and test Nx_max
 algorithmic_parameters$nmoves = 2
 # The remaining algorithmic parameters are set to their default values via the functions in util_default.R
 #--------------------------------------------------------------------------------------------

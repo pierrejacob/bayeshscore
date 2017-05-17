@@ -163,7 +163,8 @@ assimilate_one_smc2 = function(thetas, PFs, t, observations, model,
             cat("Acceptance rate (independent proposal): ", 100*rejuvenation_accept_rate, "%\n")
           }
           if (adaptNx){
-            if (rejuvenation_accept_rate < min_acceptance_rate){
+            Nx_new = 2*(PFs[[1]]$Nx)
+            if ((Nx_new <= algorithmic_parameters$Nx_max)&&(rejuvenation_accept_rate < min_acceptance_rate)){
               # Increase the number Nx of particles for each theta
               PFs = increase_Nx(observations, t, model, thetas, PFs, Ntheta)
               Nx = PFs[[1]]$Nx
