@@ -108,11 +108,12 @@ assimilate_one_smc2 = function(thetas, PFs, t, observations, model,
     }
     if (gamma<1){
       # we need to resample and move
-      # resampling step
-      covariance = cov.wt(t(thetas), wt = normw, method = "ML")
-      mean_t = covariance$center
-      cov_t = covariance$cov + diag(rep(10^(-4)/model$dimtheta),model$dimtheta)
-      #(increased a little bit the diagonal to prevent degeneracy effects)
+      # First we get the proposal for the move steps. Note: proposalmove is a list with the following fields:
+      # proposalmove$r : sampler from the proposal
+      # proposalmove$d : corresponding density function
+      # see set_default_algorithmic_parameters (util_default.R) for more details
+      proposalmove = algorithmic_parameters$proposalmove(thetas,normw,model)
+      # Resample particles theta according to normalized weights
       resampled_index = resampling(normw)
       thetas = thetas[,resampled_index,drop=FALSE]
       PFs = PFs[resampled_index]
@@ -124,9 +125,9 @@ assimilate_one_smc2 = function(thetas, PFs, t, observations, model,
       if (nmoves > 0){
         rejuvenation_time = t
         for (imove in 1:nmoves){
-          theta_new_all = fast_rmvnorm_transpose(Ntheta,mean_t,cov_t)
-          log_proposal_density_new_all = fast_dmvnorm_transpose(theta_new_all, mean_t, cov_t)
-          log_proposal_density_current = fast_dmvnorm_transpose(thetas, mean_t, cov_t)
+          theta_new_all = proposalmove$r(Ntheta)
+          log_proposal_density_new_all = proposalmove$d(theta_new_all,log=TRUE)
+          log_proposal_density_current = proposalmove$d(thetas,log=TRUE)
           accepts = 0
           for (i in 1:Ntheta) {
             theta_new = theta_new_all[,i]

@@ -18,11 +18,11 @@ hscore <- function(observations, model, algorithmic_parameters){
     cat(paste("Hscore: type = ",tolower(model$observation_type),", Method = ",sep=""))
     # Compute hscore using SMC2 (likelihood unavailable) or SMC (likelihood available)
     if (intractable_likelihood) {
-      cat(paste("SMC2", "Ntheta = ",toString(algorithmic_parameters$Ntheta),
+      cat(paste("SMC2", ", Ntheta = ",toString(algorithmic_parameters$Ntheta),
                 ", Nx (initial) = ",toString(algorithmic_parameters$Nx),"\n",sep = ""))
       return (smc2(observations, model, algorithmic_parameters))
     } else {
-      cat(paste("SMC", "Ntheta = ",toString(algorithmic_parameters$Ntheta),"\n",sep = ""))
+      cat(paste("SMC", ", Ntheta = ",toString(algorithmic_parameters$Ntheta),"\n",sep = ""))
       return (smc(observations, model, algorithmic_parameters))
     }
   }
