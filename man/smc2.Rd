@@ -10,4 +10,3 @@ smc2(observations, model, algorithmic_parameters)
 This function runs the SMC2 algorithm, using adapive Nx and tempering.
 It also computes the log-evidence and the prequential Hyvarinen score (optional).
 }
-

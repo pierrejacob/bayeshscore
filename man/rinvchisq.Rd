@@ -9,4 +9,3 @@ rinvchisq(N, df, s2 = 1)
 \description{
 Samples from scaled inverse chi-square distribution
 }
-

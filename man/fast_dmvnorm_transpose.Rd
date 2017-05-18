@@ -4,9 +4,8 @@
 \alias{fast_dmvnorm_transpose}
 \title{fast_dmvnorm_transpose}
 \usage{
-fast_dmvnorm_transpose(x, mean, chol_covariance)
+fast_dmvnorm_transpose(x, mean, covariance)
 }
 \description{
 Fast Normal log-density using Rcpp (dimensions row-wise, observations column-wise)
 }
-

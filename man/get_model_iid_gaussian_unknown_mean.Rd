@@ -9,4 +9,3 @@ get_model_iid_gaussian_unknown_mean(muprior, sigma2prior)
 \description{
 Univariate iid Gaussian observations with unknown mean (degenerate linear gaussian SSM)
 }
-

@@ -10,4 +10,3 @@ search_gamma(current_gamma, f, objective, maxsteps = 1000, tolerance = 0.01)
 This function finds the optimal gamma for tempering given some objective function f (e.g. ESS)
 WARNING: f has to be a continuous function
 }
-

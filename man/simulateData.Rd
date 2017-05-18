@@ -9,4 +9,3 @@ simulateData(model, theta, nobservations)
 \description{
 This function generates artificial data from a model.
 }
-

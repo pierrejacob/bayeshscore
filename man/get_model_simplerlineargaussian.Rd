@@ -12,4 +12,3 @@ Univariate linear Gaussian model with 2 unknown parameters
 Latent states: X[t] = \code{phi}*X[t-1] + N(0,\code{sigmaW2}).
 Observations: Y[t] = \code{psi}*X[t] + N(0,\code{sigmaV2}).
 }
-

@@ -20,8 +20,8 @@ fast_rmvnorm <- function(nparticles, mean, covariance){
 #'@title fast_dmvnorm_transpose
 #'@description Fast Normal log-density using Rcpp (dimensions row-wise, observations column-wise)
 #'@export
-fast_dmvnorm_transpose <- function(x, mean, chol_covariance){
-  return(dmvnorm_transpose(x, mean, chol_covariance))
+fast_dmvnorm_transpose <- function(x, mean, covariance){
+  return(dmvnorm_transpose(x, mean, covariance))
 }
 #'@rdname fast_dmvnorm_transpose_cholesky
 #'@title fast_dmvnorm_transpose_cholesky
