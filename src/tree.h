@@ -17,6 +17,7 @@ class Tree
   NumericMatrix retrieve_xgeneration(int lag);
   void double_size();
   NumericMatrix get_path(int n);
+  void reconstruct(int N, int M, int d, int n, IntegerVector a, IntegerVector o, NumericMatrix x, IntegerVector l);
   // attributes
   // number of particles
   int N;

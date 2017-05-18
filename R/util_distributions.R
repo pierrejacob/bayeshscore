@@ -1,7 +1,6 @@
 #------------------------------------------------------------------------------#
 #-----------------  Some useful distributions (density and sampler) -----------#
 #------------------------------------------------------------------------------#
-#------------------------------------------------------------------------------#
 #'@rdname fast_dmvnorm
 #'@title fast_dmvnorm
 #'@description Fast Normal log-density using Rcpp (observations row-wise, dimensions column-wise)

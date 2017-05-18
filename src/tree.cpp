@@ -140,6 +140,18 @@ NumericMatrix Tree::retrieve_xgeneration(int lag){
   return xgeneration;
 }
 
+// Added a new method to reconstruct tree from a list of attributes:
+// Necessary to rebuild tree after loading attributes from RDS file of a partial run save
+void Tree::reconstruct(int N, int M, int d, int n, IntegerVector a, IntegerVector o, NumericMatrix x, IntegerVector l){
+  this->N = N;
+  this->M = M;
+  this->dimx = d;
+  this->nsteps = n;
+  this->a_star = a;
+  this->o_star = o;
+  this->x_star = x;
+  this->l_star = l;
+}
 
 RCPP_MODULE(module_tree) {
   class_<Tree>( "Tree" )
@@ -158,5 +170,6 @@ RCPP_MODULE(module_tree) {
   .method( "update", &Tree::update)
   .method( "get_path", &Tree::get_path)
   .method( "retrieve_xgeneration", &Tree::retrieve_xgeneration)
+  .method( "reconstruct", &Tree::reconstruct)
   ;
 }
