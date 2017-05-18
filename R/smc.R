@@ -19,7 +19,7 @@ smc = function(observations, model, algorithmic_parameters){
   }
   # Initialize empty arrays and lists to store the results
   ESS = array(NA,dim = c(nobservations)) #ESS at successive times t
-  logevidence = array(NA,dim = c(nobservations)) #log-evidence at successive times t
+  incr_logevidence = array(NA,dim = c(nobservations)) #incremental log-evidence at successive times t
   if (algorithmic_parameters$hscore) {incr_hscore = array(NA,dim = c(nobservations))} # OPTIONAL: incremental Hyvarinen score at successive times t
   rejuvenation_times = c() #successive times where resampling is triggered
   rejuvenation_rate = c() #successive acceptance rates of resampling
@@ -64,7 +64,7 @@ smc = function(observations, model, algorithmic_parameters){
     normw = results$normw
     logw = results$logw
     logtargetdensities = results$logtargetdensities
-    logevidence[t] = results$logcst
+    incr_logevidence[t] = results$logcst
     if (!is.null(byproducts)) {byproducts = results$byproducts}
     # OPTIONAL: compute the incremental hscore for continuous observations
     if (algorithmic_parameters$hscore && (observation_type=="continuous")) {
@@ -82,6 +82,19 @@ smc = function(observations, model, algorithmic_parameters){
     if (algorithmic_parameters$progress) {
       setTxtProgressBar(progbar, t)
     }
+    # save partial results if needed
+    if (algorithmic_parameters$save) {
+      # save the variables required to resume and proceed further, in case of interrupted run
+      required_to_resume = list(thetas = thetas, normw = normw, logw = logw, logtargetdensities = logtargetdensities,
+                                byproducts = byproducts, t = t, observations = observations, model = model,
+                                algorithmic_parameters = algorithmic_parameters)
+      # save the results obtained up to this time
+      results_so_far = list(thetas_history = thetas_history, normw_history = normw_history,
+                            incr_logevidence = incr_logevidence[1:t], incr_hscore = incr_hscore[1:t],  ESS = ESS[1:t],
+                            rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate)
+      # save into RDS file
+      saveRDS(c(required_to_resume,results_so_far),file = algorithmic_parameters$savefilename)
+    }
   }
   # Update progress bar if needed
   if (algorithmic_parameters$progress) {
@@ -90,7 +103,7 @@ smc = function(observations, model, algorithmic_parameters){
     cat(paste("SMC: T = ",toString(nobservations),", Ntheta = ",toString(Ntheta),"\n",sep=""))
     print(time_end)
   }
-  return (list(thetas_history = thetas_history, normw_history = normw_history, logevidence = cumsum(logevidence),
+  return (list(thetas_history = thetas_history, normw_history = normw_history, logevidence = cumsum(incr_logevidence),
                logtargetdensities = logtargetdensities, hscore = cumsum(incr_hscore), ESS = ESS,
                rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate))
 }

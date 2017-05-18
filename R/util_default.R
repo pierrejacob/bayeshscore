@@ -19,6 +19,11 @@ set_default_algorithmic_parameters = function(observations, model, algorithmic_p
   if (is.null(algorithmic_parameters$progress)) {algorithmic_parameters$progress = FALSE}
   if (is.null(algorithmic_parameters$verbose)) {algorithmic_parameters$verbose = FALSE}
   if (is.null(algorithmic_parameters$save)) {algorithmic_parameters$save = FALSE}
+  # WARNING: results are saved as RDS files (.rds extension)
+  # Save in the working directory by default with timestamp as name
+  if (is.null(algorithmic_parameters$savefilename)) {
+    algorithmic_parameters$savefilename = paste("results_",format(Sys.time(), "%Y-%m-%d_%H-%M-%S"),".rds",sep="")
+  }
   # The default resampling scheme is: systematic resampling
   if (is.null(algorithmic_parameters$resampling)) {
     algorithmic_parameters$resampling = function(normw) systematic_resampling_n(normw, length(normw), runif(1))
