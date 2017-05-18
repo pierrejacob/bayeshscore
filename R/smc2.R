@@ -124,14 +124,15 @@ smc2 = function(observations, model, algorithmic_parameters){
     if (algorithmic_parameters$save) {
       # save the variables required to resume and proceed further, in case of interrupted run
       required_to_resume = list(thetas = thetas, normw = normw, logw = logw, logtargetdensities = logtargetdensities,
-                                PFs = PFs, t = t, observations = observations, model = model,
+                                PFs = lapply(1:Ntheta,function(i)PFs[[i]][names(PFs[[i]])!="tree"]),
+                                t = t, observations = observations, model = model,
                                 algorithmic_parameters = algorithmic_parameters)
       # save the results obtained up to this time
       results_so_far = list(thetas_history = thetas_history, normw_history = normw_history,
                             incr_logevidence = incr_logevidence[1:t], incr_hscore = incr_hscore[1:t],  ESS = ESS[1:t],
                             rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
-                            PF_history = PF_history, increase_Nx_times = increase_Nx_times,
-                            increase_Nx_values = increase_Nx_values)
+                            PF_history = lapply(1:(t+1),function(j)lapply(1:Ntheta,function(i)PF_history[[j]][[i]][names(PF_history[[j]][[i]])!="tree"])),
+                            increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values)
       # save into RDS file
       if (algorithmic_parameters$hscore && (observation_type=="discrete")) {
         # additional variables required for the discrete case
