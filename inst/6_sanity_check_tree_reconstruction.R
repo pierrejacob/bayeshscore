@@ -5,8 +5,6 @@ library(HyvarinenSSM)
 library(ggplot2)
 library(gridExtra)
 set.seed(19)
-module_tree <<- Module("module_tree", PACKAGE = "HyvarinenSSM")
-TreeClass <<- module_tree$Tree
 #--------------------------------------------------------------------------------------------
 # create data
 nobservations = 5
