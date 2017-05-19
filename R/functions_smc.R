@@ -8,7 +8,6 @@ assimilate_one_smc = function(thetas, byproducts, t, observations, model,
   nmoves = algorithmic_parameters$nmoves
   resampling = algorithmic_parameters$resampling
   ess_objective = algorithmic_parameters$ess_threshold*algorithmic_parameters$Ntheta
-  verbose = algorithmic_parameters$verbose
   # initialize variables
   current_gamma = 0
   logcst = 0
@@ -60,7 +59,7 @@ assimilate_one_smc = function(thetas, byproducts, t, observations, model,
     normw = w / sum(w)
     ESS = 1/(sum(normw^2))
     # display diagnostic
-    if (verbose){
+    if (algorithmic_parameters$verbose){
       cat("Step", t, ", gamma = ", gamma, ", ESS = ", ESS, "\n")
     }
     if (gamma<1){
@@ -95,8 +94,8 @@ assimilate_one_smc = function(thetas, byproducts, t, observations, model,
               # compute the log-likelihood of proposed theta using byproduct (e.g. Kalman filter) or analytically via the model
               if (!is.null(byproducts)){
                 byproduct = model$initialize_byproducts(theta_new, observations)
-                for (i in 1:t){
-                  byproduct = model$update_byproduct(byproduct, i, theta_new, observations)
+                for (j in 1:t){
+                  byproduct = model$update_byproduct(byproduct, j, theta_new, observations)
                 }
                 incremental_ll_new = model$dpredictive(observations,t,theta_new,byproduct,log = TRUE)
               } else {
@@ -130,7 +129,7 @@ assimilate_one_smc = function(thetas, byproducts, t, observations, model,
             }
           }
           rejuvenation_rate = accepts/Ntheta
-          if (verbose){
+          if (algorithmic_parameters$verbose){
             cat("Acceptance rate (independent proposal): ", 100*rejuvenation_rate, "%\n")
           }
         }

@@ -104,7 +104,7 @@ assimilate_one_smc2 = function(thetas, PFs, t, observations, model,
     normw = w / sum(w)
     ESS = 1/(sum(normw^2))
     # display diagnostic
-    if (verbose){
+    if (algorithmic_parameters$verbose){
       cat("Step", t, ", gamma = ", gamma, ", ESS = ", ESS, "\n")
     }
     if (gamma<1){
@@ -160,7 +160,7 @@ assimilate_one_smc2 = function(thetas, PFs, t, observations, model,
             }
           }
           rejuvenation_rate = accepts/Ntheta
-          if (verbose){
+          if (algorithmic_parameters$verbose){
             cat("Acceptance rate (independent proposal): ", 100*rejuvenation_rate, "%\n")
           }
           if (adaptNx){
@@ -171,7 +171,7 @@ assimilate_one_smc2 = function(thetas, PFs, t, observations, model,
               Nx = PFs[[1]]$Nx
               increase_Nx_times = t
               increase_Nx_values = PFs[[1]]$Nx
-              if (verbose){
+              if (algorithmic_parameters$verbose){
                 cat("Nx increased to: ", increase_Nx_values, "\n")
               }
             }
