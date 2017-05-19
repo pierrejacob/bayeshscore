@@ -123,16 +123,28 @@ smc2 = function(observations, model, algorithmic_parameters){
     # save partial results if needed
     if (algorithmic_parameters$save) {
       # save the variables required to resume and proceed further, in case of interrupted run
-      required_to_resume = list(thetas = thetas, normw = normw, logw = logw, logtargetdensities = logtargetdensities,
-                                PFs = lapply(1:Ntheta,function(i)PFs[[i]][names(PFs[[i]])!="tree"]),
-                                t = t, observations = observations, model = model,
+      # NOTE: thetas, normw, and PFs, are retrievable from the history stored in results_so_far
+      required_to_resume = list(t = t, logw = logw, logtargetdensities = logtargetdensities,
+                                observations = observations, model = model,
                                 algorithmic_parameters = algorithmic_parameters)
       # save the results obtained up to this time
       results_so_far = list(thetas_history = thetas_history, normw_history = normw_history,
                             incr_logevidence = incr_logevidence[1:t], incr_hscore = incr_hscore[1:t],  ESS = ESS[1:t],
                             rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
-                            PF_history = lapply(1:(t+1),function(j)lapply(1:Ntheta,function(i)PF_history[[j]][[i]][names(PF_history[[j]][[i]])!="tree"])),
                             increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values)
+      # if the history of x-particles is not saved, just keep the most recent ones
+      if (algorithmic_parameters$store_X){
+        results_so_far$PF_history_no_tree = lapply(1:(t+1),function(j)lapply(1:Ntheta,function(i)PF_history[[j]][[i]][names(PF_history[[j]][[i]])!="tree"]))
+        results_so_far$trees_attributes_history = lapply(1:(t+1),function(j)trees_getattributes(lapply(1:Ntheta,function(i)PF_history[[j]][[i]]$tree)))
+      } else {
+        required_to_resume$PFs_no_trees = lapply(1:Ntheta,function(i)PFs[[i]][names(PFs[[i]])!="tree"])
+        required_to_resume$trees_attributes = trees_getattributes(lapply(1:Ntheta,function(i)PFs[[i]]$tree))
+      }
+      # if the history of theta-particles is not saved, just keep the most recent ones
+      if (!algorithmic_parameters$store_theta){
+        required_to_resume$thetas = thetas
+        required_to_resume$normw = normw
+      }
       # save into RDS file
       if (algorithmic_parameters$hscore && (observation_type=="discrete")) {
         # additional variables required for the discrete case

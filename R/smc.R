@@ -85,13 +85,19 @@ smc = function(observations, model, algorithmic_parameters){
     # save partial results if needed
     if (algorithmic_parameters$save) {
       # save the variables required to resume and proceed further, in case of interrupted run
-      required_to_resume = list(thetas = thetas, normw = normw, logw = logw, logtargetdensities = logtargetdensities,
-                                byproducts = byproducts, t = t, observations = observations, model = model,
+      # NOTE: thetas and normw, are retrievable from the history stored in results_so_far
+      required_to_resume = list(t = t, logw = logw, logtargetdensities = logtargetdensities,
+                                byproducts = byproducts, observations = observations, model = model,
                                 algorithmic_parameters = algorithmic_parameters)
       # save the results obtained up to this time
       results_so_far = list(thetas_history = thetas_history, normw_history = normw_history,
                             incr_logevidence = incr_logevidence[1:t], incr_hscore = incr_hscore[1:t],  ESS = ESS[1:t],
                             rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate)
+      # if the history of theta-particles is not saved, just keep the most recent ones
+      if (!algorithmic_parameters$store_theta){
+        required_to_resume$thetas = thetas
+        required_to_resume$normw = normw
+      }
       # save into RDS file
       saveRDS(c(required_to_resume,results_so_far),file = algorithmic_parameters$savefilename)
     }
