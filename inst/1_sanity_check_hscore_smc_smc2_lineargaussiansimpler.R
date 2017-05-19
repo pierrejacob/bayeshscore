@@ -11,7 +11,7 @@ set.seed(19)
 
 # create data
 nobservations = 30
-model = get_model_simplerlineargaussian()
+model = get_model_lineargaussiansimpler()
 theta_star = c(0.8,1,model$psi,model$sigmaV2)
 sim = simulateData(model, theta = theta_star, nobservations)
 X = sim$X

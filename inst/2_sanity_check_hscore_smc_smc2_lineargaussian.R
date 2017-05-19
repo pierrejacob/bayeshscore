@@ -6,13 +6,14 @@ library(HyvarinenSSM)
 library(ggplot2)
 library(gridExtra)
 set.seed(19)
-
+module_tree <<- Module("module_tree", PACKAGE = "HyvarinenSSM")
+TreeClass <<- module_tree$Tree
+#--------------------------------------------------------------------------------------------
+model = get_model_lineargaussian()
 #--------------------------------------------------------------------------------------------
 # create data
 nobservations = 15
-model = get_model_lineargaussian()
 theta_star = c(0.8,1,1,1)
-#--------------------------------------------------------------------------------------------
 sim = simulateData(model, theta = theta_star, nobservations)
 X = sim$X
 Y = sim$Y
