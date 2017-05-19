@@ -14,7 +14,7 @@ conditional_particle_filter <- function(observations, model, theta, Nx, path = N
   log_p_y_hat <- 0 #initialize estimate of log-evidence
   incremental_ll = rep(NA,nobservations)
   X <- model$rinitial(theta,Nx) #initial step 1
-  logW <- model$dobs(observations[,1],X,1,theta)
+  logW <- model$dobs(observations[,1,drop=FALSE],X,1,theta)
   maxlogW <- max(logW)
   W <- exp(logW - maxlogW)
   incremental_ll[1] = log(mean(W)) + maxlogW
@@ -37,7 +37,7 @@ conditional_particle_filter <- function(observations, model, theta, Nx, path = N
       if (cpf){
         X[,Nx] <- path[,t]
       }
-      logW <- model$dobs(observations[,t], X, t, theta)
+      logW <- model$dobs(observations[,t,drop=FALSE], X, t, theta)
       maxlogW <- max(logW)
       W <- exp(logW - maxlogW)
       incremental_ll[t] = log(mean(W)) + maxlogW #udpate likelihood estimate
