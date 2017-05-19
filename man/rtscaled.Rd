@@ -9,3 +9,4 @@ rtscaled(N, df, s2)
 \description{
 Samples from scaled Student t distribution
 }
+

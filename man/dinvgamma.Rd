@@ -9,3 +9,4 @@ dinvgamma(y, a, b, log)
 \description{
 Density of inverse gamma distribution
 }
+

@@ -9,3 +9,4 @@ conditional_particle_filter(observations, model, theta, Nx, path = NULL)
 \description{
 This function implements the conditional particle filter. If no conditioning path is provided, it performs a regular bootstrap particle filter. It returns log-evidence estimates, particles, normalized weights, tree of paths, and one sample final path.
 }
+

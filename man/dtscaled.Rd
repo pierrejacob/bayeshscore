@@ -9,3 +9,4 @@ dtscaled(y, df, s2, log)
 \description{
 Density of scaled Student t distribution
 }
+

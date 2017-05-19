@@ -13,3 +13,4 @@ dimension of each x-particle (\code{dimx}); 'number of time "insert" has been ca
 vector of ancestor indices (\code{a_star}); vector of offspring counts (\code{o_star});
 vector of particles (\code{x_star}); vector of leaf indices (\code{l_star}).
 }
+

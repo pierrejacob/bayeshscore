@@ -9,3 +9,4 @@ KF_logdpredictive(Yt, t, KF_current)
 \description{
 This function returns the predictive log-density of the next observation
 }
+

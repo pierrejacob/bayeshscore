@@ -10,3 +10,4 @@ smc(observations, model, algorithmic_parameters)
 This function runs the SMC algorithm, using tempering.
 It also computes the log-evidence and the prequential Hyvarinen score (optional).
 }
+

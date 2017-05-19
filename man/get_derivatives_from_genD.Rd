@@ -9,3 +9,4 @@ get_derivatives_from_genD(genD_output, dimY)
 \description{
 This function extracts the jacobian and the diagonal of the hessians from the output of genD (cf. numDeriv)
 }
+

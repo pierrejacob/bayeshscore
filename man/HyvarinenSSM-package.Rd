@@ -2,8 +2,8 @@
 % Please edit documentation in R/HyvarinenSSM-package.R
 \docType{package}
 \name{HyvarinenSSM-package}
-\alias{HyvarinenSSM-package}
 \alias{HyvarinenSSM}
+\alias{HyvarinenSSM-package}
 \title{HyvarinenSSM}
 \description{
 ...
@@ -15,3 +15,4 @@
 Stephane Shao, Pierre E. Jacob
 }
 \keyword{package}
+

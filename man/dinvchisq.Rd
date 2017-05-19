@@ -9,3 +9,4 @@ dinvchisq(y, df, s2 = 1, log)
 \description{
 Density of scaled inverse chi-square distribution
 }
+

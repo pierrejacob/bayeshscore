@@ -9,3 +9,4 @@ getESS(normalized_weights)
 \description{
 This function computes the ESS given a set of normalized weights
 }
+

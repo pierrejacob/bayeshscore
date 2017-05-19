@@ -11,3 +11,4 @@ This function runs a basic kalman filter and returns the predictive means and va
 of both states and observations, and the filtering means and variances
 Prototype: state parameters = phi, sigmaV2 // observation parameter: psi, sigmaW2
 }
+

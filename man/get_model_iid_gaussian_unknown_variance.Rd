@@ -9,3 +9,4 @@ get_model_iid_gaussian_unknown_variance()
 \description{
 Univariate iid Gaussian observations with unknown variance (degenerate linear gaussian SSM)
 }
+

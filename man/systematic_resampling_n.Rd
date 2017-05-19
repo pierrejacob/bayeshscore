@@ -13,3 +13,4 @@ A vector of ancestors
 Runs a systematic resampling algorithm, taking a uniform variable, normalized weights and a number of desired draws
 and returning a vector of ancestors
 }
+
