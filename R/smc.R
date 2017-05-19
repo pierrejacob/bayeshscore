@@ -20,7 +20,7 @@ smc = function(observations, model, algorithmic_parameters){
   # Initialize empty arrays and lists to store the results
   ESS = array(NA,dim = c(nobservations)) #ESS at successive times t
   incr_logevidence = array(NA,dim = c(nobservations)) #incremental log-evidence at successive times t
-  if (algorithmic_parameters$hscore) {incr_hscore = array(NA,dim = c(nobservations))} # OPTIONAL: incremental Hyvarinen score at successive times t
+  incr_hscore = array(NA,dim = c(nobservations)) # OPTIONAL: incremental Hyvarinen score at successive times t
   rejuvenation_times = c() #successive times where resampling is triggered
   rejuvenation_rate = c() #successive acceptance rates of resampling
   thetas_history = list() #successive sets of particles theta

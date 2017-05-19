@@ -18,7 +18,7 @@ smc2 = function(observations, model, algorithmic_parameters){
   # Initialize empty arrays and lists to store the results
   ESS = array(NA,dim = c(nobservations)) #ESS at successive times t
   incr_logevidence = array(NA,dim = c(nobservations)) #incremental log-evidence at successive times t
-  if (algorithmic_parameters$hscore) {incr_hscore = array(NA,dim = c(nobservations))} # OPTIONAL: incremental Hyvarinen score at successive times t
+  incr_hscore = array(NA,dim = c(nobservations)) # OPTIONAL: incremental Hyvarinen score at successive times t
   rejuvenation_times = c() #successive times where resampling is triggered
   rejuvenation_rate = c() #successive acceptance rates of resampling
   increase_Nx_times = c() #successive times where increasing Nx is triggered
@@ -35,7 +35,7 @@ smc2 = function(observations, model, algorithmic_parameters){
   # }
   logtargetdensities = apply(thetas, 2, model$dprior) # log target density evaluations at current particles
   normw = rep(1/Ntheta, Ntheta) # normalized weights
-  logw = rep(0, Ntheta) # log normalized weights
+  logw = rep(0, Ntheta) # log weights
 
   ########## if we start from a proposal instead of the prior (e.g. improper prior)
   ########## then the weights should be initialized differently:
