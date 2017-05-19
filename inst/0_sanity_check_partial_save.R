@@ -44,7 +44,7 @@ algorithmic_parameters$save = TRUE
 #
 # WARNING: the save must be an RDS file (extension .rds)
 #
-setTimeLimit(elapsed = 30) # purposely set a time budget
+setTimeLimit(elapsed = 15) # purposely set a time budget
 ### Run SMC
 algorithmic_parameters$savefilename = "partial_smc_results.rds"
 tryCatch(hscore(observations,model,algorithmic_parameters), error = function(e) cat("--- Time out ---\n"))
@@ -130,3 +130,45 @@ ggplot(data.frame(time = rep(1:nobs_smc2,2), marginalfiltermean = c(xmean,xmeanK
                   from = factor(rep(c("smc2","KF"),each=nobs_smc2)))) +
   geom_line(aes(time, marginalfiltermean, color = from),size=1)
 
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+#-----------------------  Check that the trees were properly saved --------------------------
+#--------------------------------------------------------------------------------------------
+# check the content of the RDS save file
+print(names(partial_smc2_results))
+# Reconstruct PF_history
+PF_history = lapply(1:partial_smc2_results$t,
+                    function(t)lapply(1:length(partial_smc2_results$trees_attributes_history[[t+1]]),
+                                      function(i)c(partial_smc2_results$PF_history_no_tree[[t+1]][[i]],
+                                                   tree = tree_reconstruct(partial_smc2_results$trees_attributes_history[[t+1]][[i]]))))
+PF_history = c(list(NULL),PF_history)
+# Plot all paths from one of the latest trees (for some arbitrary theta)
+path.df = data.frame(x = c(sapply(1:PF_history[[nobs_smc2+1]][[1]]$Nx,function(i)PF_history[[nobs_smc2+1]][[1]]$tree$get_path(i-1))),
+                     time = rep(1:nobs_smc2,PF_history[[nobs_smc2+1]][[1]]$Nx),
+                     index = rep(1:PF_history[[nobs_smc2+1]][[1]]$Nx,each=nobs_smc2))
+ggplot(path.df) + geom_line(aes(time,x,group=index))
+
+
+#----------------------------------------------------------------------------------------------------------------#
+# NOTE: lapply vs for loop to reconstruct trees
+lapply_version = function() {
+  PF_history = lapply(1:partial_smc2_results$t,
+                      function(t)lapply(1:length(partial_smc2_results$trees_attributes_history[[t+1]]),
+                                        function(i)c(partial_smc2_results$PF_history_no_tree[[t+1]][[i]],
+                                                     tree = tree_reconstruct(partial_smc2_results$trees_attributes_history[[t+1]][[i]]))))
+}
+for_version = function() {
+  PF_history = vector("list",partial_smc2_results$t)
+  PFs = vector("list",Ntheta)
+  for (t in 1:partial_smc2_results$t){
+    for (i in 1:Ntheta){
+      PFs[[i]] = c(partial_smc2_results$PF_history_no_tree[[t+1]][[i]],
+                   tree = tree_reconstruct(partial_smc2_results$trees_attributes_history[[t+1]][[i]]))
+    }
+    PF_history[[t]] = PFs
+  }
+}
+microbenchmark::microbenchmark(lapply_version(),for_version(),times = 20)
