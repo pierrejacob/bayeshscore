@@ -6,3 +6,4 @@
   module_tree <<- Module("module_tree", PACKAGE = "HyvarinenSSM")
   TreeClass <<- module_tree$Tree
 }
+

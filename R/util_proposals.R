@@ -1,5 +1,11 @@
+#------------------------------------------------------------------------------#
+#-------------- Some proposals for the rejuvenation steps of SMC and SMC2  ----#
+#------------------------------------------------------------------------------#
+#'@rdname get_proposal_independent_normal
+#'@title get_proposal_independent_normal
+#'@description Independent Normal proposal using fitted mean and covariance matrix
 #'@export
-get_independent_normal_proposal <- function(){
+get_proposal_independent_normal <- function(){
   return(function(thetas,normw,...){
     covariance = cov.wt(t(thetas), wt = normw, method = "ML")
     mean_t = covariance$center
@@ -17,9 +23,12 @@ get_independent_normal_proposal <- function(){
   })
 }
 
+#'@rdname get_proposal_mixture
+#'@title get_proposal_mixture
+#'@description Independent proposal from a fitted mixture of Normals with \code{nclust} components (default is 5).
+#' If the fit is unsuccessful, return independent Normal proposal (see \code{get_independent_normal_proposal}).
 #'@export
-get_mixture_proposal <- function(nclust = 5){
-  library(Rmixmod)
+get_proposal_mixture <- function(nclust = 5){
   f <- function(thetas,normw,...){
     # resample
     ancestors <- systematic_resampling_n(normw, length(normw), runif(1))
@@ -39,7 +48,7 @@ get_mixture_proposal <- function(nclust = 5){
       is.error <- (length(fit@bestResult@parameters@proportions) == 0)
     }
     if (is.error){
-      return(get_independent_normal_proposal())
+      return(get_proposal_independent_normal())
     }
 
     # if it worked, ...

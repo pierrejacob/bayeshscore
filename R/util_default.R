@@ -34,9 +34,10 @@ set_default_algorithmic_parameters = function(observations, model, algorithmic_p
   # a sampler and its corresponding density function
   if (is.null(algorithmic_parameters$proposalmove)) {
     algorithmic_parameters$proposalmove = function(thetas,normw,model){
+      dimtheta = nrow(thetas)
       covariance = cov.wt(t(thetas), wt = normw, method = "ML")
       mean_t = covariance$center
-      cov_t = covariance$cov + diag(rep(10^(-4)/model$dimtheta),model$dimtheta) # increased a bit the diagonal to prevent degeneracy effects)
+      cov_t = covariance$cov + diag(rep(10^(-4)/dimtheta),dimtheta) # increased a bit the diagonal to prevent degeneracy effects)
       # define the sampler
       rproposal = function(Ntheta) {
         return (fast_rmvnorm_transpose(Ntheta, mean_t, cov_t))
