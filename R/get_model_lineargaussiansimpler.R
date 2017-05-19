@@ -1,11 +1,11 @@
-#'@rdname get_model_simplerlineargaussian
-#'@title get_model_simplerlineargaussian
+#'@rdname get_model_lineargaussiansimpler
+#'@title get_model_lineargaussiansimpler
 #'@description Univariate linear Gaussian model with 2 unknown parameters
 #'(\code{phi}, \code{sigmaW2}).
 #'Latent states: X[t] = \code{phi}*X[t-1] + N(0,\code{sigmaW2}).
 #'Observations: Y[t] = \code{psi}*X[t] + N(0,\code{sigmaV2}).
 #'@export
-get_model_simplerlineargaussian <- function(){
+get_model_lineargaussiansimpler <- function(){
   model = list()
   model$observation_type = 'continuous'
   model$psi = 1

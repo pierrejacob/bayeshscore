@@ -34,7 +34,8 @@ get_model_iid_gaussian_unknown_mean <- function(muprior,sigma2prior){
 
   # density of the observations
   model$dobs = function(Yt,Xt,t,theta,log = TRUE){
-    return (dnorm(Yt, theta, 1, log))
+    N = ncol(Xt)
+    return (matrix(rep(dnorm(Yt, theta, 1, log),N),ncol=N))
   }
 
   # first and second partial derivatives of the observation log-density
