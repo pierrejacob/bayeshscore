@@ -31,7 +31,8 @@ algorithmic_parameters$Nx = 2^5
 algorithmic_parameters$Nx_max = 2^10
 algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$store_theta = TRUE
-algorithmic_parameters$store_X = TRUE
+algorithmic_parameters$store_X = TRUE # Set to FALSE (or comment out) to speed up code
+algorithmic_parameters$proposalmove = get_proposal_mixture() # Comment out to speed up code
 algorithmic_parameters$ess_threshold = 0.5
 algorithmic_parameters$min_acceptance_rate = 0.3
 algorithmic_parameters$nmoves = 1
@@ -119,29 +120,47 @@ visualize_save = function(partial_smc2_results) {
 #########################################################################################
 #########################################################################################
 #########################################################################################
-algorithmic_parameters$savefilename = "partial_smc2_results.rds"
-#
+# Purposely assimilate the observations as two separate batch to test smc_resume features
+n_first_batch = floor(nobservations/2)
+#----------------------------------------------------------------------------------------
 # WARNING: the save must be an RDS file (extension .rds)
-#
-time_budget = 10
-cat(strftime(Sys.time()),", alloted time =",time_budget,"sec\n")
-setTimeLimit(elapsed = time_budget) # purposely set a time budget
-tryCatch(hscore(observations,model_nolikelihood,algorithmic_parameters), error = function(e) cat("--- Time out ---\n"))
-setTimeLimit() # This resets the time limit to infinity
+algorithmic_parameters$savefilename = "partial_smc2_results.rds"
+# purposely set a time budget
+algorithmic_parameters$time_budget = 5
+#----------------------------------------------------------------------------------------
+# Run SMC with a time budget
+smc2_result = hscore(observations[,1:n_first_batch,drop=FALSE],model_nolikelihood,algorithmic_parameters)
+# Load and visualize partial results
 partial_smc2_results = readRDS(algorithmic_parameters$savefilename)
 visualize_save(partial_smc2_results)
-#
+#----------------------------------------------------------------------------------------
 # Continue to resume / interrupt run until all the observations have been assimilated
-count = 1
-while (partial_smc2_results$t < nobservations) {
-  time_budget = 10*(2^count)
-  cat(strftime(Sys.time()),", alloted time =",time_budget,"sec\n")
-  setTimeLimit(elapsed = time_budget) # purposely set a time budget
-  tryCatch(smc2_resume(partial_smc2_results), error = function(e) cat("--- Time out ---\n"))
-  setTimeLimit() # This resets the time limit to infinity
+while (partial_smc2_results$t < n_first_batch) {
+  # increase time budget just to make sure the while loop progresses
+  algorithmic_parameters$time_budget = 2*algorithmic_parameters$time_budget
+  # resume SMC run
+  smc2_result = smc2_resume(RDSsave = partial_smc2_results, new_algorithmic_parameters = algorithmic_parameters)
+  # save and visualize partial results
   partial_smc2_results = readRDS(algorithmic_parameters$savefilename)
   visualize_save(partial_smc2_results)
-  count = count + 1
 }
-setTimeLimit() # This resets the time limit to infinity
-
+cat("----- First batch assimilated -----\n")
+#########################################################################################
+#############               Assimilate newly available observations       ###############
+#########################################################################################
+cat("----- Assimilating second batch -----\n")
+smc2_result = smc2_resume(RDSsave = partial_smc2_results,
+                          next_observations = observations[,(n_first_batch+1):nobservations,drop=FALSE],
+                          new_algorithmic_parameters = algorithmic_parameters)
+partial_smc2_results = readRDS(algorithmic_parameters$savefilename)
+visualize_save(partial_smc2_results)
+while (partial_smc2_results$t < nobservations) {
+  # increase time budget just to make sure the while loop progresses
+  algorithmic_parameters$time_budget = 2*algorithmic_parameters$time_budget
+  # resume SMC run
+  smc2_result = smc2_resume(RDSsave = partial_smc2_results, new_algorithmic_parameters = algorithmic_parameters)
+  # save and visualize partial results
+  partial_smc2_results = readRDS(algorithmic_parameters$savefilename)
+  visualize_save(partial_smc2_results)
+}
+cat("----- Second batch assimilated -----\n")

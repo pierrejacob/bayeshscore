@@ -1,6 +1,7 @@
 #'@rdname smc2_resume
 #'@title smc2_resume
 #'@description This function resumes a previously interrupted SMC2 run.
+#'It is a wrapper of the function \code{smc2_resume_} with a time budgeting and partial save feature.
 #'@export
 smc2_resume = function(RDSsave=NULL, savefilename=NULL, next_observations=NULL, new_algorithmic_parameters=NULL){
   ########################################################################
@@ -10,19 +11,39 @@ smc2_resume = function(RDSsave=NULL, savefilename=NULL, next_observations=NULL, 
   if (is.null(RDSsave)) {
     if (is.null(savefilename)) {
       cat("partial results (loaded from RDS file) or path to RDS file (savefilename) must be provided\n")
+      return (NULL)
     } else {
       RDSsave = readRDS(savefilename)
     }
   }
   # update new algorithmic parameters and flags. NOTE: some parameters CANNOT be modified (e.g. Ntheta, model, ...)
   algorithmic_parameters = RDSsave$algorithmic_parameters
-  modifiable_parameters = c("adaptNx","Nx_max","min_acceptance_rate","ess_threshold","nmoves","progress","verbose",
-                            "save","savefilename","resampling","proposalmove")
-  for (i in 1:length(modifiable_parameters)) {
-    if (!is.null(new_algorithmic_parameters[[modifiable_parameters[i]]])) {
-      algorithmic_parameters[[modifiable_parameters[i]]] = new_algorithmic_parameters[[modifiable_parameters[i]]]
+  mutable = c("progress","verbose","save","savefilename","time_budget","ess_threshold","nmoves","resampling","proposalmove")
+  for (i in 1:length(mutable)) {
+    if (!is.null(new_algorithmic_parameters[[mutable[i]]])) {
+      algorithmic_parameters[[mutable[i]]] = new_algorithmic_parameters[[mutable[i]]]
     }
   }
+  # Set the time budget if needed
+  if (!is.null(algorithmic_parameters$time_budget)){
+    if (is.null(algorithmic_parameters$save)||(algorithmic_parameters$save == FALSE)||is.null(algorithmic_parameters$savefilename)){
+      saveprompt  = "not saved (no savefilename provided or option save is off)"
+    } else {
+      saveprompt  = paste("saved in",algorithmic_parameters$savefilename)
+    }
+    cat(strftime(Sys.time()),", time budget =",algorithmic_parameters$time_budget,"sec\n")
+    setTimeLimit(elapsed = algorithmic_parameters$time_budget)
+  }
+  # Run the SMC with possible interruption
+  results = tryCatch(smc2_resume_(RDSsave, algorithmic_parameters, next_observations),
+                     error = function(e) {cat("Time limit reached: partial results",saveprompt,"\n"); NULL})
+  # Resets time budget to infinity
+  setTimeLimit()
+  return (results)
+}
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+smc2_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL){
   # Update the observations to assimilate
   observations = cbind(RDSsave$observations, next_observations)
   nobservations = ncol(observations)
@@ -57,10 +78,10 @@ smc2_resume = function(RDSsave=NULL, savefilename=NULL, next_observations=NULL, 
   increase_Nx_values = RDSsave$increase_Nx_values
   if (n_assimilated == nobservations){
     # all observations have been assimilated, we can return the result
-    return(list(thetas_history = thetas_history, normw_history = normw_history, logevidence = cumsum(incr_logevidence),
-                logtargetdensities = logtargetdensities, hscore = cumsum(incr_hscore), ESS = ESS,
-                rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
-                PF_history = PF_history, increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values))
+    return(list(thetas_history = thetas_history, normw_history = normw_history, logtargetdensities = logtargetdensities,
+                PF_history = PF_history, logevidence = cumsum(incr_logevidence), hscore = cumsum(incr_hscore),
+                ESS = ESS, rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
+                increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values))
   } else {
     # Get the latest particles and their normalized weights
     if (algorithmic_parameters$store_theta) {
@@ -78,7 +99,7 @@ smc2_resume = function(RDSsave=NULL, savefilename=NULL, next_observations=NULL, 
     }
     # update remaining parameters and # Get all the variables required to resume SMC2 run
     Nx = PFs[[1]]$Nx
-    logw = RDSsave$logw # log normalized weights of latest particles
+    logw = RDSsave$logw
     model = RDSsave$model
     if (algorithmic_parameters$hscore) {observation_type = tolower(model$observation_type)}
     #  OPTIONAL: For discrete hscore, retrieve array of most recent particles X targeting predictive distributions

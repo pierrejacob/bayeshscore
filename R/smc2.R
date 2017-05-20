@@ -2,19 +2,42 @@
 #'@title smc2
 #'@description This function runs the SMC2 algorithm, using adapive Nx and tempering.
 #'It also computes the log-evidence and the prequential Hyvarinen score (optional).
+#'It is a wrapper of the function \code{smc2_} with a time budgeting and partial save feature.
 #'@export
 smc2 = function(observations, model, algorithmic_parameters){
+  # Set the time budget if needed
+  if (!is.null(algorithmic_parameters$time_budget)){
+    if (is.null(algorithmic_parameters$save)||(algorithmic_parameters$save == FALSE)||is.null(algorithmic_parameters$savefilename)){
+      saveprompt  = "not saved (no savefilename provided or option save is off)"
+    } else {
+      saveprompt  = paste("saved in",algorithmic_parameters$savefilename)
+    }
+    cat(strftime(Sys.time()),", time budget =",algorithmic_parameters$time_budget,"sec\n")
+    setTimeLimit(elapsed = algorithmic_parameters$time_budget)
+  }
+  # Run the SMC with possible interruption
+  results = tryCatch(smc2_(observations, model, algorithmic_parameters),
+                     error = function(e) {cat("Time limit reached: partial results",saveprompt,"\n"); NULL})
+  # Resets time budget to infinity
+  setTimeLimit()
+  return (results)
+}
+#-------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+smc2_ = function(observations, model, algorithmic_parameters){
   # Parse algorithmic parameters and set flags accordingly
   nobservations = ncol(observations)
   Ntheta = algorithmic_parameters$Ntheta
   Nx = algorithmic_parameters$Nx
   if (algorithmic_parameters$hscore) {observation_type = tolower(model$observation_type)}
+  #-------------------------------------------------------------------------------------------------------
   # Monitor progress if needed
   if (algorithmic_parameters$progress) {
     print(paste("Started at:",Sys.time()))
     progbar = txtProgressBar(min = 0,max = nobservations,style=3)
     time_start = proc.time()
   }
+  #-------------------------------------------------------------------------------------------------------
   # Initialize empty arrays and lists to store the results
   ESS = array(NA,dim = c(nobservations)) #ESS at successive times t
   incr_logevidence = array(NA,dim = c(nobservations)) #incremental log-evidence at successive times t
@@ -44,12 +67,14 @@ smc2 = function(observations, model, algorithmic_parameters){
     thetas_history[[1]] = thetas
     normw_history[[1]] = normw
   }
+  #-------------------------------------------------------------------------------------------------------
   #  OPTIONAL: For discrete hscore, initialize array of most recent particles X targeting predictive distributions
   if (algorithmic_parameters$hscore && (observation_type=="discrete")) {
     Xprevious = array(NA,dim = c(model$dimX, Nx, Ntheta))
     Xpred = array(NA,dim = c(model$dimX, Nx, Ntheta))
     XnormW_previous = matrix(1/Nx, nrow = Nx, ncol = Ntheta) #matrix of normalized weights for X at previous step
   }
+  #-------------------------------------------------------------------------------------------------------
   # Initialize filters (first observation passed as argument just to initialize the fields of PF)
   PFs = list() # list of particle filters (one for each theta)
   for (itheta in 1:Ntheta){
@@ -58,8 +83,10 @@ smc2 = function(observations, model, algorithmic_parameters){
     #Note: the CPF performs a regular PF when no conditioning path is provided
     if (algorithmic_parameters$hscore && (observation_type=="discrete")) {Xpred[,,itheta] = PFs[[itheta]]$X}
   }
+  #-------------------------------------------------------------------------------------------------------
   # Assimilate observations one by one
   for (t in 1:nobservations){
+    #-------------------------------------------------------------------------------------------------------
     # OPTIONAL: compute the incremental hscore for discrete observations
     if (algorithmic_parameters$hscore && (observation_type=="discrete")) {
       # Construct particles targeting the one-step-ahead predictive (need to reconstruct since size Nx might change)
@@ -79,8 +106,10 @@ smc2 = function(observations, model, algorithmic_parameters){
       # compute incremental H score (with theta from time t-1, see formula in the paper)
       incr_hscore[t] = Hd_smc2(t,model,observations[,t],thetas,normw,Ntheta,Xpred,XnormW_previous)
     }
+    #-------------------------------------------------------------------------------------------------------
     # Assimilate the next observation
     results = assimilate_one_smc2(thetas,PFs,t,observations,model,logtargetdensities,logw,normw,algorithmic_parameters)
+    #-------------------------------------------------------------------------------------------------------
     # Update the particles theta and compute the log-evidence
     thetas = results$thetas
     normw = results$normw
@@ -88,6 +117,7 @@ smc2 = function(observations, model, algorithmic_parameters){
     PFs = results$PFs
     logtargetdensities = results$logtargetdensities
     incr_logevidence[t] = results$logcst
+    #-------------------------------------------------------------------------------------------------------
     # OPTIONAL: compute incremental hscore here for continuous observations and update particles for discrete case
     if (algorithmic_parameters$hscore) {
       if (observation_type=="continuous") {
@@ -103,6 +133,7 @@ smc2 = function(observations, model, algorithmic_parameters){
         }
       }
     }
+    #-------------------------------------------------------------------------------------------------------
     # do some book-keeping
     ESS[t] = results$ESS
     if (!is.na(results$rejuvenation_time)) {rejuvenation_times = c(rejuvenation_times, results$rejuvenation_time)}
@@ -116,10 +147,12 @@ smc2 = function(observations, model, algorithmic_parameters){
     if (algorithmic_parameters$store_X){
       PF_history[[t+1]] = PFs
     }
+    #-------------------------------------------------------------------------------------------------------
     # Update progress bar if needed
     if (algorithmic_parameters$progress) {
       setTxtProgressBar(progbar, t)
     }
+    #-------------------------------------------------------------------------------------------------------
     # save partial results if needed
     if (algorithmic_parameters$save) {
       # save the variables required to resume and proceed further, in case of interrupted run
@@ -154,6 +187,7 @@ smc2 = function(observations, model, algorithmic_parameters){
         saveRDS(c(required_to_resume,results_so_far),file = algorithmic_parameters$savefilename)
       }
     }
+    #-------------------------------------------------------------------------------------------------------
   }
   # Update progress bar if needed
   if (algorithmic_parameters$progress) {
@@ -162,8 +196,8 @@ smc2 = function(observations, model, algorithmic_parameters){
     cat(paste("SMC2: T = ",toString(nobservations),", Ntheta = ",toString(Ntheta),", Nx (last) = ",toString(PFs[[1]]$Nx),"\n",sep=""))
     print(time_end)
   }
-  return(list(thetas_history = thetas_history, normw_history = normw_history, logevidence = cumsum(incr_logevidence),
-              logtargetdensities = logtargetdensities, hscore = cumsum(incr_hscore), ESS = ESS,
-              rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
-              PF_history = PF_history, increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values))
+  return(list(thetas_history = thetas_history, normw_history = normw_history, logtargetdensities = logtargetdensities,
+              PF_history = PF_history, logevidence = cumsum(incr_logevidence), hscore = cumsum(incr_hscore),
+              ESS = ESS, rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
+              increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values))
 }
