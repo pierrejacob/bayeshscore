@@ -1,10 +1,29 @@
-#'@rdname smc
-#'@title smc
-#'@description This function runs the SMC algorithm, using tempering.
-#'It also computes the log-evidence and the prequential Hyvarinen score (optional).
-#'It is a wrapper of the function \code{smc_} with a time budgeting and partial save feature.
+#'@rdname smc_resume
+#'@title smc_resume
+#'@description This function resumes a previously interrupted SMC run.
+#'It is a wrapper of the function \code{smc_resume_} with a time budgeting and partial save feature.
 #'@export
-smc = function(observations, model, algorithmic_parameters){
+smc_resume = function(RDSsave=NULL, savefilename=NULL, next_observations=NULL, new_algorithmic_parameters=NULL){
+  ########################################################################
+  ################ Load partial results from save file ###################
+  ########################################################################
+  # load RDS file
+  if (is.null(RDSsave)) {
+    if (is.null(savefilename)) {
+      cat("partial results (loaded from RDS file) or path to RDS file (savefilename) must be provided\n")
+      return (NULL)
+    } else {
+      RDSsave = readRDS(savefilename)
+    }
+  }
+  # update new algorithmic parameters and flags. NOTE: some parameters CANNOT be modified (e.g. Ntheta, model, ...)
+  algorithmic_parameters = RDSsave$algorithmic_parameters
+  mutable = c("progress","verbose","save","savefilename","time_budget","ess_threshold","nmoves","resampling","proposalmove")
+  for (i in 1:length(mutable)) {
+    if (!is.null(new_algorithmic_parameters[[mutable[i]]])) {
+      algorithmic_parameters[[mutable[i]]] = new_algorithmic_parameters[[mutable[i]]]
+    }
+  }
   # Set the time budget if needed
   if (!is.null(algorithmic_parameters$time_budget)){
     if (is.null(algorithmic_parameters$save)||(algorithmic_parameters$save == FALSE)||is.null(algorithmic_parameters$savefilename)){
@@ -16,7 +35,7 @@ smc = function(observations, model, algorithmic_parameters){
     setTimeLimit(elapsed = algorithmic_parameters$time_budget)
   }
   # Run the SMC with possible interruption
-  results = tryCatch(smc_(observations, model, algorithmic_parameters),
+  results = tryCatch(smc_resume_(RDSsave, algorithmic_parameters, next_observations),
                      error = function(e) {cat("Time limit reached: partial results",saveprompt,"\n"); NULL})
   # Resets time budget to infinity
   setTimeLimit()
@@ -24,60 +43,66 @@ smc = function(observations, model, algorithmic_parameters){
 }
 #-------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------
-smc_ = function(observations, model, algorithmic_parameters){
-  # Parse algorithmic parameters and set flags accordingly
+smc_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL){
+  # Update the observations to assimilate
+  observations = cbind(RDSsave$observations, next_observations)
   nobservations = ncol(observations)
-  Ntheta = algorithmic_parameters$Ntheta
-  nmoves = algorithmic_parameters$nmoves
-  resampling = algorithmic_parameters$resampling
-  ess_objective = algorithmic_parameters$ess_threshold*algorithmic_parameters$Ntheta
+  n_assimilated = RDSsave$t
+  # Get the number of particles
+  Ntheta = RDSsave$algorithmic_parameters$Ntheta
+  # Retrieve the theta-particles history and byproducts history(possibly empty lists)
+  thetas_history = RDSsave$thetas_history
+  normw_history = RDSsave$normw_history
+  byproducts_history = RDSsave$byproducts_history
+  # Retrieve the results up to now
+  logtargetdensities = RDSsave$logtargetdensities # log target density evaluations at latest particles
+  ESS = array(NA,dim = c(nobservations)) #ESS at successive times
+  ESS[1:n_assimilated] = RDSsave$ESS #reload previous ESS
+  incr_logevidence = array(NA,dim = c(nobservations)) #incremental log-evidence at successive times
+  incr_logevidence[1:n_assimilated] = RDSsave$incr_logevidence #reload previous logevidence
+  incr_hscore = array(NA,dim = c(nobservations))
+  if (algorithmic_parameters$hscore) {
+    # OPTIONAL: incremental Hyvarinen score
+    incr_hscore[1:n_assimilated] = RDSsave$incr_hscore
+  }
+  # Retrieve the diagnostics up to now
+  rejuvenation_times = RDSsave$rejuvenation_times
+  rejuvenation_rate = RDSsave$rejuvenation_rate
+  if (n_assimilated == nobservations){
+    # all observations have been assimilated, we can return the result
+    return (list(thetas_history = thetas_history, normw_history = normw_history, logtargetdensities = logtargetdensities,
+                 byproducts_history = byproducts_history, logevidence = cumsum(incr_logevidence), hscore = cumsum(incr_hscore),
+                 ESS = ESS, rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate))
+  }
+  # Get the latest particles and their normalized weights
+  if (algorithmic_parameters$store_theta) {
+    thetas = thetas_history[[n_assimilated+1]]
+    normw = normw_history[[n_assimilated+1]]
+  } else {
+    thetas = RDSsave$thetas
+    normw = RDSsave$normw
+  }
+  # Get the latest byproducts
+  if (algorithmic_parameters$store_byproducts) {
+    byproducts = RDSsave$byproducts_history[[n_assimilated+1]]
+  } else {
+    byproducts = RDSsave$byproducts
+  }
+  # update remaining parameters and # Get all the variables required to resume SMC run
+  logw = RDSsave$logw
+  model = RDSsave$model
   if (algorithmic_parameters$hscore) {observation_type = tolower(model$observation_type)}
-  #-------------------------------------------------------------------------------------------------------
   # Monitor progress if needed
   if (algorithmic_parameters$progress) {
     print(paste("Started at:",Sys.time()))
-    progbar = txtProgressBar(min = 0,max = nobservations,style=3)
+    progbar = txtProgressBar(min = 0,max = nobservations,initial = n_assimilated,style=3)
     time_start = proc.time()
   }
   #-------------------------------------------------------------------------------------------------------
-  # Initialize empty arrays and lists to store the results
-  ESS = array(NA,dim = c(nobservations)) #ESS at successive times t
-  incr_logevidence = array(NA,dim = c(nobservations)) #incremental log-evidence at successive times t
-  incr_hscore = array(NA,dim = c(nobservations)) # OPTIONAL: incremental Hyvarinen score at successive times t
-  rejuvenation_times = c() #successive times where resampling is triggered
-  rejuvenation_rate = c() #successive acceptance rates of resampling
-  thetas_history = list() #successive sets of particles theta
-  normw_history = list() #successive sets of normalized weights for theta
-  byproducts_history = list() #successive byproducts (one for each theta at each time step)
-  # if (is.null(algorithmic_parameters$rinitial_theta)){
-  thetas = model$rprior(Ntheta)
-  # } else {
-  # thetas = algorithmic_parameters$rinitial_theta(Ntheta)
-  # }
-  logtargetdensities = apply(thetas, 2, model$dprior) # log target density evaluations at current particles
-  normw = rep(1/Ntheta, Ntheta) # normalized weights
-  logw = rep(0, Ntheta) # log normalized weights
-
-  ########## if we start from a proposal instead of the prior (e.g. improper prior)
-  ########## then the weights should be initialized differently:
-  ########## log(prior_density) - log(proposal_density) ???
-  if (algorithmic_parameters$store_theta){
-    thetas_history[[1]] = thetas
-    normw_history[[1]] = normw
-  }
-  #-------------------------------------------------------------------------------------------------------
-  # initialize possible byproducts (e.g. Kalman filters, etc ...)
-  byproducts = list()
-  if (!is.null(model$initialize_byproducts)) {
-    for (itheta in 1:Ntheta){
-      byproducts[[itheta]] = model$initialize_byproducts(thetas[,itheta], observations)
-    }
-  } else {
-    byproducts = NULL
-  }
-  #-------------------------------------------------------------------------------------------------------
-  # Assimilate observations one by one
-  for (t in 1:nobservations){
+  ########################################################################
+  ################ Assimilate the remaining observations #################
+  ########################################################################
+  for (t in (n_assimilated+1):nobservations){
     #-------------------------------------------------------------------------------------------------------
     # OPTIONAL: compute the incremental hscore for discrete observations
     if (algorithmic_parameters$hscore && (observation_type=="discrete")) {
@@ -103,19 +128,10 @@ smc_ = function(observations, model, algorithmic_parameters){
     #-------------------------------------------------------------------------------------------------------
     # do some book-keeping
     ESS[t] = results$ESS
-    if (!is.na(results$rejuvenation_time)) {
-      rejuvenation_times = c(rejuvenation_times, results$rejuvenation_time)
-    }
-    if (!is.na(results$rejuvenation_rate)) {
-      rejuvenation_rate = c(rejuvenation_rate, results$rejuvenation_rate)
-    }
-    if (algorithmic_parameters$store_theta){
-      thetas_history[[t+1]] = thetas
-      normw_history[[t+1]] = normw
-    }
-    if (algorithmic_parameters$store_byproducts){
-      byproducts_history[[t+1]] = byproducts
-    }
+    if (!is.na(results$rejuvenation_time)) {rejuvenation_times = c(rejuvenation_times, results$rejuvenation_time)}
+    if (!is.na(results$rejuvenation_rate)) {rejuvenation_rate = c(rejuvenation_rate, results$rejuvenation_rate)}
+    if (algorithmic_parameters$store_theta){thetas_history[[t+1]] = thetas; normw_history[[t+1]] = normw}
+    if (algorithmic_parameters$store_byproducts){byproducts_history[[t+1]] = byproducts}
     #-------------------------------------------------------------------------------------------------------
     # Update progress bar if needed
     if (algorithmic_parameters$progress) {
@@ -160,4 +176,17 @@ smc_ = function(observations, model, algorithmic_parameters){
                byproducts_history = byproducts_history, logevidence = cumsum(incr_logevidence), hscore = cumsum(incr_hscore),
                ESS = ESS, rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate))
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 

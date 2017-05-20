@@ -16,9 +16,11 @@ set_default_algorithmic_parameters = function(observations, model, algorithmic_p
   if (is.null(algorithmic_parameters$hscore)) {algorithmic_parameters$hscore = TRUE}
   if (is.null(algorithmic_parameters$store_theta)) {algorithmic_parameters$store_theta = TRUE}
   if (is.null(algorithmic_parameters$store_X)) {algorithmic_parameters$store_X = FALSE}
+  if (is.null(algorithmic_parameters$store_byproducts)) {algorithmic_parameters$store_byproducts = FALSE}
   if (is.null(algorithmic_parameters$progress)) {algorithmic_parameters$progress = FALSE}
   if (is.null(algorithmic_parameters$verbose)) {algorithmic_parameters$verbose = FALSE}
   if (is.null(algorithmic_parameters$save)) {algorithmic_parameters$save = FALSE}
+  if (is.null(algorithmic_parameters$time_budget)) {algorithmic_parameters$time_budget = NULL}
   # WARNING: results are saved as RDS files (.rds extension)
   # Save in the working directory by default with timestamp as name
   if (is.null(algorithmic_parameters$savefilename)) {
