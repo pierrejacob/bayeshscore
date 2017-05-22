@@ -30,27 +30,9 @@ set_default_algorithmic_parameters = function(observations, model, algorithmic_p
   if (is.null(algorithmic_parameters$resampling)) {
     algorithmic_parameters$resampling = function(normw) systematic_resampling_n(normw, length(normw), runif(1))
   }
-  # The default proposal for rejuvenation steps is a Normal.
-  # algorithmic_parameters$proposalmove should be defined as a function that takes as input
-  # the current particles thetas, their normalized weights, and the model. It outputs a list made of
-  # a sampler and its corresponding density function
+  # The default proposal for rejuvenation steps is independent draws from a fitted mixture of Normals
   if (is.null(algorithmic_parameters$proposalmove)) {
-    algorithmic_parameters$proposalmove = function(thetas,normw,model){
-      dimtheta = nrow(thetas)
-      covariance = cov.wt(t(thetas), wt = normw, method = "ML")
-      mean_t = covariance$center
-      cov_t = covariance$cov + diag(rep(10^(-4)/dimtheta),dimtheta) # increased a bit the diagonal to prevent degeneracy effects)
-      # define the sampler
-      rproposal = function(Ntheta) {
-        return (fast_rmvnorm_transpose(Ntheta, mean_t, cov_t))
-      }
-      # define the corresponding density function
-      dproposal = function(theta,log = TRUE) {
-        if (log) {return (fast_dmvnorm_transpose(theta, mean_t, cov_t))}
-        else {return (exp(fast_dmvnorm_transpose(theta, mean_t, cov_t)))}
-      }
-      return (list(r = rproposal, d = dproposal))
-    }
+    algorithmic_parameters$proposalmove = get_proposal_mixture()
   }
   return(algorithmic_parameters)
 }

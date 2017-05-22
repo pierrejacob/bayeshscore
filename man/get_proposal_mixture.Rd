@@ -4,7 +4,7 @@
 \alias{get_proposal_mixture}
 \title{get_proposal_mixture}
 \usage{
-get_proposal_mixture(nclust = 5)
+get_proposal_mixture(nclust = 5, maxattempts = 5)
 }
 \description{
 Independent proposal from a fitted mixture of Normals with \code{nclust} components (default is 5).

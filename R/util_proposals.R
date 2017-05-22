@@ -6,7 +6,7 @@
 #'@description Independent Normal proposal using fitted mean and covariance matrix
 #'@export
 get_proposal_independent_normal <- function(){
-  return(function(thetas,normw,...){
+  f = function(thetas,normw,...){
     covariance = cov.wt(t(thetas), wt = normw, method = "ML")
     mean_t = covariance$center
     cov_t = covariance$cov + diag(rep(10^(-4)/nrow(thetas)), nrow(thetas)) # increased a bit the diagonal to prevent degeneracy effects)
@@ -20,7 +20,8 @@ get_proposal_independent_normal <- function(){
       else {return (exp(fast_dmvnorm_transpose(thetas, mean_t, cov_t)))}
     }
     return (list(r = rproposal, d = dproposal))
-  })
+  }
+  return(f)
 }
 
 #'@rdname get_proposal_mixture
@@ -28,8 +29,9 @@ get_proposal_independent_normal <- function(){
 #'@description Independent proposal from a fitted mixture of Normals with \code{nclust} components (default is 5).
 #' If the fit is unsuccessful, return independent Normal proposal (see \code{get_independent_normal_proposal}).
 #'@export
-get_proposal_mixture <- function(nclust = 5){
+get_proposal_mixture <- function(nclust = 5, maxattempts = 5){
   f <- function(thetas,normw,...){
+    options(warn = -1)
     # resample
     ancestors <- systematic_resampling_n(normw, length(normw), runif(1))
     thetas_check <- thetas[,ancestors,drop=FALSE]
@@ -37,18 +39,17 @@ get_proposal_mixture <- function(nclust = 5){
     fit <- mixmodCluster(data = data.frame(t(thetas_check)), nbCluster = nclust, dataType = "quantitative")
     # test that it worked
     is.error <- (length(fit@bestResult@parameters@proportions) == 0)
-    maxattempts <- 5
-    attempt <- 0
+    attempt = 0
     while(attempt < maxattempts && is.error){
       attempt <- attempt + 1
       cat("fitting mixture... attempt", attempt, "\n")
-      print(head(data.frame(t(thetas_check))))
       fit <- mixmodCluster(data = data.frame(t(thetas_check)), nbCluster = nclust, dataType = "quantitative")
       # test that it worked
       is.error <- (length(fit@bestResult@parameters@proportions) == 0)
     }
+    options(warn = 0)
     if (is.error){
-      return(get_proposal_independent_normal())
+      return(get_proposal_independent_normal()(thetas,normw))
     }
 
     # if it worked, ...
