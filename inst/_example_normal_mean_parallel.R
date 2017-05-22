@@ -12,7 +12,7 @@ library(doParallel)
 library(foreach)
 set.seed(29)
 
-# Generate some data
+# Define model and data
 nobservations = 20
 Y = rnorm(nobservations,0,1)
 observations = matrix(Y, nrow = 1)# observations in a matrix of dimensions dimy x nobservations
@@ -21,31 +21,38 @@ observations = matrix(Y, nrow = 1)# observations in a matrix of dimensions dimy 
 # set algorithmic parameters
 algorithmic_parameters = list()
 algorithmic_parameters$Ntheta = 2^10
+algorithmic_parameters$Nx = 2^0
+algorithmic_parameters$adaptNx = FALSE
 algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$store_theta = TRUE
 algorithmic_parameters$ess_threshold = 0.5
 algorithmic_parameters$min_acceptance_rate = 0.5
+algorithmic_parameters$nmoves = 2
 # The remaining algorithmic parameters are set to their default values via the functions in util_default.R
 #--------------------------------------------------------------------------------------------
-sigma2prior_all = c(1000,10000)
+repl = 5 #number of replications
+registerDoParallel(cores=5) #number of workers in parallel
+#--------------------------------------------------------------------------------------------
+sigma2prior_all = c(100,1000,10000,100000)
 results_all = data.frame()
 post_all = data.frame()
 #--------------------------------------------------------------------------------------------
-repl = 5
 ### Compute logevidence and hscore for increasing vagueness
 for (s in 1:length(sigma2prior_all)){
   sigma2prior = sigma2prior_all[s]
+  results = foreach(i=1:repl,.packages=c('HyvarinenSSM'),.verbose = TRUE) %dorng% {
+    hscore(observations, get_model_iid_gaussian_unknown_mean(0,sigma2prior), algorithmic_parameters)
+  }
   for (r in 1:repl){
-    results = hscore(observations, get_model_iid_gaussian_unknown_mean(0,sigma2prior), algorithmic_parameters)
-    results_all = rbind(results_all,data.frame(logevidence = results$logevidence,
-                                               hscore = results$hscore,
+    results_all = rbind(results_all,data.frame(logevidence = results[[r]]$logevidence,
+                                               hscore = results[[r]]$hscore,
                                                time = 1:nobservations,
                                                sigma2prior = sigma2prior,
                                                repl = r))
-    post_all = rbind(post_all,data.frame(theta = c(results$thetas_history[[nobservations+1]]),
-                                         W = results$normw_history[[nobservations+1]],
-                                         sigma2prior = sigma2prior,
-                                         repl = r))
+    post_all = rbind(post_all,data.frame(theta = c(results[[r]]$thetas_history[[nobservations+1]]),
+                                                   W = results[[r]]$normw_history[[nobservations+1]],
+                                                   sigma2prior = sigma2prior,
+                                                   repl = r))
   }
 }
 #--------------------------------------------------------------------------------------------

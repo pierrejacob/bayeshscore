@@ -1,7 +1,7 @@
 ##################################################################################################
-# This checks that the outputs using SMC and SMC2 for continuous  observations
-# match the exact results from Metropolis-Hastings in a linear gaussian example (with 2 parameters)
-# where exact computation are achievable by using Kalman filters.
+# This checks that the outputs using SMC and SMC2 match the exact results
+# in a linear gaussian case with 1 parameter (with discrete prior so that everything can be
+# computed exactly).
 ##################################################################################################
 rm(list = ls())
 library(HyvarinenSSM)
@@ -18,39 +18,45 @@ X = sim$X
 Y = sim$Y
 observations = matrix(Y, nrow = model$dimY)
 # observations in a matrix of dimensions dimY by nobservations
-
 #--------------------------------------------------------------------------------------------
 # set algorithmic parameters
 algorithmic_parameters = list()
-algorithmic_parameters$Ntheta = 2^10
-algorithmic_parameters$Nx = 2^6
+algorithmic_parameters$Ntheta = 2^14
+algorithmic_parameters$Nx = 2^7
 algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$store_theta = TRUE
 algorithmic_parameters$store_X = FALSE
 algorithmic_parameters$ess_threshold = 0.5
-algorithmic_parameters$min_acceptance_rate = 0.5 # purposely set high to trigger some increase Nx steps
-algorithmic_parameters$nmoves = 2
+algorithmic_parameters$min_acceptance_rate = 0.0
+algorithmic_parameters$nmoves = 1
 # The remaining algorithmic parameters are set to their default values via the functions in util_default.R
 
 #--------------------------------------------------------------------------------------------
 ### Run SMC
 smc_results = hscore(observations, model, algorithmic_parameters)
-### Run SMC_2
-module_tree <<- Module("module_tree", PACKAGE = "HyvarinenSSM")
-TreeClass <<- module_tree$Tree
-model_withoutlikelihood = model
-model_withoutlikelihood$likelihood = NULL # this forces the use of SMC2
-model_withoutlikelihood$dpredictive = NULL # this forces the use of SMC2
-smc2_results = hscore(observations, model_withoutlikelihood, algorithmic_parameters)
-
 ########### BE CAREFUL, SMC starts with the prior sample at t = 1 #######################
 thetas_smc = smc_results$thetas_history[[nobservations+1]]
 normw_smc = smc_results$normw_history[[nobservations+1]]
-thetas_smc2 = smc2_results$thetas_history[[nobservations+1]]
-normw_smc2 = smc2_results$normw_history[[nobservations+1]]
 #--------------------------------------------------------------------------------------------
-###########################################################################################
-###########################################################################################
+### Run PMMH
+# define proposals for PMMH
+PMMHcov = (cov.wt(t(thetas_smc[1:4,]),wt=smc_results$normw_history[[nobservations+1]])$cov)/5
+PMMH_parameters = list()
+PMMH_parameters$resampling = function(normw) systematic_resampling_n(normw, length(normw), runif(1))
+PMMH_parameters$rMHproposal = function(current_theta) {
+  return (fast_rmvnorm_transpose(1, current_theta, PMMHcov))
+}
+PMMH_parameters$dMHproposal = function(new_theta,current_theta) {
+  #Note: this outputs the LOG-density
+  return (fast_dmvnorm_transpose(new_theta, current_theta, PMMHcov))
+}
+PMMH_parameters$Nx = 100
+PMMH_parameters$M = 3000 #number of initial PMMH iterations
+PMMH_parameters$burnin = 1000 #burn-in
+PMMH_parameters$progress = TRUE
+thetasPMMH = PMMH(observations, model, PMMH_parameters)
+#########################################################################################
+#########################################################################################
 #### Sanity check: sample posterior via naive MH
 # Computes the posterior density (target)
 psi = model$psi
@@ -116,23 +122,13 @@ thetas_MH = thetas_MH[,index]
 
 # Checking sample from the posterior distribution (marginal histogram)
 Ntheta = algorithmic_parameters$Ntheta
-post = data.frame(from = factor(rep(c("smc","smc2","MH"),each = Ntheta)))
-post$theta1 = c(thetas_smc[1,],thetas_smc2[1,],thetas_MH[1,])
-post$theta2 = c(thetas_smc[2,],thetas_smc2[2,],thetas_MH[2,])
-post$weight = c(normw_smc,normw_smc2,rep(1/Ntheta,Ntheta))
-# plot posterior marginals
-plot_theta1 = ggplot(post) +  geom_density(aes(theta1, weight = weight, fill = from), alpha = 0.6) + theme(legend.position="none")
-plot_theta2 = ggplot(post) +  geom_density(aes(theta2, weight = weight, fill = from), alpha = 0.6)
-grid.arrange(plot_theta1, plot_theta2, ncol = 2, widths=c(1,1.35))
 
-#--------------------------------------------------------------------------------------------
-# Check the log-evidence (RESCALED BY 1/t)
-results = data.frame(from = factor(rep(c("smc","smc2"),each = nobservations)))
-results$time = rep(1:nobservations, 2)
-results$logevidence = c(smc_results$logevidence, smc2_results$logevidence)
-ggplot(results) + geom_line(aes(time, logevidence/time, color = from), size = 1)
+g1 <- qplot(x = thetas_smc[1,], weight = normw_smc, geom = "blank") + geom_density(aes(y = ..density..))
+g1 <- g1 + geom_density(data = data.frame(x = thetas_MH[1,]), aes(x = x, weight = NULL), col = "red")
+g1 <- g1 + geom_density(data = data.frame(x = thetasPMMH[1,]), aes(x = x, weight = NULL), col = "blue")
+g1
 
-#--------------------------------------------------------------------------------------------
-# Check the hscore (RESCALED BY 1/t)
-results$hscore = c(smc_results$hscore, smc2_results$hscore)
-ggplot(results) + geom_line(aes(time, hscore/time, color = from), size = 1)
+g2 <- qplot(x = thetas_smc[2,], weight = normw_smc, geom = "blank") + geom_density(aes(y = ..density..))
+g2 <- g2 + geom_density(data = data.frame(x = thetas_MH[2,]), aes(x = x, weight = NULL), col = "red")
+g2 <- g2 + geom_density(data = data.frame(x = thetasPMMH[2,]), aes(x = x, weight = NULL), col = "blue")
+g2
