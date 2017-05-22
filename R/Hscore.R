@@ -11,8 +11,9 @@ hscore <- function(observations, model, algorithmic_parameters){
   } else {
     intractable_likelihood = (is.null(model$likelihood))&&(is.null(model$dpredictive))
     # set missing algorithmic parameters to default values
-    algorithmic_parameters = set_default_algorithmic_parameters(observations,model,algorithmic_parameters)
     algorithmic_parameters$hscore = TRUE
+    if (is.null(algorithmic_parameters$store_theta)) {algorithmic_parameters$store_theta = FALSE}
+    algorithmic_parameters = set_default_algorithmic_parameters(observations,model,algorithmic_parameters)
     # set missing fields to automatic values (e.g. numerical derivatives)
     model = set_default_model(model)
     cat("Hscore: type = ",tolower(model$observation_type),", Method = ",sep="")
@@ -26,3 +27,5 @@ hscore <- function(observations, model, algorithmic_parameters){
     }
   }
 }
+
+

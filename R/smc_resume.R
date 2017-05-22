@@ -72,7 +72,8 @@ smc_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL){
     # all observations have been assimilated, we can return the result
     return (list(thetas_history = thetas_history, normw_history = normw_history, logtargetdensities = logtargetdensities,
                  byproducts_history = byproducts_history, logevidence = cumsum(incr_logevidence), hscore = cumsum(incr_hscore),
-                 ESS = ESS, rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate))
+                 ESS = ESS, rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
+                 method = 'SMC'))
   }
   # Get the latest particles and their normalized weights
   if (algorithmic_parameters$store_theta) {
@@ -148,7 +149,8 @@ smc_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL){
       # save the results obtained up to this time
       results_so_far = list(thetas_history = thetas_history, normw_history = normw_history,
                             incr_logevidence = incr_logevidence[1:t], incr_hscore = incr_hscore[1:t],  ESS = ESS[1:t],
-                            rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate)
+                            rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
+                            method = 'SMC')
       # if the history of theta-particles is not saved, just keep the most recent ones
       if (!algorithmic_parameters$store_theta){
         required_to_resume$thetas = thetas; required_to_resume$normw = normw
@@ -174,7 +176,8 @@ smc_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL){
   }
   return (list(thetas_history = thetas_history, normw_history = normw_history, logtargetdensities = logtargetdensities,
                byproducts_history = byproducts_history, logevidence = cumsum(incr_logevidence), hscore = cumsum(incr_hscore),
-               ESS = ESS, rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate))
+               ESS = ESS, rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
+               method = 'SMC'))
 }
 
 

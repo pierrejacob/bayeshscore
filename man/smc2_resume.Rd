@@ -9,5 +9,6 @@ smc2_resume(RDSsave = NULL, savefilename = NULL, next_observations = NULL,
 }
 \description{
 This function resumes a previously interrupted SMC2 run.
+It is a wrapper of the function \code{smc2_resume_} with a time budgeting and partial save feature.
 }
 

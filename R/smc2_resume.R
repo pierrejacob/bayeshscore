@@ -81,7 +81,7 @@ smc2_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL)
     return(list(thetas_history = thetas_history, normw_history = normw_history, logtargetdensities = logtargetdensities,
                 PF_history = PF_history, logevidence = cumsum(incr_logevidence), hscore = cumsum(incr_hscore),
                 ESS = ESS, rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
-                increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values))
+                increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values,method = 'SMC2'))
   } else {
     # Get the latest particles and their normalized weights
     if (algorithmic_parameters$store_theta) {
@@ -189,7 +189,8 @@ smc2_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL)
         results_so_far = list(thetas_history = thetas_history, normw_history = normw_history,
                               incr_logevidence = incr_logevidence[1:t], incr_hscore = incr_hscore[1:t],  ESS = ESS[1:t],
                               rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
-                              increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values)
+                              increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values,
+                              method = 'SMC2')
         # if the history of x-particles is not saved, just keep the most recent ones
         if (algorithmic_parameters$store_X){
           results_so_far$PF_history_no_tree = lapply(1:(t+1),function(j)lapply(1:Ntheta,function(i)PF_history[[j]][[i]][names(PF_history[[j]][[i]])!="tree"]))
@@ -223,6 +224,7 @@ smc2_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL)
     return(list(thetas_history = thetas_history, normw_history = normw_history, logevidence = cumsum(incr_logevidence),
                 logtargetdensities = logtargetdensities, hscore = cumsum(incr_hscore), ESS = ESS,
                 rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
-                PF_history = PF_history, increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values))
+                PF_history = PF_history, increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values,
+                method = 'SMC2'))
   }
 }

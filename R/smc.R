@@ -6,10 +6,9 @@
 #'@export
 smc = function(observations, model, algorithmic_parameters){
   # Set the time budget if needed
+  saveprompt  = "not saved (no savefilename provided or option save is off)"
   if (!is.null(algorithmic_parameters$time_budget)){
-    if (is.null(algorithmic_parameters$save)||(algorithmic_parameters$save == FALSE)||is.null(algorithmic_parameters$savefilename)){
-      saveprompt  = "not saved (no savefilename provided or option save is off)"
-    } else {
+    if (!is.null(algorithmic_parameters$save)&&(algorithmic_parameters$save == TRUE)&&!is.null(algorithmic_parameters$savefilename)){
       saveprompt  = paste("saved in",algorithmic_parameters$savefilename)
     }
     cat(strftime(Sys.time()),", time budget =",algorithmic_parameters$time_budget,"sec\n")
@@ -49,18 +48,30 @@ smc_ = function(observations, model, algorithmic_parameters){
   thetas_history = list() #successive sets of particles theta
   normw_history = list() #successive sets of normalized weights for theta
   byproducts_history = list() #successive byproducts (one for each theta at each time step)
+  # # if we start from a proposal instead of the prior (e.g. improper prior)
+  # # then the weights should be initialized differently
   # if (is.null(algorithmic_parameters$rinitial_theta)){
-  thetas = model$rprior(Ntheta)
+  #   thetas = model$rprior(Ntheta)
+  #   logtargetdensities = model$dprior(thetas) # log target density at current particles
+  #   normw = rep(1/Ntheta, Ntheta) # normalized weights
+  #   logw = rep(0, Ntheta) # log normalized weights
   # } else {
-  # thetas = algorithmic_parameters$rinitial_theta(Ntheta)
+  #   # this assumes that the posterior is proper after 1 observation.
+  #   # For the general case where the posterior only becomes proper after k observations,
+  #   # we should target directly the posterior at time k and start assimilating observations
+  #   # from time (k+1) to T
+  #   thetas = algorithmic_parameters$rinitial_theta(Ntheta)
+  #   logtargetdensities = model$dprior(thetas) # log target density at current particles
+  #   logw = logtargetdensities - algorithmic_parameters$dinitial_theta(thetas)
+  #   w = exp(logw - max(logw))
+  #   normw = w / sum(w)
   # }
-  logtargetdensities = apply(thetas, 2, model$dprior) # log target density evaluations at current particles
+  # Assuming the prior distribution is proper
+  thetas = model$rprior(Ntheta)
+  logtargetdensities = model$dprior(thetas) # log target density at current particles
   normw = rep(1/Ntheta, Ntheta) # normalized weights
   logw = rep(0, Ntheta) # log normalized weights
-
-  ########## if we start from a proposal instead of the prior (e.g. improper prior)
-  ########## then the weights should be initialized differently:
-  ########## log(prior_density) - log(proposal_density) ???
+  # save thetas if needed
   if (algorithmic_parameters$store_theta){
     thetas_history[[1]] = thetas
     normw_history[[1]] = normw
@@ -132,7 +143,8 @@ smc_ = function(observations, model, algorithmic_parameters){
       # save the results obtained up to this time
       results_so_far = list(thetas_history = thetas_history, normw_history = normw_history,
                             incr_logevidence = incr_logevidence[1:t], incr_hscore = incr_hscore[1:t],  ESS = ESS[1:t],
-                            rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate)
+                            rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
+                            method = 'SMC')
       # if the history of theta-particles is not saved, just keep the most recent ones
       if (!algorithmic_parameters$store_theta){
         required_to_resume$thetas = thetas; required_to_resume$normw = normw
@@ -158,6 +170,7 @@ smc_ = function(observations, model, algorithmic_parameters){
   }
   return (list(thetas_history = thetas_history, normw_history = normw_history, logtargetdensities = logtargetdensities,
                byproducts_history = byproducts_history, logevidence = cumsum(incr_logevidence), hscore = cumsum(incr_hscore),
-               ESS = ESS, rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate))
+               ESS = ESS, rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
+               method = 'SMC', algorithmic_parameters = algorithmic_parameters))
 }
 
