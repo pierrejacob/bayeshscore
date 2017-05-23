@@ -67,12 +67,12 @@ get_model_lineargaussian <- function(){
   # The function is vectorized with respect to the states Xt (dimX by Nx), so that it outputs:
   # >> the jacobian (Nx by dimY matrix: each row is the transpose of the corresponding gradients row-wise)
   # >> the Hessian diagonals (Nx by dimY matrix: each row is the diagonal coeffs of the corresponding Hessian)
-  model$derivativelogdobs = function(Yt,Xt,t,theta,dimY){
+  model$derivativelogdobs = function(Yt,Xt,t,theta){
     psi = theta[3]
     sigmaV2 = theta[4]
     N = ncol(Xt)
     d1 = t((psi*Xt-repeat_column(N,Yt))/sigmaV2)
-    d2 = matrix(-1/sigmaV2,nrow = N, ncol = dimY)
+    d2 = matrix(-1/sigmaV2,nrow = N, ncol = model$dimY)
     return (list(jacobian = d1, hessiandiag = d2))
   }
 
@@ -122,7 +122,7 @@ get_model_lineargaussian <- function(){
   # The function outputs:
   # >> the transpose of the gradient (1 by dimY)
   # >> the Hessian diagonal coefficients (1 by dimY)
-  model$derivativelogdpredictive = function(observations,t,theta,KF,dimY) {
+  model$derivativelogdpredictive = function(observations,t,theta,KF) {
     m = KF[[t]]$muY_t_t_1
     V = KF[[t]]$PY_t_t_1
     d1 = t(matrix((m-observations[,t])/V))

@@ -68,7 +68,7 @@ smc2_ = function(observations, model, algorithmic_parameters){
   # }
   # Assuming the prior distribution is proper
   thetas = model$rprior(Ntheta)
-  logtargetdensities = model$dprior(thetas) # log target density at current particles
+  logtargetdensities = apply(thetas,2,model$dprior) # log target density at current particles
   normw = rep(1/Ntheta, Ntheta) # normalized weights
   logw = rep(0, Ntheta) # log normalized weights
   if (algorithmic_parameters$store_theta){

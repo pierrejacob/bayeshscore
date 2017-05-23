@@ -26,10 +26,8 @@ get_model_lineargaussiansimpler_discreteprior <- function(){
 
   # prior distribution density on parameters
   model$dprior = function(theta, log = TRUE){
-    support = model$supportprior
-    sigmaV2 = theta[1]
-    if (sigmaV2 %in% support) {
-      n = length(support)
+    if (theta %in% model$supportprior) {
+      n = length(model$supportprior)
       if (log) {return (-log(n))}
       else {return (1/n)}
     }

@@ -96,9 +96,9 @@ set_default_model = function(model){
     # >> the jacobian (Nx by dimY matrix: each row is the transpose of the corresponding gradients row-wise)
     # >> the Hessian diagonals (Nx by dimY matrix: each row is the diagonal coeffs of the corresponding Hessian)
     if (is.null(model$derivativelogdobs)){
-      model$derivativelogdobs = function(Yt,Xt,t,theta,dimY){
+      model$derivativelogdobs = function(Yt,Xt,t,theta){
         logdobs = function(y){model$dobs(y,Xt,t,theta,log = TRUE)}
-        derivatives = get_derivatives_from_genD(genD(logdobs,Yt)$D,dimY)
+        derivatives = get_derivatives_from_genD(genD(logdobs,Yt)$D,model$dimY)
         return (list(jacobian = derivatives$jacobian, hessiandiag = derivatives$hessiandiag))
       }
     }
@@ -108,23 +108,23 @@ set_default_model = function(model){
     # >> the Hessian diagonal coefficients (1 by dimY)
     if (is.null(model$derivativelogdpredictive)){
       if (is.null(model$initialize_byproducts)){
-        model$derivativelogdpredictive = function(observations,t,theta,dimY){
+        model$derivativelogdpredictive = function(observations,t,theta){
           if (t==1){
             logpred = function(y) {model$dpredictive(y,t,theta,log = TRUE)}
           } else {
             logpred = function(y) {model$dpredictive(cbind(observations[,1:(t-1),drop=FALSE],y),t,theta,log = TRUE)}
           }
-          derivatives = get_derivatives_from_genD(genD(logpred,observations[,t,drop=FALSE])$D,dimY)
+          derivatives = get_derivatives_from_genD(genD(logpred,observations[,t,drop=FALSE])$D,model$dimY)
           return (list(jacobian = derivatives$jacobian, hessiandiag = derivatives$hessiandiag))
         }
       } else {
-        model$derivativelogdpredictive = function(observations,t,theta,byproduct,dimY){
+        model$derivativelogdpredictive = function(observations,t,theta,byproduct){
           if (t==1){
             logpred = function(y) {model$dpredictive(y,t,theta,byproduct,log = TRUE)}
           } else {
             logpred = function(y) {model$dpredictive(cbind(observations[,1:(t-1),drop=FALSE],y),t,theta,byproduct,log = TRUE)}
           }
-          derivatives = get_derivatives_from_genD(genD(logpred,observations[,t,drop=FALSE])$D,dimY)
+          derivatives = get_derivatives_from_genD(genD(logpred,observations[,t,drop=FALSE])$D,model$dimY)
           return (list(jacobian = derivatives$jacobian, hessiandiag = derivatives$hessiandiag))
         }
       }

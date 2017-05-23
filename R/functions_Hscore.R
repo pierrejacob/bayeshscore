@@ -23,7 +23,7 @@ hincrementContinuous_smc2 = function(t,model,observationt,thetas,Wtheta,PFs,Nthe
       }
       # compute the derivatives for all k and all X at once during the first loop
       if (k==1){
-        derivatives = model$derivativelogdobs(observationt,X,t,thetas[,m],model$dimY)
+        derivatives = model$derivativelogdobs(observationt,X,t,thetas[,m])
         d1log[[m]] = derivatives$jacobian
         d2log[[m]] = derivatives$hessiandiag
       }
@@ -52,9 +52,9 @@ hincrementContinuous_smc = function(t,model,observations,thetas,Wtheta,byproduct
       # compute the derivatives for all k at once during the first loop
       if (k==1){
         if (!is.null(byproducts)){
-          derivatives = model$derivativelogdpredictive(observations,t,thetas[,m],byproducts[[m]],model$dimY)
+          derivatives = model$derivativelogdpredictive(observations,t,thetas[,m],byproducts[[m]])
         } else {
-          derivatives = model$derivativelogdpredictive(observations,t,thetas[,m],model$dimY)
+          derivatives = model$derivativelogdpredictive(observations,t,thetas[,m])
         }
         d1log[[m]] = derivatives$jacobian
         d2log[[m]] = derivatives$hessiandiag
