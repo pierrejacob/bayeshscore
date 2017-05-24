@@ -4,7 +4,7 @@
 \alias{get_model_iid_exponential}
 \title{get_model_iid_exponential}
 \usage{
-get_model_iid_exponential(prior_a, prior_b)
+get_model_iid_exponential(a, b)
 }
 \description{
 Univariate iid exponential observations

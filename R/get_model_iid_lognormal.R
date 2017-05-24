@@ -2,7 +2,7 @@
 #'@title get_model_iid_lognormal
 #'@description Univariate iid lognormal observations
 #'@export
-get_model_iid_lognormal <- function(mu0,sigma02,a,b){
+get_model_iid_lognormal <- function(mu0,kappa0,nu0,sigma02){
   model = list()
   # Type of observations (string): "continuous" or "discrete"
   model$observation_type = "continuous"
@@ -13,17 +13,13 @@ get_model_iid_lognormal <- function(mu0,sigma02,a,b){
   # inputs: Ntheta (int)
   # outputs: matrix (dimtheta by Ntheta) of prior draws
   model$rprior = function(Ntheta){
-    mus <- rnorm(Ntheta, mu0, sqrt(sigma02))
-    sigmas_square <- rinvgamma(Ntheta, a, b)
-    return(rbind(mus, sigmas_square))
+    return (rnorminvchisq(Ntheta,mu0,kappa0,nu0,sigma02))
   }
   # prior density on parameters
   # inputs: theta (single vector), log (TRUE by default)
   # outputs: prior (log)-density theta (double)
   model$dprior = function(theta, log = TRUE){
-    lp = dnorm(theta[1],mu0,sqrt(sigma02),TRUE) + dinvgamma(theta[2],a,b,TRUE)
-    if (log==TRUE) {return (lp)}
-    else {return (exp(lp))}
+    return (dnorminvchisq(theta,mu0,kappa0,nu0,sigma02,log))
   }
   #----------------------------------------------------------------------------------------------------
   #----------------------------------------------------------------------------------------------------
@@ -39,10 +35,7 @@ get_model_iid_lognormal <- function(mu0,sigma02,a,b){
   # WARNING: must be an explicit function of the observation at time t to allow the
   # computation of the derivative of the log-predictive density
   model$dpredictive = function(observations,t,theta,byproduct,log = TRUE){
-    y <- observations[,t]
-    lp = -0.5*log(2*pi*theta[2]) - log(y) - 0.5*(log(y) - theta[1])^2 / theta[2]
-    if (log) {return(lp)}
-    else {return(exp(lp))}
+    return(dlnorm(observations[,t],theta[1],sqrt(theta[2]),log))
   }
   # OPTIONAL: derivatives of the predicitve density with respect to the observation at time t
   # inputs: observations (dimY by T matrix, with T >= t), time index t (int), theta (single vector),

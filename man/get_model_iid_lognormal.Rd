@@ -4,7 +4,7 @@
 \alias{get_model_iid_lognormal}
 \title{get_model_iid_lognormal}
 \usage{
-get_model_iid_lognormal(prior_mu0, prior_sigma02, prior_a, prior_b)
+get_model_iid_lognormal(mu0, kappa0, nu0, sigma02)
 }
 \description{
 Univariate iid lognormal observations
