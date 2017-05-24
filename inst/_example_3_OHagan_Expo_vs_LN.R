@@ -23,9 +23,9 @@ algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$ess_threshold = 0.5
 #--------------------------------------------------------------------------------------------
 # define models
-# Note: set a and b close to 0, and sigma02 close to infinity for improper reference priors
+# Note: set a, b, nu0 and kappa0 close to 0 close to infinity for improper reference priors
 model1 = get_model_iid_exponential(a = 1, b = 1)
-model2 = get_model_iid_lognormal(mu0 = 0, sigma02 = 100, a = 1, b = 1)
+model2 = get_model_iid_lognormal(mu0 = 0, kappa0 = 1, nu0 = 1, sigma02 = 1)
 models = list(model1, model2)
 #--------------------------------------------------------------------------------------------
 repl = 5 #number of replications
