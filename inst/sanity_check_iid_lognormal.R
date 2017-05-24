@@ -29,31 +29,28 @@ nu0 = 1
 sigma02 = 1
 # define models
 model2 = get_model_iid_lognormal(mu0 = mu0, kappa0 = kappa0, nu0 = nu0, sigma02 = sigma02)
-models = list(model2)
 #--------------------------------------------------------------------------------------------
 repl = 5 #number of replications
 registerDoParallel(cores=5) #number of workers in parallel
 #--------------------------------------------------------------------------------------------
 results = data.frame()
 post_all = data.frame()
-for (m in 1:length(models)){
-  result = foreach(i=1:repl,.packages=c('HyvarinenSSM'),.verbose = TRUE) %dorng% {
-    hscore(observations, models[[m]], algorithmic_parameters)
-  }
-  for (r in 1:repl){
-    results = rbind(results,data.frame(logevidence = result[[r]]$logevidence,
-                                       hscore = result[[r]]$hscore,
-                                       time = 1:nobservations,
-                                       model = m,
-                                       repl = r))
-    for (t in 1:nobservations){
-      post_all = rbind(post_all,data.frame(mu = c(result[[r]]$thetas_history[[t+1]][1,]),
-                                           sigma2 = c(result[[r]]$thetas_history[[t+1]][2,]),
-                                           W = result[[r]]$normw_history[[t+1]],
-                                           time = t,
-                                           model = m,
-                                           repl = r))
-    }
+result = foreach(i=1:repl,.packages=c('HyvarinenSSM'),.verbose = TRUE) %dorng% {
+  hscore(observations, model2, algorithmic_parameters)
+}
+for (r in 1:repl){
+  results = rbind(results,data.frame(logevidence = result[[r]]$logevidence,
+                                     hscore = result[[r]]$hscore,
+                                     time = 1:nobservations,
+                                     model = 2,
+                                     repl = r))
+  for (t in 1:nobservations){
+    post_all = rbind(post_all,data.frame(mu = c(result[[r]]$thetas_history[[t+1]][1,]),
+                                         sigma2 = c(result[[r]]$thetas_history[[t+1]][2,]),
+                                         W = result[[r]]$normw_history[[t+1]],
+                                         time = t,
+                                         model = m,
+                                         repl = r))
   }
 }
 #--------------------------------------------------------------------------------------------
@@ -79,7 +76,7 @@ for (r in 1:repl){
                                              sigma2 = exact_draw[2,],
                                              W = 1/M,
                                              time = t,
-                                             model = 1,
+                                             model = 2,
                                              repl = r))
   }
 }
