@@ -16,7 +16,10 @@ smc2 = function(observations, model, algorithmic_parameters){
   }
   # Run the SMC with possible interruption
   results = tryCatch(smc2_(observations, model, algorithmic_parameters),
-                     error = function(e) {cat("Time limit reached: partial results",saveprompt,"\n"); NULL})
+                     error = function(e) {
+                       if (regexpr("time limit",e$message) == -1) {print(e); return (NULL)}
+                       else {cat("Time limit reached: partial results",saveprompt,"\n"); return (NULL)}
+                     })
   # Resets time budget to infinity
   setTimeLimit()
   return (results)
