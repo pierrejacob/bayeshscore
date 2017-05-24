@@ -27,8 +27,6 @@ mu0 = 0
 kappa0 = 1
 nu0 = 1
 sigma02 = 1
-# define models
-model2 = get_model_iid_lognormal(mu0 = mu0, kappa0 = kappa0, nu0 = nu0, sigma02 = sigma02)
 #--------------------------------------------------------------------------------------------
 repl = 5 #number of replications
 registerDoParallel(cores=5) #number of workers in parallel
@@ -36,7 +34,7 @@ registerDoParallel(cores=5) #number of workers in parallel
 results = data.frame()
 post_all = data.frame()
 result = foreach(i=1:repl,.packages=c('HyvarinenSSM'),.verbose = TRUE) %dorng% {
-  hscore(observations, model2, algorithmic_parameters)
+  hscore(observations, get_model_iid_lognormal(mu0, kappa0,nu0,sigma02), algorithmic_parameters)
 }
 for (r in 1:repl){
   results = rbind(results,data.frame(logevidence = result[[r]]$logevidence,
