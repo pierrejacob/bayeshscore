@@ -28,7 +28,12 @@ assimilate_one_smc = function(thetas, byproducts, t, observations, model,
   }
   while (current_gamma < 1){
     ess_given_gamma = function(gamma){
-      logw_ = logw + (gamma - current_gamma) * logw_incremental
+      logw_ = logw
+      # Note: the following test deals with cases where logw_incremental takes -Inf value,
+      # which poses problem when evaluating ess_given_gamma(current_gamma) later on since
+      # we get "0 * -Inf" which produces NaN
+      noNA = (is.finite(logw_incremental)|(gamma - current_gamma > 0))
+      logw_[noNA] = logw_[noNA] + (gamma - current_gamma) * logw_incremental[noNA]
       maxlogw = max(logw_)
       w = exp(logw_ - maxlogw)
       normw = w / sum(w)
