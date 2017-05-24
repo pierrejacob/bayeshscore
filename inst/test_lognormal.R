@@ -54,8 +54,8 @@ get_lognormal <- function(){
   # WARNING: must be an explicit function of the observation at time t to allow the
   # computation of the derivative of the log-predictive density
   model$dpredictive = function(observations,t,theta,byproduct,log = TRUE){
-    y <- observations[1,t]
-    lp = -0.9189385 - 0.5 * log(theta[2]) - log(y) - 0.5 * (log(y) - theta[1])^2 / theta[2]
+    y <- observations[,t]
+    lp = -0.5*log(2*pi*theta[2]) - 0.5 * log(theta[2]) - log(y) - 0.5 * (log(y) - theta[1])^2 / theta[2]
     if (log) {return(lp)}
     else {return(exp(lp))}
   }
@@ -68,7 +68,7 @@ get_lognormal <- function(){
   # NB: if missing, this field is automatically filled with numerical derivatives
   # via set_default_model in util_default.R)
   model$derivativelogdpredictive = function(observations,t,theta,byproduct) {
-    y <- observations[1,t]
+    y <- observations[,t]
     deriv1 <- (-1/y) * (1 + (log(y) - theta[1]) / theta[2])
     deriv2 <- (1/(y^2)) * (1 + (log(y) - theta[1] - 1) / theta[2])
     return (list(jacobian = matrix(deriv1, 1, 1), hessiandiag = matrix(deriv2, 1, 1)))
@@ -77,12 +77,6 @@ get_lognormal <- function(){
 }
 
 
-#--------------------------------------------------------------------------------------------
-#--------------------------------- TREE MODULE (for SMC2) -----------------------------------
-#--------------------------------------------------------------------------------------------
-# if SMC2 will be used, need tree module (NB: automatically called upon loading HyvarinenSSM package)
-module_tree <<- Module("module_tree", PACKAGE = "HyvarinenSSM")
-TreeClass <<- module_tree$Tree
 #--------------------------------------------------------------------------------------------
 #---------------------------------        DATA            -----------------------------------
 #--------------------------------------------------------------------------------------------
@@ -123,7 +117,6 @@ algorithmic_parameters$verbose = TRUE # <<<< if TRUE, displays tempering steps a
 #--------------------------------------------------------------------------------------------
 # Run SMC or SMC2
 results = hscore(observations, model, algorithmic_parameters)
-results
 # exctract particles thetas and weights
 if (results$algorithmic_parameters$store_theta) {
   thetas = results$thetas_history[[nobservations+1]]
@@ -136,4 +129,4 @@ if (results$algorithmic_parameters$hscore) {
   hscore = results$hscore
 }
 hscore
-results$logevidence
+logevidence

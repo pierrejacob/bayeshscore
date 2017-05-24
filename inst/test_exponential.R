@@ -77,15 +77,9 @@ get_exponential <- function(){
 
 
 #--------------------------------------------------------------------------------------------
-#--------------------------------- TREE MODULE (for SMC2) -----------------------------------
-#--------------------------------------------------------------------------------------------
-# if SMC2 will be used, need tree module (NB: automatically called upon loading HyvarinenSSM package)
-module_tree <<- Module("module_tree", PACKAGE = "HyvarinenSSM")
-TreeClass <<- module_tree$Tree
-#--------------------------------------------------------------------------------------------
 #---------------------------------        DATA            -----------------------------------
 #--------------------------------------------------------------------------------------------
-nobservations = 20
+nobservations = 50
 Y = rexp(nobservations, 1)
 # observations in a matrix of dimensions dimy x nobservations
 observations = matrix(Y, nrow = 1)
@@ -134,4 +128,4 @@ if (results$algorithmic_parameters$hscore) {
   hscore = results$hscore
 }
 hscore
-
+logevidence

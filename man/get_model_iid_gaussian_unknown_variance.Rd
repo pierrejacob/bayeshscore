@@ -4,7 +4,7 @@
 \alias{get_model_iid_gaussian_unknown_variance}
 \title{get_model_iid_gaussian_unknown_variance}
 \usage{
-get_model_iid_gaussian_unknown_variance()
+get_model_iid_gaussian_unknown_variance(priordf)
 }
 \description{
 Univariate iid Gaussian observations with unknown variance (degenerate linear gaussian SSM)
