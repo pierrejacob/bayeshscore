@@ -45,6 +45,20 @@ fast_rmvnorm_transpose_cholesky <- function(nparticles, mean, cholcovariance){
   return(rmvnorm_transpose_cholesky(nparticles, mean, cholcovariance))
 }
 #------------------------------------------------------------------------------#
+#'@rdname rinvgamma
+#'@title rinvgamma
+#'@description Samples from inverse gamma distribution
+#'@export
+rinvgamma = function(N,a,b){
+  return (1/rgamma(N,a,rate = b))
+}
+# # Sanity check: density of inverse Gamma distribution
+# a = 10
+# b = 1
+# g11 <- ggplot(data.frame(sim=rinvgamma(10000,a,b)), aes(x = sim)) + geom_density() +
+#   stat_function(fun = function(y)dinvgamma(y,a,b,FALSE), colour = "red",size=1.5,linetype=2)
+# grid.arrange(g11,ncol = 1, nrow = 1)
+
 #'@rdname dinvgamma
 #'@title dinvgamma
 #'@description Density of inverse gamma distribution
@@ -69,35 +83,7 @@ dinvgamma = function(y,a,b,log){
 # g11 <- ggplot(data.frame(sim=rinvgamma(10000,a,b)), aes(x = sim)) + geom_density() +
 #   stat_function(fun = function(y)dinvgamma(y,a,b,FALSE), colour = "red",size=1.5,linetype=2)
 # grid.arrange(g11,ncol = 1, nrow = 1)
-
-#'@rdname rinvgamma
-#'@title rinvgamma
-#'@description Samples from inverse gamma distribution
-#'@export
-rinvgamma = function(N,a,b){
-  return (1/rgamma(N,a,rate = b))
-}
-# # Sanity check: density of inverse Gamma distribution
-# a = 10
-# b = 1
-# g11 <- ggplot(data.frame(sim=rinvgamma(10000,a,b)), aes(x = sim)) + geom_density() +
-#   stat_function(fun = function(y)dinvgamma(y,a,b,FALSE), colour = "red",size=1.5,linetype=2)
-# grid.arrange(g11,ncol = 1, nrow = 1)
 #------------------------------------------------------------------------------#
-#'@rdname dinvchisq
-#'@title dinvchisq
-#'@description Density of scaled inverse chi-square distribution
-#'@export
-dinvchisq = function(y,df,s2=1,log){
-  return (dinvgamma(y,a = df/2,b = df*s2/2,log))
-}
-# # Sanity check: density of scaled inverse chi-square distribution
-# df = 20
-# s2 = 2
-# g11 <- ggplot(data.frame(sim=rinvchisq(10000,df,s2)), aes(x = sim)) + geom_density() +
-#   stat_function(fun = function(y)dinvchisq(y,df,s2,FALSE), colour = "red",size=1.5,linetype=2)
-# grid.arrange(g11,ncol = 1, nrow = 1)
-
 #'@rdname rinvchisq
 #'@title rinvchisq
 #'@description Samples from scaled inverse chi-square distribution
@@ -111,7 +97,35 @@ rinvchisq = function(N,df,s2=1){
 # g11 <- ggplot(data.frame(sim=rinvchisq(10000,df,s2)), aes(x = sim)) + geom_density() +
 #   stat_function(fun = function(y)dinvchisq(y,df,s2,FALSE), colour = "red",size=1.5,linetype=2)
 # grid.arrange(g11,ncol = 1, nrow = 1)
+
+#'@rdname dinvchisq
+#'@title dinvchisq
+#'@description Density of scaled inverse chi-square distribution
+#'@export
+dinvchisq = function(y,df,s2=1,log){
+  return (dinvgamma(y,a = df/2,b = df*s2/2,log))
+}
+# # Sanity check: density of scaled inverse chi-square distribution
+# df = 20
+# s2 = 2
+# g11 <- ggplot(data.frame(sim=rinvchisq(10000,df,s2)), aes(x = sim)) + geom_density() +
+#   stat_function(fun = function(y)dinvchisq(y,df,s2,FALSE), colour = "red",size=1.5,linetype=2)
+# grid.arrange(g11,ncol = 1, nrow = 1)
 #------------------------------------------------------------------------------#
+#'@rdname rtscaled
+#'@title rtscaled
+#'@description Samples from scaled Student t distribution
+#'@export
+rtscaled = function(N,df,s2){
+  return (sqrt(s2)*rt(N,df))
+}
+# Sanity check: density of scaled t distribution
+# df = 5
+# s2 = 2
+# g11 <- ggplot(data.frame(sim=rtscaled(10000,df,s2)), aes(x = sim)) + geom_density() +
+#   stat_function(fun = function(y)dtscaled(y,df,s2,FALSE), colour = "red",size=1.5,linetype=2)
+# grid.arrange(g11,ncol = 1, nrow = 1)
+
 #'@rdname dtscaled
 #'@title dtscaled
 #'@description Density of scaled Student t distribution
@@ -130,20 +144,27 @@ dtscaled = function(y,df,s2,log){
 # g11 <- ggplot(data.frame(sim=rtscaled(10000,df,s2)), aes(x = sim)) + geom_density() +
 #   stat_function(fun = function(y)dtscaled(y,df,s2,FALSE), colour = "red",size=1.5,linetype=2)
 # grid.arrange(g11,ncol = 1, nrow = 1)
-
-#'@rdname rtscaled
-#'@title rtscaled
-#'@description Samples from scaled Student t distribution
-#'@export
-rtscaled = function(N,df,s2){
-  return (sqrt(s2)*rt(N,df))
-}
-# Sanity check: density of scaled t distribution
-# df = 5
-# s2 = 2
-# g11 <- ggplot(data.frame(sim=rtscaled(10000,df,s2)), aes(x = sim)) + geom_density() +
-#   stat_function(fun = function(y)dtscaled(y,df,s2,FALSE), colour = "red",size=1.5,linetype=2)
-# grid.arrange(g11,ncol = 1, nrow = 1)
 #------------------------------------------------------------------------------#
-
+#'@rdname rnorminvchisq
+#'@title rnorminvchisq
+#'@description Samples from a Normal-Inverse-Chi-square (cf. Bayesian data analysis equation 3.6)
+#'@export
+rnorminvchisq = function(N,mu0,kappa0,nu0,sigma02){
+  sigmas_square <- rinvchisq(N, nu0, sigma02)
+  mus <- sapply(sigmas_square, function(s2) rnorm(1,mu0,sqrt(s2/kappa0)))
+  return (rbind(mus, sigmas_square))
+}
+#'@rdname dnorminvchisq
+#'@title dnorminvchisq
+#'@description Density of a Normal-Inverse-Chi-square (cf. Bayesian data analysis equation 3.6)
+#'@export
+dnorminvchisq = function(theta,mu0,kappa0,nu0,sigma02,log){
+  if (theta[2]<0) {
+    lp = -Inf
+  } else {
+    lp = dnorm(theta[1],mu0,sqrt(theta[2]/kappa0),TRUE) + dinvchisq(theta[2],nu0,sigma02,TRUE)
+  }
+  if (log==TRUE) {return (lp)}
+  else {return (exp(lp))}
+}
 
