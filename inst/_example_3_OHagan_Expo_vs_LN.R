@@ -14,7 +14,7 @@ set.seed(1)
 # Generate some data
 nobservations = 300
 Y = rexp(nobservations,1)
-observations = matrix(Y, nrow = 1)# observations in a matrix of dimensions dimy x nobservations
+observations = matrix(Y, nrow = 1)# observations in a matrix of dimensions dimy by nobservations
 #--------------------------------------------------------------------------------------------
 # set algorithmic parameters
 algorithmic_parameters = list()
