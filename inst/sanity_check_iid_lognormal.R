@@ -49,7 +49,7 @@ for (r in 1:repl){
                                          sigma2 = c(result[[r]]$thetas_history[[t+1]][2,]),
                                          W = result[[r]]$normw_history[[t+1]],
                                          time = t,
-                                         model = m,
+                                         model = 2,
                                          repl = r))
   }
 }
