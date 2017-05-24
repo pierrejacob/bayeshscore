@@ -40,7 +40,7 @@ get_model_iid_lognormal <- function(mu0,sigma02,a,b){
   # computation of the derivative of the log-predictive density
   model$dpredictive = function(observations,t,theta,byproduct,log = TRUE){
     y <- observations[,t]
-    lp = -0.5*log(2*pi*theta[2]) - 0.5*log(theta[2]) - log(y) - 0.5*(log(y) - theta[1])^2 / theta[2]
+    lp = -0.5*log(2*pi*theta[2]) - log(y) - 0.5*(log(y) - theta[1])^2 / theta[2]
     if (log) {return(lp)}
     else {return(exp(lp))}
   }
