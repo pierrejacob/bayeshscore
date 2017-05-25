@@ -14,13 +14,13 @@ get_model_iid_exponential <- function(a,b){
   # inputs: Ntheta (int)
   # outputs: matrix (dimtheta by Ntheta) of prior draws
   model$rprior = function(Ntheta){
-    return (matrix(rinvgamma(Ntheta, a, b), nrow = 1))
+    return (matrix(rgamma(Ntheta, shape = a, rate = b), nrow = 1))
   }
   # prior density on parameters
   # inputs: theta (single vector), log (TRUE by default)
   # outputs: prior (log)-density theta (double)
   model$dprior = function(theta, log = TRUE){
-    return(dinvgamma(theta, a, b, log = log))
+    return (dgamma(theta, shape = a, rate = b, log = log))
   }
   #----------------------------------------------------------------------------------------------------
   #----------------------------------------------------------------------------------------------------
@@ -36,9 +36,7 @@ get_model_iid_exponential <- function(a,b){
   # WARNING: must be an explicit function of the observation at time t to allow the
   # computation of the derivative of the log-predictive density
   model$dpredictive = function(observations,t,theta,byproduct,log = TRUE){
-    lp = -observations[,t]/theta - log(theta)
-    if (log) {return(lp)}
-    else {return(exp(lp))}
+    return (dexp(observations[,t],rate = theta,log))
   }
   # OPTIONAL: derivatives of the predicitve density with respect to the observation at time t
   # inputs: observations (dimY by T matrix, with T >= t), time index t (int), theta (single vector),
@@ -49,7 +47,7 @@ get_model_iid_exponential <- function(a,b){
   # NB: if missing, this field is automatically filled with numerical derivatives
   # via set_default_model in util_default.R)
   model$derivativelogdpredictive = function(observations,t,theta,byproduct) {
-    return (list(jacobian = matrix(-1/theta, 1, 1), hessiandiag = matrix(0, 1, 1)))
+    return (list(jacobian = matrix(-theta, 1, 1), hessiandiag = matrix(0, 1, 1)))
   }
   return(model)
 }
