@@ -50,6 +50,7 @@ assimilate_one_smc2 = function(thetas, PFs, t, observations, model,
   logw_incremental = rep(NA, Ntheta)
   rejuvenation_time = NA
   rejuvenation_rate = NA
+  rejuvenation_rate_average = NA
   increase_Nx_times = NA
   increase_Nx_values = NA
   if (t == 1){
@@ -130,6 +131,7 @@ assimilate_one_smc2 = function(thetas, PFs, t, observations, model,
       #
       if (nmoves > 0){
         rejuvenation_time = t
+        rejuvenation_rate_average = 0
         for (imove in 1:nmoves){
           theta_new_all = proposalmove$r(Ntheta)
           log_proposal_density_new_all = proposalmove$d(theta_new_all,log=TRUE)
@@ -165,19 +167,62 @@ assimilate_one_smc2 = function(thetas, PFs, t, observations, model,
             }
           }
           rejuvenation_rate = accepts/Ntheta
+          rejuvenation_rate_average = rejuvenation_rate_average + rejuvenation_rate
           if (algorithmic_parameters$verbose){
             cat("Acceptance rate (independent proposal): ", 100*rejuvenation_rate, "%\n")
           }
-          if (adaptNx){
-            Nx_new = 2*(PFs[[1]]$Nx)
-            if ((Nx_new <= algorithmic_parameters$Nx_max)&&(rejuvenation_rate < min_acceptance_rate)){
-              # Increase the number Nx of particles for each theta
-              PFs = increase_Nx(observations, t, model, thetas, PFs, Ntheta)
-              Nx = PFs[[1]]$Nx
-              increase_Nx_times = t
-              increase_Nx_values = PFs[[1]]$Nx
+        }
+        rejuvenation_rate_average = rejuvenation_rate_average/nmoves
+        # Increase the number Nx of particles for each theta if needed
+        if (adaptNx){
+          Nx_new = 2*(PFs[[1]]$Nx)
+          if ((Nx_new <= algorithmic_parameters$Nx_max)&&(rejuvenation_rate_average < min_acceptance_rate)){
+            PFs = increase_Nx(observations, t, model, thetas, PFs, Ntheta)
+            Nx = PFs[[1]]$Nx
+            increase_Nx_times = t
+            increase_Nx_values = PFs[[1]]$Nx
+            if (algorithmic_parameters$verbose){
+              cat("Nx increased to: ", increase_Nx_values, "\n")
+            }
+            # Perform the move steps one more time after increasing Nx
+            for (imove in 1:nmoves){
+              theta_new_all = proposalmove$r(Ntheta)
+              log_proposal_density_new_all = proposalmove$d(theta_new_all,log=TRUE)
+              log_proposal_density_current = proposalmove$d(thetas,log=TRUE)
+              accepts = 0
+              for (i in 1:Ntheta) {
+                theta_new = theta_new_all[,i]
+                logprior_theta_new = model$dprior(theta_new, log = TRUE)
+                if (is.infinite(logprior_theta_new)){
+                  next
+                } else {
+                  #the CPF function performs a regular PF when no conditioning path is provided
+                  PF_new = conditional_particle_filter(observations[,1:t,drop=FALSE], model, theta_new, Nx)
+                  incremental_ll_new = PF_new$incremental_ll
+                  loglikelihood_new = gamma * incremental_ll_new[t]
+                  logw_incremental_new = incremental_ll_new[t]
+                  if (t > 1){
+                    loglikelihood_new = loglikelihood_new + sum(incremental_ll_new[1:(t-1)])
+                  }
+                  logtarget_new = logprior_theta_new + loglikelihood_new
+                  lognum = logtarget_new + log_proposal_density_current[i]
+                  logdenom = logtargetdensities[i] + log_proposal_density_new_all[i]
+                  logacceptance = lognum - logdenom
+                  logu = log(runif(1))
+                  if (logu <= logacceptance){
+                    accepts = accepts + 1
+                    thetas[,i] = theta_new
+                    logtargetdensities[i] = logtarget_new
+                    logw_incremental[i] = logw_incremental_new
+                    PFs[[i]] = PF_new
+                  }
+                  # otherwise do nothing (i.e. keep the current particles)
+                }
+              }
+              rejuvenation_rate = accepts/Ntheta
+              rejuvenation_rate_average = rejuvenation_rate_average + rejuvenation_rate
               if (algorithmic_parameters$verbose){
-                cat("Nx increased to: ", increase_Nx_values, "\n")
+                cat("Acceptance rate (independent proposal): ", 100*rejuvenation_rate, "%\n")
               }
             }
           }
@@ -187,7 +232,7 @@ assimilate_one_smc2 = function(thetas, PFs, t, observations, model,
   }
   return(list(thetas = thetas, normw = normw, logw = logw, logtargetdensities = logtargetdensities,
               logcst = logcst, PFs = PFs, rejuvenation_time = rejuvenation_time,
-              rejuvenation_rate = rejuvenation_rate, ESS = ESS,
+              rejuvenation_rate = rejuvenation_rate_average, ESS = ESS,
               increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values))
 }
 

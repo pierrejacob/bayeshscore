@@ -14,6 +14,7 @@ assimilate_one_smc = function(thetas, byproducts, t, observations, model,
   logw_incremental = rep(NA, Ntheta)
   rejuvenation_time = NA
   rejuvenation_rate = NA
+  rejuvenation_rate_average = NA
   # compute the log-incremental weight using byproduct (e.g. Kalman filter) or analytically via the model
   if (!is.null(byproducts)){
     for (itheta in 1:Ntheta){
@@ -85,6 +86,7 @@ assimilate_one_smc = function(thetas, byproducts, t, observations, model,
       #
       if (nmoves > 0){
         rejuvenation_time = t
+        rejuvenation_rate_average = 0
         for (imove in 1:nmoves){
           theta_new_all = proposalmove$r(Ntheta)
           log_proposal_density_new_all = proposalmove$d(theta_new_all,log=TRUE)
@@ -134,6 +136,7 @@ assimilate_one_smc = function(thetas, byproducts, t, observations, model,
             }
           }
           rejuvenation_rate = accepts/Ntheta
+          rejuvenation_rate_average = rejuvenation_rate_average + rejuvenation_rate
           if (algorithmic_parameters$verbose){
             cat("Acceptance rate (independent proposal): ", 100*rejuvenation_rate, "%\n")
           }
@@ -143,5 +146,5 @@ assimilate_one_smc = function(thetas, byproducts, t, observations, model,
   }
   return(list(thetas = thetas, normw = normw, logw = logw, logtargetdensities = logtargetdensities,
               logcst = logcst, byproducts = byproducts, rejuvenation_time = rejuvenation_time,
-              rejuvenation_rate = rejuvenation_rate, ESS = ESS))
+              rejuvenation_rate = rejuvenation_rate_average/nmoves, ESS = ESS))
 }

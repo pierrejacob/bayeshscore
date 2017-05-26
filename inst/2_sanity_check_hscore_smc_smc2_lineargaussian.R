@@ -29,8 +29,8 @@ algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$store_theta = TRUE
 algorithmic_parameters$store_X = TRUE
 algorithmic_parameters$ess_threshold = 0.5
-algorithmic_parameters$min_acceptance_rate = 0.8 # purposely set high to trigger increase Nx step and test Nx_max
-algorithmic_parameters$nmoves = 2
+algorithmic_parameters$min_acceptance_rate = 0.5 # purposely set high to trigger increase Nx step and test Nx_max
+algorithmic_parameters$nmoves = 5 # purposely set high for sanity check
 # The remaining algorithmic parameters are set to their default values via the functions in util_default.R
 #--------------------------------------------------------------------------------------------
 ### Run SMC

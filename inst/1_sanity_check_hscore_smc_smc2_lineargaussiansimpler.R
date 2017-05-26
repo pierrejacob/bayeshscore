@@ -29,7 +29,7 @@ algorithmic_parameters$store_theta = TRUE
 algorithmic_parameters$store_X = FALSE
 algorithmic_parameters$ess_threshold = 0.5
 algorithmic_parameters$min_acceptance_rate = 0.5 # purposely set high to trigger some increase Nx steps
-algorithmic_parameters$nmoves = 2
+algorithmic_parameters$nmoves = 5 # purposely set high for sanity check
 # The remaining algorithmic parameters are set to their default values via the functions in util_default.R
 
 #--------------------------------------------------------------------------------------------
