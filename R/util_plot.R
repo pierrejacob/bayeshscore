@@ -6,15 +6,19 @@
 #'@description This function generates artificial data from a model.
 #'@export
 simulateData = function(model,theta,nobservations) {
-  X <- matrix(nrow = model$dimX, ncol = nobservations)
-  Y <- matrix(nrow = model$dimY, ncol = nobservations)
-  X[,1] <- model$rinitial(theta,1)
-  Y[,1] <- model$robs(matrix(X[,1], nrow = 1),1,theta)
-  for (t in 2:nobservations) {
-    X[,t] = model$rtransition(X[,t-1,drop=FALSE], t, theta)
-    Y[,t] = model$robs(X[,t,drop=FALSE], t, theta)
+  if (!is.null(model$dimX)){
+    X <- matrix(nrow = model$dimX, ncol = nobservations)
+    Y <- matrix(nrow = model$dimY, ncol = nobservations)
+    X[,1] <- model$rinitial(theta,1)
+    Y[,1] <- model$robs(matrix(X[,1], nrow = 1),1,theta)
+    for (t in 2:nobservations) {
+      X[,t] = model$rtransition(X[,t-1,drop=FALSE], t, theta)
+      Y[,t] = model$robs(X[,t,drop=FALSE], t, theta)
+    }
+    return (list(X = X, Y = Y))
+  } else {
+    return (model$robs(nobservations,theta))
   }
-  return (list(X = X, Y = Y))
 }
 #------------------------------------------------------------------------------#
 #'@rdname setmytheme

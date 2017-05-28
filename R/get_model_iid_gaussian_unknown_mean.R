@@ -26,9 +26,8 @@ get_model_iid_gaussian_unknown_mean <- function(muprior,sigma2prior){
   }
 
   # OPTIONAL: simulate observations
-  model$robs = function(Xt,t,theta){
-    N = ncol(Xt)
-    return (matrix(rnorm(N, theta, 1),ncol = N))
+  model$robs = function(nobservations,theta){
+    return (matrix(rnorm(nobservations, theta, 1),ncol = nobservations))
   }
   return(model)
 }
