@@ -46,8 +46,6 @@ for (i in 1:4){
   }
   hexact1 = cumsum(hexact1)
   hexact2 = cumsum(hexact2)
-  # expected_H_model1_exact[i] = (sigma2_star-2)
-  # expected_H_model2_exact[i] = (1/sigma2_star^2)*(sigma2_star+mu_star^2-2*sigma2_star)
   expected_H_model1_exact[i] = (sigma2_star+mu_star^2-2*mu_star*mu_post[nobservations]+mu_post[nobservations]^2-2)
   thetas2_postmean = nu_post[nobservations]*s2_post[nobservations]/(nu_post[nobservations]-2)
   expected_H_model2_exact[i] = (1/thetas2_postmean^2)*(sigma2_star+mu_star^2-2*thetas2_postmean)
