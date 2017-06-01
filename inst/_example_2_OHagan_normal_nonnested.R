@@ -208,7 +208,8 @@ for (i in 1:4){
   plot_hfactor[[i]] <<- ggplot(subset(h_factors, case==i)) +
     geom_line(aes(time, hfactor, color = case, group = repl)) +
     geom_line(aes(time, time*slope), col = "blue", linetype ="dashed") +
-    ylab("H-factor")
+    geom_hline(yintercept = 0,linetype="dotted",size=1) +
+    ylab("H factor")
   })
 }
 # Checking H-factor
