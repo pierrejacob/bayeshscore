@@ -18,6 +18,21 @@ model = function(i){
   if (i==2){return(get_model_ARMA(0,1,nu0, sigma02))} # MA(1)
 }
 
+# this function finds parameters (used to generate data) that guarantee stationarity
+get_stationaryparameters = function(p,q){
+  AR_coeffs = runif(p,-1,1)
+  MA_coeffs = runif(q,-1,1)
+  AR_roots = polyroot(c(1,-AR_coeffs))
+  MA_roots = polyroot(c(1,-MA_coeffs))
+  accept = ((sum(abs(AR_roots)<=1))==0)&&((sum(abs(MA_roots)<=1))==0)&&(length(intersect(AR_roots,MA_roots))==0)
+  while (!accept){
+    AR_coeffs = runif(p,-1,1)
+    MA_coeffs = runif(q,-1,1)
+    accept = ((sum(abs(polyroot(c(1,-AR_coeffs)))<=1))==0)&&((sum(abs(polyroot(c(1,-MA_coeffs)))<=1))==0)
+  }
+  return (c(AR_coeffs,MA_coeffs,1))
+}
+
 # set algorithmic parameters
 algorithmic_parameters = list()
 algorithmic_parameters$Ntheta = 2^10
@@ -33,7 +48,7 @@ nobservations = 50
 # Case 1: true model = AR(1)
 ##################################################################################################
 true_model = 1
-true_theta = c(0.5,2)
+true_theta = get_stationaryparameters(1,0)
 observations1 = simulateData(model(true_model),true_theta,nobservations)$Y
 # observations in a matrix of dimensions dimy x nobservations
 #--------------------------------------------------------------------------------------------
@@ -62,7 +77,7 @@ ggplot(results_all1) +
 # Case 2: true model = MA(1)
 ##################################################################################################
 true_model = 2
-true_theta = c(0.5,2)
+true_theta = get_stationaryparameters(0,1)
 observations2 = simulateData(model(true_model),true_theta,nobservations)$Y
 # observations in a matrix of dimensions dimy x nobservations
 #--------------------------------------------------------------------------------------------

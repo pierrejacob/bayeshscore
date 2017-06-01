@@ -14,7 +14,11 @@ get_model_ARMA <- function(p,q,nu0,sigma02){
 
   # set some hyperparameters
   model$initial_mean = matrix(0,nrow=model$dimX,ncol=1)
-
+  model$get_initial_var = function(theta){
+    sigma2 = theta[model$dimtheta]
+    initial_var = diag(sigma2,model$dimX)
+    return (initial_var)
+  }
   #-------------------------------------------------------------------------------------
   # Get the linear gaussian state-space model representation of the ARMA model
   # This function extends the vector of ARMA coefficients
@@ -93,7 +97,7 @@ get_model_ARMA <- function(p,q,nu0,sigma02){
   model$rinitial = function(theta,N){
     ARMA_coeffs = theta[1:(model$dimtheta-1)]
     sigma2 = theta[model$dimtheta]
-    return (matrix(rnorm(N*r, mean = 0, sd = sqrt(sigma2/(1-ARMA_coeffs[1]^2))), ncol = N))
+    return (matrix(rnorm(N*r, mean = 0, sd = sqrt(model$get_initial_var(theta)[1,1])), ncol = N))
   }
 
 
@@ -126,11 +130,10 @@ get_model_ARMA <- function(p,q,nu0,sigma02){
     sigmaW2 = model$get_SIGMAW2(sigma2)
     sigmaV2 = model$SIGMAV2
     initial_mean = model$initial_mean
-    initial_var = diag(sigma2/(1-ARMA_coeffs[1]^2),model$dimX)
+    initial_var = model$get_initial_var(theta)
     KF = KF_assimilate_one(observations[,t,drop=FALSE],t,phi,psi,sigmaV2,sigmaW2,initial_mean,initial_var,KF)
     # we make the likelihood an explicit function of the observation at time t
     # to allow the computation of the derivative of the log-predictive density
-    KF = KF_assimilate_one(observations[,t,drop=FALSE],t,phi,psi,sigmaV2,sigmaW2,initial_mean,initial_var,KF)
     ll = 0
     for (i in 1:t){
       ll = ll + KF_logdpredictive(observations[,i,drop=FALSE],i,KF)
@@ -153,7 +156,7 @@ get_model_ARMA <- function(p,q,nu0,sigma02){
     sigmaW2 = model$get_SIGMAW2(sigma2)
     sigmaV2 = model$SIGMAV2
     initial_mean = model$initial_mean
-    initial_var = diag(sigma2/(1-ARMA_coeffs[1]^2),model$dimX)
+    initial_var = model$get_initial_var(theta)
     # we make it an explicit function of the observation at time t to allow computation of the derivative
     KF = KF_assimilate_one(observations[,t,drop=FALSE],t,phi,psi,sigmaV2,sigmaW2,initial_mean,initial_var,KF)
     incremental_ll = KF_logdpredictive(observations[,t,drop=FALSE],t,KF)
@@ -191,7 +194,7 @@ get_model_ARMA <- function(p,q,nu0,sigma02){
     sigmaW2 = model$get_SIGMAW2(sigma2)
     sigmaV2 = model$SIGMAV2
     initial_mean = model$initial_mean
-    initial_var = diag(sigma2/(1-ARMA_coeffs[1]^2),model$dimX)
+    initial_var = model$get_initial_var(theta)
     KF_updated = KF_assimilate_one(observations[,t,drop=FALSE],t,phi,psi,sigmaV2,sigmaW2,initial_mean,initial_var, KF)
     return(KF_updated)
   }
