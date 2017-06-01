@@ -15,15 +15,15 @@ get_model_lineargaussian <- function(){
   model$dimX = 1
 
   # sampler from the prior distribution on parameters
-  rangephi = c(0.1,0.9)
-  rangepsi = c(0.5,1.5)
-  rangesigmaV2 = c(0.1,10)
-  rangesigmaW2 = c(0.1,10)
+  model$rangephi = c(0,1)
+  model$rangepsi = c(0,1)
+  model$rangesigmaV2 = c(0,10)
+  model$rangesigmaW2 = c(0,10)
   model$rprior = function(Ntheta){
-    phi = runif(Ntheta,rangephi[1],rangephi[2])
-    psi = runif(Ntheta,rangepsi[1],rangepsi[2])
-    sigmaW2 = runif(Ntheta,rangesigmaV2[1],rangesigmaV2[2])
-    sigmaV2 = runif(Ntheta,rangesigmaW2[1],rangesigmaW2[2])
+    phi = runif(Ntheta,model$rangephi[1],model$rangephi[2])
+    psi = runif(Ntheta,model$rangepsi[1],model$rangepsi[2])
+    sigmaW2 = runif(Ntheta,model$rangesigmaV2[1],model$rangesigmaV2[2])
+    sigmaV2 = runif(Ntheta,model$rangesigmaW2[1],model$rangesigmaW2[2])
     return (rbind(phi,sigmaW2,psi,sigmaV2))
   }
 
@@ -33,10 +33,10 @@ get_model_lineargaussian <- function(){
     sigmaW2 = theta[2]
     psi = theta[3]
     sigmaV2 = theta[4]
-    logd = dunif(phi,rangephi[1],rangephi[2],log = TRUE) +
-      dunif(psi,rangepsi[1],rangepsi[2],log = TRUE) +
-      dunif(sigmaW2,rangesigmaV2[1],rangesigmaV2[2],log = TRUE) +
-      dunif(sigmaV2,rangesigmaW2[1],rangesigmaW2[2],log = TRUE)
+    logd = dunif(phi,model$rangephi[1],model$rangephi[2],log = TRUE) +
+      dunif(psi,model$rangepsi[1],model$rangepsi[2],log = TRUE) +
+      dunif(sigmaW2,model$rangesigmaV2[1],model$rangesigmaV2[2],log = TRUE) +
+      dunif(sigmaV2,model$rangesigmaW2[1],model$rangesigmaW2[2],log = TRUE)
     if (log==TRUE) {return (logd)}
     else {return (exp(logd))}
   }

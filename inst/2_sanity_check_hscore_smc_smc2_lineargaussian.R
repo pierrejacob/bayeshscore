@@ -6,14 +6,12 @@ library(HyvarinenSSM)
 library(ggplot2)
 library(gridExtra)
 set.seed(19)
-module_tree <<- Module("module_tree", PACKAGE = "HyvarinenSSM")
-TreeClass <<- module_tree$Tree
 #--------------------------------------------------------------------------------------------
 model = get_model_lineargaussian()
 #--------------------------------------------------------------------------------------------
 # create data
 nobservations = 15
-theta_star = c(0.8,1,1,1)
+theta_star = c(0.8,1,0.5,1)
 sim = simulateData(model, theta = theta_star, nobservations)
 X = sim$X
 Y = sim$Y
@@ -22,9 +20,9 @@ observations = matrix(Y, nrow = model$dimY)
 #--------------------------------------------------------------------------------------------
 # set algorithmic parameters
 algorithmic_parameters = list()
-algorithmic_parameters$Ntheta = 2^10
+algorithmic_parameters$Ntheta = 2^12
 algorithmic_parameters$Nx = 2^5
-algorithmic_parameters$Nx_max = 2^6
+# algorithmic_parameters$Nx_max = 2^6
 algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$store_theta = TRUE
 algorithmic_parameters$store_X = TRUE
@@ -36,8 +34,6 @@ algorithmic_parameters$nmoves = 5 # purposely set high for sanity check
 ### Run SMC
 smc_results = hscore(observations, model, algorithmic_parameters)
 ### Run SMC_2
-module_tree <<- Module("module_tree", PACKAGE = "HyvarinenSSM")
-TreeClass <<- module_tree$Tree
 model_withoutlikelihood = model
 model_withoutlikelihood$likelihood = NULL # this forces the use of SMC2
 model_withoutlikelihood$dpredictive = NULL # this forces the use of SMC2
