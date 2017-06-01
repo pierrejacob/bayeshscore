@@ -13,7 +13,11 @@ KF_assimilate_one = function(Yt, t, phi,psi,sigmaV2,sigmaW2,initial_mean,initial
     PX_t_t_1 = initial_var
     Kt = PX_t_t_1%*%t(psi)%*%solve(psi%*%PX_t_t_1%*%t(psi) + sigmaV2)
     muX_t_t = muX_t_t_1 + Kt%*%(Yt - psi%*%muX_t_t_1)
-    PX_t_t = (diag(1,nrow(Yt))-Kt%*%psi)%*%PX_t_t_1
+    if (!is.null(dim(PX_t_t_1))) {
+      PX_t_t = (diag(1,nrow(PX_t_t_1))-Kt%*%psi)%*%PX_t_t_1
+    } else {
+      PX_t_t = (1-Kt%*%psi)%*%PX_t_t_1
+    }
     muY_t_t_1 = psi%*%muX_t_t_1
     PY_t_t_1 = psi%*%PX_t_t_1%*%t(psi) + sigmaV2
   } else {
@@ -21,7 +25,11 @@ KF_assimilate_one = function(Yt, t, phi,psi,sigmaV2,sigmaW2,initial_mean,initial
     PX_t_t_1 = phi%*%KF_current[[t-1]]$PX_t_t%*%t(phi) + sigmaW2
     Kt = PX_t_t_1%*%t(psi)%*%solve(psi%*%PX_t_t_1%*%t(psi) + sigmaV2)
     muX_t_t = muX_t_t_1 + Kt%*%(Yt - psi%*%muX_t_t_1)
-    PX_t_t = (diag(1,nrow(Yt))-Kt%*%psi)%*%PX_t_t_1
+    if (!is.null(dim(PX_t_t_1))) {
+      PX_t_t = (diag(1,nrow(PX_t_t_1))-Kt%*%psi)%*%PX_t_t_1
+    } else {
+      PX_t_t = (1-Kt%*%psi)%*%PX_t_t_1
+    }
     muY_t_t_1 = psi%*%muX_t_t_1
     PY_t_t_1 = psi%*%PX_t_t_1%*%t(psi) + sigmaV2
   }
