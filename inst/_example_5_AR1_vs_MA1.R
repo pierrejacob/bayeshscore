@@ -27,25 +27,24 @@ algorithmic_parameters$verbose = TRUE
 repl = 5 #number of replications
 registerDoParallel(cores=5) #number of workers in parallel
 #--------------------------------------------------------------------------------------------
-
+nobservations = 50
 
 ##################################################################################################
 # Case 1: true model = AR(1)
 ##################################################################################################
-nobservations = 20
 true_model = 1
 true_theta = c(0.5,2)
-observations = simulateData(model(true_model),true_theta,nobservations)$Y
+observations1 = simulateData(model(true_model),true_theta,nobservations)$Y
 # observations in a matrix of dimensions dimy x nobservations
 #--------------------------------------------------------------------------------------------
-results1_all = data.frame()
+results_all1 = data.frame()
 ### Compute logevidence and hscore for each model
 for (m in 1:nb_models){
   results = foreach(i=1:repl,.packages=c('HyvarinenSSM'),.verbose = TRUE) %dorng% {
-    hscore(observations, model(m), algorithmic_parameters)
+    hscore(observations1, model(m), algorithmic_parameters)
   }
   for (r in 1:repl){
-    results1_all = rbind(results1_all,data.frame(logevidence = results[[r]]$logevidence,
+    results_all1 = rbind(results_all1,data.frame(logevidence = results[[r]]$logevidence,
                                                  hscore = results[[r]]$hscore,
                                                  time = 1:nobservations,
                                                  model = factor(m),
@@ -53,29 +52,28 @@ for (m in 1:nb_models){
   }
 }
 ### Plot log evidence
-ggplot(results1_all) +
+ggplot(results_all1) +
   geom_line(aes(time,-logevidence/time,color=model,group=interaction(model,repl)))
 ### Plot H score
-ggplot(results1_all) +
+ggplot(results_all1) +
   geom_line(aes(time,hscore/time,color=model,group=interaction(model,repl)))
 
 ##################################################################################################
 # Case 2: true model = MA(1)
 ##################################################################################################
-nobservations = 20
 true_model = 2
 true_theta = c(0.5,2)
-observations = simulateData(model(true_model),true_theta,nobservations)$Y
+observations2 = simulateData(model(true_model),true_theta,nobservations)$Y
 # observations in a matrix of dimensions dimy x nobservations
 #--------------------------------------------------------------------------------------------
-results2_all = data.frame()
+results_all2 = data.frame()
 ### Compute logevidence and hscore for each model
 for (m in 1:nb_models){
   results = foreach(i=1:repl,.packages=c('HyvarinenSSM'),.verbose = TRUE) %dorng% {
-    hscore(observations, model(m), algorithmic_parameters)
+    hscore(observations2, model(m), algorithmic_parameters)
   }
   for (r in 1:repl){
-    results2_all = rbind(results2_all,data.frame(logevidence = results[[r]]$logevidence,
+    results_all2 = rbind(results_all2,data.frame(logevidence = results[[r]]$logevidence,
                                                  hscore = results[[r]]$hscore,
                                                  time = 1:nobservations,
                                                  model = factor(m),
@@ -83,14 +81,44 @@ for (m in 1:nb_models){
   }
 }
 ### Plot log evidence
-ggplot(results2_all) +
+ggplot(results_all2) +
   geom_line(aes(time,-logevidence/time,color=model,group=interaction(model,repl)))
 ### Plot H score
-ggplot(results2_all) +
+ggplot(results_all2) +
   geom_line(aes(time,hscore/time,color=model,group=interaction(model,repl)))
 
 
 ##################################################################################################
 # Compare model 1 and model 2 in each case
 ##################################################################################################
+results_all = list(results_all1,results_all2)
+logbayesfactors = data.frame()
+h_factors = data.frame()
+BF_plots = list()
+HF_plots = list()
+for (r in 1:repl) {
+  for (i in 1:nb_models) {
+    results = results_all[[i]]
+    logbayes_factor = subset(results,model==1&repl==r)$logevidence - subset(results,model==2&repl==r)$logevidence
+    logbayesfactors = rbind(logbayesfactors,data.frame(case = factor(i), time = 1:nobservations, repl = r, logbayesfactor = logbayes_factor))
+    h_factor = subset(results,model==2&repl==r)$hscore - subset(results,model==1&repl==r)$hscore
+    h_factors = rbind(h_factors,data.frame(case = factor(i), time = 1:nobservations, repl = r, hfactor = h_factor))
+    local({i = i;
+    BF_plots[[i]] <<- ggplot(subset(logbayesfactors, case==i)) +
+      geom_line(aes(time, logbayesfactor, color = case, group = repl)) +
+      geom_hline(yintercept = 0,linetype="dotted",size=1) +
+      ylab("log Bayes factor");
+    HF_plots[[i]] <<- ggplot(subset(h_factors, case==i)) +
+      geom_line(aes(time, hfactor, color = case, group = repl)) +
+      geom_hline(yintercept = 0,linetype="dotted",size=1) +
+      ylab("H factor")
+    })
+  }
+}
+# Plot log Bayes factor
+# left, right = case 1, 2
+do.call(grid.arrange,c(BF_plots, ncol = 2))
+# Plot H factor
+# left, right = case 1, 2
+do.call(grid.arrange,c(HF_plots, ncol = 2))
 

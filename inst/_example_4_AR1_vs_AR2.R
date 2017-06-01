@@ -27,12 +27,11 @@ algorithmic_parameters$verbose = TRUE
 repl = 5 #number of replications
 registerDoParallel(cores=5) #number of workers in parallel
 #--------------------------------------------------------------------------------------------
-
+nobservations = 100
 
 ##################################################################################################
 # Case 1: true model = AR(1)
 ##################################################################################################
-nobservations = 100
 true_model = 1
 true_theta = c(0.5,2)
 observations1 = simulateData(model(true_model),true_theta,nobservations)
