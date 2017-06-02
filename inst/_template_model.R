@@ -1,11 +1,11 @@
 ##################################################################################################
 # Generic template to define a model
 ##################################################################################################
-#'@rdname get_nameOfTheModel
-#'@title get_nameOfTheModel
+#'@rdname get_model_nameOfTheModel
+#'@title get_model_nameOfTheModel
 #'@description
 #'@export
-get_nameOfTheModel <- function(){
+get_model_nameOfTheModel <- function(){
   model = list()
   # Type of observations (string): "continuous" or "discrete"
   model$observation_type = ...
@@ -13,6 +13,19 @@ get_nameOfTheModel <- function(){
   model$dimtheta = ...
   model$dimY = ...
   model$dimX = ...
+  #----------------------------------------------------------------------------------------------------
+  #----------------------------------------------------------------------------------------------------
+  # If the observations are discrete, lower and upper bounds for each component of the observations
+  # are required to compute the Hyvarinen score.
+  # model$lower and model$upper are vectors of length model$dimY, such that model$lower[j] and
+  # model$upper[j] are respectively the lower and upper bound defining the support of the j-th
+  # component of the observations
+  # Note: if no bounds are provided, the lower/upper bounds are set to -Inf/Inf by default
+  model$lower = c(0,0)
+  model$upper = c(Inf,Inf)
+  #----------------------------------------------------------------------------------------------------
+  #----------------------------------------------------------------------------------------------------
+
   # Sampler from the prior distribution on parameters
   # inputs: Ntheta (int)
   # outputs: matrix (dimtheta by Ntheta) of prior draws
@@ -98,10 +111,10 @@ get_nameOfTheModel <- function(){
     return (...)
   }
   # Sampler from the transition distribution of the latent states
-  # inputs: current states Xt (dimX by Nx), time t (int), theta (single vector)
+  # inputs: current states Xs at time (t-1) (dimX by Nx matrix), time t (int), theta (single vector)
   # outputs: updated states (dimX by Nx)
-  model$rtransition = function(Xts,t,theta){
-    Nx = ncol(Xts)
+  model$rtransition = function(Xs,t,theta){
+    Nx = ncol(Xs)
     ...
     return (...)
   }
@@ -126,8 +139,8 @@ get_nameOfTheModel <- function(){
   }
 
   # sampler from the observation disctribution
-  # inputs: states Xts (dimX by Nx), time t, theta (single vector), log (TRUE by default)
-  # outputs: observations (dimY by Nx matrix)
+  # inputs: single state Xt (dimX by 1), time t, theta (single vector)
+  # outputs: single observation (dimY by 1 matrix)
   model$robs = function(Xt,t,theta){
     ...
     return (...)

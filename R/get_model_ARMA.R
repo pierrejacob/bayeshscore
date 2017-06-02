@@ -114,10 +114,10 @@ get_model_ARMA <- function(p,q,nu0,sigma02){
   }
 
   # density of the observations
-  model$dobs = function(Yt,Xt,t,theta,log = TRUE){
+  model$dobs = function(Yt,Xts,t,theta,log = TRUE){
     ARMA_coeffs = theta[1:(model$dimtheta-1)]
     PSI = model$get_PSI(ARMA_coeffs)
-    return (dnorm(Yt,mean = PSI%*%Xt,sd = sqrt(0), log))
+    return (dnorm(Yt,mean = PSI%*%Xts,sd = sqrt(0), log))
   }
 
   # OPTIONAL: likelihood of the observations from time 1 to t

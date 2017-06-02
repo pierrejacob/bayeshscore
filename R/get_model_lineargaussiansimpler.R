@@ -43,11 +43,11 @@ get_model_lineargaussiansimpler <- function(){
   }
 
   # sampler from the transition density of the states
-  model$rtransition = function(Xt,t,theta){
+  model$rtransition = function(Xs,t,theta){
     phi = theta[1]
     sigmaW2 = theta[2]
-    N = ncol(Xt)
-    return (matrix(phi*Xt + rnorm(N, mean = 0, sd = sqrt(sigmaW2)), ncol = N))
+    N = ncol(Xs)
+    return (matrix(phi*Xs + rnorm(N, mean = 0, sd = sqrt(sigmaW2)), ncol = N))
   }
 
   # density of the observations
@@ -58,14 +58,14 @@ get_model_lineargaussiansimpler <- function(){
   }
 
   # first and second partial derivatives of the observation log-density
-  # The function is vectorized with respect to the states Xt (dimX by Nx), so that it outputs:
+  # The function is vectorized with respect to the states Xts (dimX by Nx), so that it outputs:
   # >> the jacobian (Nx by dimY matrix: each row is the transpose of the corresponding gradients row-wise)
   # >> the Hessian diagonals (Nx by dimY matrix: each row is the diagonal coeffs of the corresponding Hessian)
-  model$derivativelogdobs = function(Yt,Xt,t,theta){
+  model$derivativelogdobs = function(Yt,Xts,t,theta){
     psi = theta[3]
     sigmaV2 = theta[4]
-    N = ncol(Xt)
-    d1 = t((psi*Xt-repeat_column(N,Yt))/sigmaV2)
+    N = ncol(Xts)
+    d1 = t((psi*Xts-repeat_column(N,Yt))/sigmaV2)
     d2 = matrix(-1/sigmaV2,nrow = N, ncol = model$dimY)
     return (list(jacobian = d1, hessiandiag = d2))
   }
@@ -150,45 +150,5 @@ get_model_lineargaussiansimpler <- function(){
     return (matrix(psi*Xt + rnorm(N, mean = 0, sd = sqrt(sigmaV2)),ncol = N))
   }
 
-  # # OPTIONAL: likelihood of the observations from time 1 to t
-  # # This relies on some Kalman filter (passed as a byproduct)
-  # model$likelihood = function(observations,t,theta,KF,log = TRUE){
-  #   incremental_ll <- byproduct$get_incremental_ll()
-  #   if (log) {
-  #     return(sum(incremental_ll[1:t]))
-  #   } else {
-  #     return(exp(sum(incremental_ll[1:t])))
-  #   }
-  # }
-  # # # OPTIONAL: one-step-ahead predictive distribution of the observationt t given past from time 1 to t-1
-  # # This relies on some Kalman filter (passed as a byproduct containing the likelihood of the past)
-  # # It should be a function of the observation at time t
-  # model$dpredictive = function(observations,t,theta,byproduct,log = TRUE){
-  #   if (t==1){
-  #     byproduct$set_observations(matrix(observations, ncol = 1))
-  #     byproduct$first_step()
-  #     byproduct$filtering_step(t-1)
-  #     return(byproduct$get_incremental_ll()[t])
-  #   } else {
-  #     past_ll = sum(byproduct$get_incremental_ll()[1:(t-1)])
-  #     byproduct$set_observations(matrix(observations, ncol = 1))
-  #     byproduct$filtering_step(t-1)
-  #     return(byproduct$get_incremental_ll()[t])
-  #   }
-  # }
-
-  # # OPTIONAL: initialize byproducts (e.g. Kalman filters, etc ...)
-  # model$initialize_byproducts = function(theta, observations, Ntheta){
-  #   KF <- new(kalman_module$Kalman)
-  #   KF$set_parameters(list(rho = theta[1], sigma = sqrt(theta[2]),eta = model$psi,tau=sqrt(model$sigmaV2)))
-  #   KF$set_observations(matrix(observations, ncol = 1))
-  #   KF$first_step()
-  #   return(KF)
-  # }
-  # # OPTIONAL: update byproducts (e.g. Kalman filters, etc ...)
-  # model$update_byproduct = function(KF, t, thetas, observations){
-  #   KF$filtering_step(t-1)
-  #   return(KF)
-  # }
   return(model)
 }

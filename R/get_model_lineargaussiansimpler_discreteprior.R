@@ -45,11 +45,11 @@ get_model_lineargaussiansimpler_discreteprior <- function(){
   }
 
   # sampler from the transition density of the states
-  model$rtransition = function(Xt,t,theta){
+  model$rtransition = function(Xs,t,theta){
     phi = model$phi
     sigmaW2 = model$sigmaW2
-    N = ncol(Xt)
-    return (matrix(phi*Xt + rnorm(N, mean = 0, sd = sqrt(sigmaW2)), ncol = N))
+    N = ncol(Xs)
+    return (matrix(phi*Xs + rnorm(N, mean = 0, sd = sqrt(sigmaW2)), ncol = N))
   }
 
   # density of the observations

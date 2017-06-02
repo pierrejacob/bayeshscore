@@ -49,29 +49,29 @@ get_model_lineargaussian <- function(){
   }
 
   # sampler from the transition density of the states
-  model$rtransition = function(Xt,t,theta){
+  model$rtransition = function(Xs,t,theta){
     phi = theta[1]
     sigmaW2 = theta[2]
-    N = ncol(Xt)
-    return (matrix(phi*Xt + rnorm(N, mean = 0, sd = sqrt(sigmaW2)), ncol = N))
+    N = ncol(Xs)
+    return (matrix(phi*Xs + rnorm(N, mean = 0, sd = sqrt(sigmaW2)), ncol = N))
   }
 
   # density of the observations
-  model$dobs = function(Yt,Xt,t,theta,log = TRUE){
+  model$dobs = function(Yt,Xts,t,theta,log = TRUE){
     psi = theta[3]
     sigmaV2 = theta[4]
-    return (dnorm(Yt,mean = psi*Xt,sd = sqrt(sigmaV2), log))
+    return (dnorm(Yt,mean = psi*Xts,sd = sqrt(sigmaV2), log))
   }
 
   # first and second partial derivatives of the observation log-density
-  # The function is vectorized with respect to the states Xt (dimX by Nx), so that it outputs:
+  # The function is vectorized with respect to the states Xts (dimX by Nx), so that it outputs:
   # >> the jacobian (Nx by dimY matrix: each row is the transpose of the corresponding gradients row-wise)
   # >> the Hessian diagonals (Nx by dimY matrix: each row is the diagonal coeffs of the corresponding Hessian)
-  model$derivativelogdobs = function(Yt,Xt,t,theta){
+  model$derivativelogdobs = function(Yt,Xts,t,theta){
     psi = theta[3]
     sigmaV2 = theta[4]
-    N = ncol(Xt)
-    d1 = t((psi*Xt-repeat_column(N,Yt))/sigmaV2)
+    N = ncol(Xts)
+    d1 = t((psi*Xts-repeat_column(N,Yt))/sigmaV2)
     d2 = matrix(-1/sigmaV2,nrow = N, ncol = model$dimY)
     return (list(jacobian = d1, hessiandiag = d2))
   }
