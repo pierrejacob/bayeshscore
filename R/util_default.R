@@ -90,7 +90,17 @@ set_default_model = function(model){
       }
     }
   }
-  if (tolower(model$observation_type) == 'continuous') {
+  # If the observations are discrete, lower and upper bounds defining the support for each component
+  # of the observations are required to compute the Hyvarinen score
+  if (tolower(model$observation_type) == "discrete") {
+    if (is.null(model$lower)){
+      model$lower = rep(-Inf, model$dimY)
+    }
+    if (is.null(model$upper)){
+      model$upper = rep(Inf, model$dimY)
+    }
+  }
+  if (tolower(model$observation_type) == "continuous") {
     # Define the derivatives of the observation log-density via numerical derivation (cf. numDeriv)
     # The function is vectorized with respect to the states Xt (dimX by Nx), so that it outputs:
     # >> the jacobian (Nx by dimY matrix: each row is the transpose of the corresponding gradients row-wise)
