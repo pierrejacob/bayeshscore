@@ -41,8 +41,8 @@ pz_perturb_randomness_cpp <- function(randomness, rho) {
     .Call('HyvarinenSSM_pz_perturb_randomness_cpp', PACKAGE = 'HyvarinenSSM', randomness, rho)
 }
 
-rtransition_logistic_c <- function(Xt, dt, sigma, r, b) {
-    .Call('HyvarinenSSM_rtransition_logistic_c', PACKAGE = 'HyvarinenSSM', Xt, dt, sigma, r, b)
+rtransition_logistic_c <- function(Xt, delta_t, dt, sigma, r, b) {
+    .Call('HyvarinenSSM_rtransition_logistic_c', PACKAGE = 'HyvarinenSSM', Xt, delta_t, dt, sigma, r, b)
 }
 
 systematic_resampling_n_ <- function(weights, ndraws, u) {
