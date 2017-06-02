@@ -135,17 +135,18 @@ BEGIN_RCPP
 END_RCPP
 }
 // rtransition_logistic_c
-NumericVector rtransition_logistic_c(NumericVector Xt, double dt, double sigma, double r, double b);
-RcppExport SEXP HyvarinenSSM_rtransition_logistic_c(SEXP XtSEXP, SEXP dtSEXP, SEXP sigmaSEXP, SEXP rSEXP, SEXP bSEXP) {
+NumericVector rtransition_logistic_c(NumericVector Xt, double delta_t, double dt, double sigma, double r, double b);
+RcppExport SEXP HyvarinenSSM_rtransition_logistic_c(SEXP XtSEXP, SEXP delta_tSEXP, SEXP dtSEXP, SEXP sigmaSEXP, SEXP rSEXP, SEXP bSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< NumericVector >::type Xt(XtSEXP);
+    Rcpp::traits::input_parameter< double >::type delta_t(delta_tSEXP);
     Rcpp::traits::input_parameter< double >::type dt(dtSEXP);
     Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
     Rcpp::traits::input_parameter< double >::type r(rSEXP);
     Rcpp::traits::input_parameter< double >::type b(bSEXP);
-    __result = Rcpp::wrap(rtransition_logistic_c(Xt, dt, sigma, r, b));
+    __result = Rcpp::wrap(rtransition_logistic_c(Xt, delta_t, dt, sigma, r, b));
     return __result;
 END_RCPP
 }
