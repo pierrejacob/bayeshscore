@@ -27,11 +27,17 @@ hincrementContinuous_smc2 = function(t,model,observationt,thetas,Wtheta,PFs,Nthe
         d1log[[m]] = derivatives$jacobian
         d2log[[m]] = derivatives$hessiandiag
       }
-      Ek_theta[m] = sum(WX*(d2log[[m]][,k] + (d1log[[m]][,k])^2))
-      Fk_theta[m] = sum(WX*d1log[[m]][,k])
+      # we automatically discard particles with weight 0 to avoid artificial apparition of NaN
+      # (which could happen when performing 0*Inf)
+      nonzeroWX = (WX>0)
+      Ek_theta[m] = sum(WX[nonzeroWX]*(d2log[[m]][nonzeroWX,k] + (d1log[[m]][nonzeroWX,k])^2))
+      Fk_theta[m] = sum(WX[nonzeroWX]*d1log[[m]][nonzeroWX,k])
     }
-    Ek = sum(Wtheta*Ek_theta)
-    Fk = (sum(Wtheta*Fk_theta))^2
+    # we automatically discard particles with weight 0 to avoid artificial apparition of NaN
+    # (which could happen when performing 0*Inf)
+    nonzeroWtheta = (Wtheta>0)
+    Ek = sum(Wtheta[nonzeroWtheta]*Ek_theta[nonzeroWtheta])
+    Fk = (sum(Wtheta[nonzeroWtheta]*Fk_theta[nonzeroWtheta]))^2
     hincrement = hincrement + 2*Ek - Fk
   }
   return (hincrement)
@@ -62,8 +68,11 @@ hincrementContinuous_smc = function(t,model,observations,thetas,Wtheta,byproduct
       Ek_theta[m] = d2log[[m]][k] + (d1log[[m]][k])^2
       Fk_theta[m] = d1log[[m]][k]
     }
-    Ek = sum(Wtheta*Ek_theta)
-    Fk = (sum(Wtheta*Fk_theta))^2
+    # we automatically discard particles with weight 0 to avoid artificial apparition of NaN
+    # (which could happen when performing 0*Inf)
+    nonzeroWtheta = (Wtheta>0)
+    Ek = sum(Wtheta[nonzeroWtheta]*Ek_theta[nonzeroWtheta])
+    Fk = (sum(Wtheta[nonzeroWtheta]*Fk_theta[nonzeroWtheta]))^2
     hincrement = hincrement + 2*Ek - Fk
   }
   return (hincrement)
