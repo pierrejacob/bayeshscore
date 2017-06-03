@@ -2,15 +2,20 @@
 using namespace Rcpp;
 using namespace std;
 
+// Simulate latent state transition of model 1 for kangaroo counts (cf. Knape and Valpine, 2012)
 // [[Rcpp::export]]
-NumericVector rtransition_logistic_cpp(NumericVector Xt, double delta_t, double dt, double sigma, double r, double b){
+NumericMatrix rtransition_logistic_cpp(const NumericMatrix& Xold, const double& delta_t, const double& dt,
+                                       const double& sigma, const double& r, const double& b){
   RNGScope scope;
-  int N = Xt.size();
-  NumericVector logXtold = log(Xt);
+  int N = Xold.ncol();
+  NumericMatrix Xnew(1,N);
+  Xnew(0,_) = log(Xold(0,_));
   int M = delta_t / dt;
   double sqrtdt = sqrt(dt);
   for (int im = 0; im < M; im ++){
-    logXtold = logXtold + (r-b*exp(logXtold))*dt + sigma*sqrtdt*rnorm(N);
+    Xnew(0,_) = Xnew(0,_) + (r-b*exp(Xnew(0,_)))*dt + sigma*sqrtdt*rnorm(N);
   }
-  return exp(logXtold);
+  Xnew(0,_) = exp(Xnew(0,_));
+  return Xnew;
 }
+
