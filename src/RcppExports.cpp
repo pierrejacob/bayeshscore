@@ -6,42 +6,6 @@
 
 using namespace Rcpp;
 
-// KF_assimilate_one_cpp
-List KF_assimilate_one_cpp(NumericVector Yt, int t, NumericVector initial_mean, NumericMatrix initial_var, NumericMatrix phi, NumericMatrix psi, NumericMatrix sigmaV2, NumericMatrix sigmaW2, List KF_current);
-RcppExport SEXP HyvarinenSSM_KF_assimilate_one_cpp(SEXP YtSEXP, SEXP tSEXP, SEXP initial_meanSEXP, SEXP initial_varSEXP, SEXP phiSEXP, SEXP psiSEXP, SEXP sigmaV2SEXP, SEXP sigmaW2SEXP, SEXP KF_currentSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericVector >::type Yt(YtSEXP);
-    Rcpp::traits::input_parameter< int >::type t(tSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type initial_mean(initial_meanSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type initial_var(initial_varSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type phi(phiSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type psi(psiSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type sigmaV2(sigmaV2SEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type sigmaW2(sigmaW2SEXP);
-    Rcpp::traits::input_parameter< List >::type KF_current(KF_currentSEXP);
-    __result = Rcpp::wrap(KF_assimilate_one_cpp(Yt, t, initial_mean, initial_var, phi, psi, sigmaV2, sigmaW2, KF_current));
-    return __result;
-END_RCPP
-}
-// KF_filtering_cpp
-List KF_filtering_cpp(NumericMatrix Y, NumericVector initial_mean, NumericMatrix initial_var, NumericMatrix phi, NumericMatrix psi, NumericMatrix sigmaV2, NumericMatrix sigmaW2);
-RcppExport SEXP HyvarinenSSM_KF_filtering_cpp(SEXP YSEXP, SEXP initial_meanSEXP, SEXP initial_varSEXP, SEXP phiSEXP, SEXP psiSEXP, SEXP sigmaV2SEXP, SEXP sigmaW2SEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericMatrix >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type initial_mean(initial_meanSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type initial_var(initial_varSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type phi(phiSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type psi(psiSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type sigmaV2(sigmaV2SEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type sigmaW2(sigmaW2SEXP);
-    __result = Rcpp::wrap(KF_filtering_cpp(Y, initial_mean, initial_var, phi, psi, sigmaV2, sigmaW2));
-    return __result;
-END_RCPP
-}
 // multinomial_resampling_n_
 IntegerVector multinomial_resampling_n_(const NumericVector& weights, int ndraws);
 RcppExport SEXP HyvarinenSSM_multinomial_resampling_n_(SEXP weightsSEXP, SEXP ndrawsSEXP) {
@@ -116,6 +80,42 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type ndraws(ndrawsSEXP);
     Rcpp::traits::input_parameter< double >::type u(uSEXP);
     __result = Rcpp::wrap(systematic_resampling_n_(weights, ndraws, u));
+    return __result;
+END_RCPP
+}
+// KF_assimilate_one_cpp
+List KF_assimilate_one_cpp(NumericVector Yt, int t, NumericVector initial_mean, NumericMatrix initial_var, NumericMatrix phi, NumericMatrix psi, NumericMatrix sigmaV2, NumericMatrix sigmaW2, List KF_current);
+RcppExport SEXP HyvarinenSSM_KF_assimilate_one_cpp(SEXP YtSEXP, SEXP tSEXP, SEXP initial_meanSEXP, SEXP initial_varSEXP, SEXP phiSEXP, SEXP psiSEXP, SEXP sigmaV2SEXP, SEXP sigmaW2SEXP, SEXP KF_currentSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type Yt(YtSEXP);
+    Rcpp::traits::input_parameter< int >::type t(tSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type initial_mean(initial_meanSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type initial_var(initial_varSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type phi(phiSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type psi(psiSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type sigmaV2(sigmaV2SEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type sigmaW2(sigmaW2SEXP);
+    Rcpp::traits::input_parameter< List >::type KF_current(KF_currentSEXP);
+    __result = Rcpp::wrap(KF_assimilate_one_cpp(Yt, t, initial_mean, initial_var, phi, psi, sigmaV2, sigmaW2, KF_current));
+    return __result;
+END_RCPP
+}
+// KF_filtering_cpp
+List KF_filtering_cpp(NumericMatrix Y, NumericVector initial_mean, NumericMatrix initial_var, NumericMatrix phi, NumericMatrix psi, NumericMatrix sigmaV2, NumericMatrix sigmaW2);
+RcppExport SEXP HyvarinenSSM_KF_filtering_cpp(SEXP YSEXP, SEXP initial_meanSEXP, SEXP initial_varSEXP, SEXP phiSEXP, SEXP psiSEXP, SEXP sigmaV2SEXP, SEXP sigmaW2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericMatrix >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type initial_mean(initial_meanSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type initial_var(initial_varSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type phi(phiSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type psi(psiSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type sigmaV2(sigmaV2SEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type sigmaW2(sigmaW2SEXP);
+    __result = Rcpp::wrap(KF_filtering_cpp(Y, initial_mean, initial_var, phi, psi, sigmaV2, sigmaW2));
     return __result;
 END_RCPP
 }

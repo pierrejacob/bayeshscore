@@ -1,5 +1,5 @@
 ##################################################################################################
-# Example 6: Kangaroo population models (Knap and Valpine, 2012)
+# Example 6: Kangaroo population models (Knape and Valpine, 2012)
 ##################################################################################################
 rm(list = ls())
 library(HyvarinenSSM)
