@@ -55,12 +55,12 @@ for (t in 1:nobservations) {
   normw = smc2_results$normw_history[[t+1]]
   thetas = smc2_results$thetas_history[[t+1]]
   for (i in 1:Ntheta){
-    phi = thetas[1,i]
-    sigmaW2 = thetas[2,i]
-    psi = thetas[3,i]
-    sigmaV2 = thetas[4,i]
-    initial_mean = 0
-    initial_var = (sigmaW2)/(1-phi^2)
+    phi = matrix(thetas[1,i])
+    sigmaW2 = matrix(thetas[2,i])
+    psi = matrix(thetas[3,i])
+    sigmaV2 = matrix(thetas[4,i])
+    initial_mean = matrix(0)
+    initial_var = matrix((sigmaW2)/(1-phi^2))
     KF = KF_filtering(observations[,1:t,drop=FALSE],phi,psi,sigmaV2,sigmaW2,initial_mean,initial_var)
     xmeanKF[t] = xmeanKF[t] + KF[[t]]$muX_t_t*normw[i]
   }

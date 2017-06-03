@@ -6,6 +6,42 @@
 
 using namespace Rcpp;
 
+// KF_assimilate_one_cpp
+List KF_assimilate_one_cpp(NumericVector Yt, int t, NumericVector initial_mean, NumericMatrix initial_var, NumericMatrix phi, NumericMatrix psi, NumericMatrix sigmaV2, NumericMatrix sigmaW2, List KF_current);
+RcppExport SEXP HyvarinenSSM_KF_assimilate_one_cpp(SEXP YtSEXP, SEXP tSEXP, SEXP initial_meanSEXP, SEXP initial_varSEXP, SEXP phiSEXP, SEXP psiSEXP, SEXP sigmaV2SEXP, SEXP sigmaW2SEXP, SEXP KF_currentSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type Yt(YtSEXP);
+    Rcpp::traits::input_parameter< int >::type t(tSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type initial_mean(initial_meanSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type initial_var(initial_varSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type phi(phiSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type psi(psiSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type sigmaV2(sigmaV2SEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type sigmaW2(sigmaW2SEXP);
+    Rcpp::traits::input_parameter< List >::type KF_current(KF_currentSEXP);
+    __result = Rcpp::wrap(KF_assimilate_one_cpp(Yt, t, initial_mean, initial_var, phi, psi, sigmaV2, sigmaW2, KF_current));
+    return __result;
+END_RCPP
+}
+// KF_filtering_cpp
+List KF_filtering_cpp(NumericMatrix Y, NumericVector initial_mean, NumericMatrix initial_var, NumericMatrix phi, NumericMatrix psi, NumericMatrix sigmaV2, NumericMatrix sigmaW2);
+RcppExport SEXP HyvarinenSSM_KF_filtering_cpp(SEXP YSEXP, SEXP initial_meanSEXP, SEXP initial_varSEXP, SEXP phiSEXP, SEXP psiSEXP, SEXP sigmaV2SEXP, SEXP sigmaW2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericMatrix >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type initial_mean(initial_meanSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type initial_var(initial_varSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type phi(phiSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type psi(psiSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type sigmaV2(sigmaV2SEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type sigmaW2(sigmaW2SEXP);
+    __result = Rcpp::wrap(KF_filtering_cpp(Y, initial_mean, initial_var, phi, psi, sigmaV2, sigmaW2));
+    return __result;
+END_RCPP
+}
 // multinomial_resampling_n_
 IntegerVector multinomial_resampling_n_(const NumericVector& weights, int ndraws);
 RcppExport SEXP HyvarinenSSM_multinomial_resampling_n_(SEXP weightsSEXP, SEXP ndrawsSEXP) {
@@ -44,19 +80,6 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
-// rmvnorm_transpose_cholesky
-NumericMatrix rmvnorm_transpose_cholesky(int nsamples, const NumericVector& mean, const Eigen::MatrixXd& cholesky_covariance);
-RcppExport SEXP HyvarinenSSM_rmvnorm_transpose_cholesky(SEXP nsamplesSEXP, SEXP meanSEXP, SEXP cholesky_covarianceSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< int >::type nsamples(nsamplesSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type mean(meanSEXP);
-    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type cholesky_covariance(cholesky_covarianceSEXP);
-    __result = Rcpp::wrap(rmvnorm_transpose_cholesky(nsamples, mean, cholesky_covariance));
-    return __result;
-END_RCPP
-}
 // dmvnorm
 NumericVector dmvnorm(const NumericMatrix& x, const NumericVector& mean, const NumericMatrix& covariance);
 RcppExport SEXP HyvarinenSSM_dmvnorm(SEXP xSEXP, SEXP meanSEXP, SEXP covarianceSEXP) {
@@ -83,73 +106,6 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
-// dmvnorm_transpose_cholesky
-NumericVector dmvnorm_transpose_cholesky(const NumericMatrix& x, const NumericVector& mean, const Eigen::MatrixXd& cholesky_covariance);
-RcppExport SEXP HyvarinenSSM_dmvnorm_transpose_cholesky(SEXP xSEXP, SEXP meanSEXP, SEXP cholesky_covarianceSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< const NumericMatrix& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type mean(meanSEXP);
-    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type cholesky_covariance(cholesky_covarianceSEXP);
-    __result = Rcpp::wrap(dmvnorm_transpose_cholesky(x, mean, cholesky_covariance));
-    return __result;
-END_RCPP
-}
-// one_step_pz_vector
-NumericMatrix one_step_pz_vector(NumericMatrix xparticles, NumericVector alphas, double t, NumericVector parameters);
-RcppExport SEXP HyvarinenSSM_one_step_pz_vector(SEXP xparticlesSEXP, SEXP alphasSEXP, SEXP tSEXP, SEXP parametersSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericMatrix >::type xparticles(xparticlesSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type alphas(alphasSEXP);
-    Rcpp::traits::input_parameter< double >::type t(tSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type parameters(parametersSEXP);
-    __result = Rcpp::wrap(one_step_pz_vector(xparticles, alphas, t, parameters));
-    return __result;
-END_RCPP
-}
-// pz_generate_randomness_cpp
-NumericVector pz_generate_randomness_cpp(int nparticles, int datalength);
-RcppExport SEXP HyvarinenSSM_pz_generate_randomness_cpp(SEXP nparticlesSEXP, SEXP datalengthSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< int >::type nparticles(nparticlesSEXP);
-    Rcpp::traits::input_parameter< int >::type datalength(datalengthSEXP);
-    __result = Rcpp::wrap(pz_generate_randomness_cpp(nparticles, datalength));
-    return __result;
-END_RCPP
-}
-// pz_perturb_randomness_cpp
-NumericVector pz_perturb_randomness_cpp(const NumericVector& randomness, double rho);
-RcppExport SEXP HyvarinenSSM_pz_perturb_randomness_cpp(SEXP randomnessSEXP, SEXP rhoSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< const NumericVector& >::type randomness(randomnessSEXP);
-    Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
-    __result = Rcpp::wrap(pz_perturb_randomness_cpp(randomness, rho));
-    return __result;
-END_RCPP
-}
-// rtransition_logistic_c
-NumericVector rtransition_logistic_c(NumericVector Xt, double delta_t, double dt, double sigma, double r, double b);
-RcppExport SEXP HyvarinenSSM_rtransition_logistic_c(SEXP XtSEXP, SEXP delta_tSEXP, SEXP dtSEXP, SEXP sigmaSEXP, SEXP rSEXP, SEXP bSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericVector >::type Xt(XtSEXP);
-    Rcpp::traits::input_parameter< double >::type delta_t(delta_tSEXP);
-    Rcpp::traits::input_parameter< double >::type dt(dtSEXP);
-    Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
-    Rcpp::traits::input_parameter< double >::type r(rSEXP);
-    Rcpp::traits::input_parameter< double >::type b(bSEXP);
-    __result = Rcpp::wrap(rtransition_logistic_c(Xt, delta_t, dt, sigma, r, b));
-    return __result;
-END_RCPP
-}
 // systematic_resampling_n_
 IntegerVector systematic_resampling_n_(const NumericVector& weights, int ndraws, double u);
 RcppExport SEXP HyvarinenSSM_systematic_resampling_n_(SEXP weightsSEXP, SEXP ndrawsSEXP, SEXP uSEXP) {
@@ -160,6 +116,264 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type ndraws(ndrawsSEXP);
     Rcpp::traits::input_parameter< double >::type u(uSEXP);
     __result = Rcpp::wrap(systematic_resampling_n_(weights, ndraws, u));
+    return __result;
+END_RCPP
+}
+// rtransition_logistic_cpp
+NumericMatrix rtransition_logistic_cpp(const NumericMatrix& Xold, const double& delta_t, const double& dt, const double& sigma, const double& r, const double& b);
+RcppExport SEXP HyvarinenSSM_rtransition_logistic_cpp(SEXP XoldSEXP, SEXP delta_tSEXP, SEXP dtSEXP, SEXP sigmaSEXP, SEXP rSEXP, SEXP bSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type Xold(XoldSEXP);
+    Rcpp::traits::input_parameter< const double& >::type delta_t(delta_tSEXP);
+    Rcpp::traits::input_parameter< const double& >::type dt(dtSEXP);
+    Rcpp::traits::input_parameter< const double& >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< const double& >::type r(rSEXP);
+    Rcpp::traits::input_parameter< const double& >::type b(bSEXP);
+    __result = Rcpp::wrap(rtransition_logistic_cpp(Xold, delta_t, dt, sigma, r, b));
+    return __result;
+END_RCPP
+}
+// rinitial_SVLevy_cpp
+NumericMatrix rinitial_SVLevy_cpp(int N, double t, double xi, double w2, double lambda);
+RcppExport SEXP HyvarinenSSM_rinitial_SVLevy_cpp(SEXP NSEXP, SEXP tSEXP, SEXP xiSEXP, SEXP w2SEXP, SEXP lambdaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< int >::type N(NSEXP);
+    Rcpp::traits::input_parameter< double >::type t(tSEXP);
+    Rcpp::traits::input_parameter< double >::type xi(xiSEXP);
+    Rcpp::traits::input_parameter< double >::type w2(w2SEXP);
+    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    __result = Rcpp::wrap(rinitial_SVLevy_cpp(N, t, xi, w2, lambda));
+    return __result;
+END_RCPP
+}
+// rtransition_SVLevy_cpp
+NumericMatrix rtransition_SVLevy_cpp(NumericMatrix Xold, double t_1, double t, double xi, double w2, double lambda);
+RcppExport SEXP HyvarinenSSM_rtransition_SVLevy_cpp(SEXP XoldSEXP, SEXP t_1SEXP, SEXP tSEXP, SEXP xiSEXP, SEXP w2SEXP, SEXP lambdaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericMatrix >::type Xold(XoldSEXP);
+    Rcpp::traits::input_parameter< double >::type t_1(t_1SEXP);
+    Rcpp::traits::input_parameter< double >::type t(tSEXP);
+    Rcpp::traits::input_parameter< double >::type xi(xiSEXP);
+    Rcpp::traits::input_parameter< double >::type w2(w2SEXP);
+    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    __result = Rcpp::wrap(rtransition_SVLevy_cpp(Xold, t_1, t, xi, w2, lambda));
+    return __result;
+END_RCPP
+}
+// dobs_SVLevy_cpp
+NumericMatrix dobs_SVLevy_cpp(NumericVector Yt, NumericMatrix Xts, double mu, double beta, bool log);
+RcppExport SEXP HyvarinenSSM_dobs_SVLevy_cpp(SEXP YtSEXP, SEXP XtsSEXP, SEXP muSEXP, SEXP betaSEXP, SEXP logSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type Yt(YtSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Xts(XtsSEXP);
+    Rcpp::traits::input_parameter< double >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< bool >::type log(logSEXP);
+    __result = Rcpp::wrap(dobs_SVLevy_cpp(Yt, Xts, mu, beta, log));
+    return __result;
+END_RCPP
+}
+// d1logdobs_SVLevy_cpp
+NumericMatrix d1logdobs_SVLevy_cpp(NumericVector Yt, NumericMatrix Xts, double mu, double beta);
+RcppExport SEXP HyvarinenSSM_d1logdobs_SVLevy_cpp(SEXP YtSEXP, SEXP XtsSEXP, SEXP muSEXP, SEXP betaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type Yt(YtSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Xts(XtsSEXP);
+    Rcpp::traits::input_parameter< double >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
+    __result = Rcpp::wrap(d1logdobs_SVLevy_cpp(Yt, Xts, mu, beta));
+    return __result;
+END_RCPP
+}
+// d2logdobs_SVLevy_cpp
+NumericMatrix d2logdobs_SVLevy_cpp(NumericVector Yt, NumericMatrix Xts, double mu, double beta);
+RcppExport SEXP HyvarinenSSM_d2logdobs_SVLevy_cpp(SEXP YtSEXP, SEXP XtsSEXP, SEXP muSEXP, SEXP betaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type Yt(YtSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Xts(XtsSEXP);
+    Rcpp::traits::input_parameter< double >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
+    __result = Rcpp::wrap(d2logdobs_SVLevy_cpp(Yt, Xts, mu, beta));
+    return __result;
+END_RCPP
+}
+// rinitial_SVLevy_multifactor_cpp
+NumericMatrix rinitial_SVLevy_multifactor_cpp(int N, double t, double xi, double w2, double lambda1, double lambda2, double w);
+RcppExport SEXP HyvarinenSSM_rinitial_SVLevy_multifactor_cpp(SEXP NSEXP, SEXP tSEXP, SEXP xiSEXP, SEXP w2SEXP, SEXP lambda1SEXP, SEXP lambda2SEXP, SEXP wSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< int >::type N(NSEXP);
+    Rcpp::traits::input_parameter< double >::type t(tSEXP);
+    Rcpp::traits::input_parameter< double >::type xi(xiSEXP);
+    Rcpp::traits::input_parameter< double >::type w2(w2SEXP);
+    Rcpp::traits::input_parameter< double >::type lambda1(lambda1SEXP);
+    Rcpp::traits::input_parameter< double >::type lambda2(lambda2SEXP);
+    Rcpp::traits::input_parameter< double >::type w(wSEXP);
+    __result = Rcpp::wrap(rinitial_SVLevy_multifactor_cpp(N, t, xi, w2, lambda1, lambda2, w));
+    return __result;
+END_RCPP
+}
+// rtransition_SVLevy_multifactor_cpp
+NumericMatrix rtransition_SVLevy_multifactor_cpp(NumericMatrix Xold, double t_1, double t, double xi, double w2, double lambda1, double lambda2, double w);
+RcppExport SEXP HyvarinenSSM_rtransition_SVLevy_multifactor_cpp(SEXP XoldSEXP, SEXP t_1SEXP, SEXP tSEXP, SEXP xiSEXP, SEXP w2SEXP, SEXP lambda1SEXP, SEXP lambda2SEXP, SEXP wSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericMatrix >::type Xold(XoldSEXP);
+    Rcpp::traits::input_parameter< double >::type t_1(t_1SEXP);
+    Rcpp::traits::input_parameter< double >::type t(tSEXP);
+    Rcpp::traits::input_parameter< double >::type xi(xiSEXP);
+    Rcpp::traits::input_parameter< double >::type w2(w2SEXP);
+    Rcpp::traits::input_parameter< double >::type lambda1(lambda1SEXP);
+    Rcpp::traits::input_parameter< double >::type lambda2(lambda2SEXP);
+    Rcpp::traits::input_parameter< double >::type w(wSEXP);
+    __result = Rcpp::wrap(rtransition_SVLevy_multifactor_cpp(Xold, t_1, t, xi, w2, lambda1, lambda2, w));
+    return __result;
+END_RCPP
+}
+// dobs_SVLevy_multifactor_cpp
+NumericMatrix dobs_SVLevy_multifactor_cpp(NumericVector Yt, NumericMatrix Xts, double mu, double beta, bool log);
+RcppExport SEXP HyvarinenSSM_dobs_SVLevy_multifactor_cpp(SEXP YtSEXP, SEXP XtsSEXP, SEXP muSEXP, SEXP betaSEXP, SEXP logSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type Yt(YtSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Xts(XtsSEXP);
+    Rcpp::traits::input_parameter< double >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< bool >::type log(logSEXP);
+    __result = Rcpp::wrap(dobs_SVLevy_multifactor_cpp(Yt, Xts, mu, beta, log));
+    return __result;
+END_RCPP
+}
+// d1logdobs_SVLevy_multifactor_cpp
+NumericMatrix d1logdobs_SVLevy_multifactor_cpp(NumericVector Yt, NumericMatrix Xts, double mu, double beta);
+RcppExport SEXP HyvarinenSSM_d1logdobs_SVLevy_multifactor_cpp(SEXP YtSEXP, SEXP XtsSEXP, SEXP muSEXP, SEXP betaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type Yt(YtSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Xts(XtsSEXP);
+    Rcpp::traits::input_parameter< double >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
+    __result = Rcpp::wrap(d1logdobs_SVLevy_multifactor_cpp(Yt, Xts, mu, beta));
+    return __result;
+END_RCPP
+}
+// d2logdobs_SVLevy_multifactor_cpp
+NumericMatrix d2logdobs_SVLevy_multifactor_cpp(NumericVector Yt, NumericMatrix Xts, double mu, double beta);
+RcppExport SEXP HyvarinenSSM_d2logdobs_SVLevy_multifactor_cpp(SEXP YtSEXP, SEXP XtsSEXP, SEXP muSEXP, SEXP betaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type Yt(YtSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Xts(XtsSEXP);
+    Rcpp::traits::input_parameter< double >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
+    __result = Rcpp::wrap(d2logdobs_SVLevy_multifactor_cpp(Yt, Xts, mu, beta));
+    return __result;
+END_RCPP
+}
+// rinitial_SVLevy_multifactorleverage_cpp
+NumericMatrix rinitial_SVLevy_multifactorleverage_cpp(int N, double t, double xi, double w2, double lambda1, double lambda2, double w);
+RcppExport SEXP HyvarinenSSM_rinitial_SVLevy_multifactorleverage_cpp(SEXP NSEXP, SEXP tSEXP, SEXP xiSEXP, SEXP w2SEXP, SEXP lambda1SEXP, SEXP lambda2SEXP, SEXP wSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< int >::type N(NSEXP);
+    Rcpp::traits::input_parameter< double >::type t(tSEXP);
+    Rcpp::traits::input_parameter< double >::type xi(xiSEXP);
+    Rcpp::traits::input_parameter< double >::type w2(w2SEXP);
+    Rcpp::traits::input_parameter< double >::type lambda1(lambda1SEXP);
+    Rcpp::traits::input_parameter< double >::type lambda2(lambda2SEXP);
+    Rcpp::traits::input_parameter< double >::type w(wSEXP);
+    __result = Rcpp::wrap(rinitial_SVLevy_multifactorleverage_cpp(N, t, xi, w2, lambda1, lambda2, w));
+    return __result;
+END_RCPP
+}
+// rtransition_SVLevy_multifactorleverage_cpp
+NumericMatrix rtransition_SVLevy_multifactorleverage_cpp(NumericMatrix Xold, double t_1, double t, double xi, double w2, double lambda1, double lambda2, double w);
+RcppExport SEXP HyvarinenSSM_rtransition_SVLevy_multifactorleverage_cpp(SEXP XoldSEXP, SEXP t_1SEXP, SEXP tSEXP, SEXP xiSEXP, SEXP w2SEXP, SEXP lambda1SEXP, SEXP lambda2SEXP, SEXP wSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericMatrix >::type Xold(XoldSEXP);
+    Rcpp::traits::input_parameter< double >::type t_1(t_1SEXP);
+    Rcpp::traits::input_parameter< double >::type t(tSEXP);
+    Rcpp::traits::input_parameter< double >::type xi(xiSEXP);
+    Rcpp::traits::input_parameter< double >::type w2(w2SEXP);
+    Rcpp::traits::input_parameter< double >::type lambda1(lambda1SEXP);
+    Rcpp::traits::input_parameter< double >::type lambda2(lambda2SEXP);
+    Rcpp::traits::input_parameter< double >::type w(wSEXP);
+    __result = Rcpp::wrap(rtransition_SVLevy_multifactorleverage_cpp(Xold, t_1, t, xi, w2, lambda1, lambda2, w));
+    return __result;
+END_RCPP
+}
+// dobs_SVLevy_multifactorleverage_cpp
+NumericMatrix dobs_SVLevy_multifactorleverage_cpp(NumericVector Yt, NumericMatrix Xts, double mu, double beta, double xi, double lambda1, double lambda2, double w, double rho1, double rho2, bool log);
+RcppExport SEXP HyvarinenSSM_dobs_SVLevy_multifactorleverage_cpp(SEXP YtSEXP, SEXP XtsSEXP, SEXP muSEXP, SEXP betaSEXP, SEXP xiSEXP, SEXP lambda1SEXP, SEXP lambda2SEXP, SEXP wSEXP, SEXP rho1SEXP, SEXP rho2SEXP, SEXP logSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type Yt(YtSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Xts(XtsSEXP);
+    Rcpp::traits::input_parameter< double >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< double >::type xi(xiSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda1(lambda1SEXP);
+    Rcpp::traits::input_parameter< double >::type lambda2(lambda2SEXP);
+    Rcpp::traits::input_parameter< double >::type w(wSEXP);
+    Rcpp::traits::input_parameter< double >::type rho1(rho1SEXP);
+    Rcpp::traits::input_parameter< double >::type rho2(rho2SEXP);
+    Rcpp::traits::input_parameter< bool >::type log(logSEXP);
+    __result = Rcpp::wrap(dobs_SVLevy_multifactorleverage_cpp(Yt, Xts, mu, beta, xi, lambda1, lambda2, w, rho1, rho2, log));
+    return __result;
+END_RCPP
+}
+// d1logdobs_SVLevy_multifactorleverage_cpp
+NumericMatrix d1logdobs_SVLevy_multifactorleverage_cpp(NumericVector Yt, NumericMatrix Xts, double mu, double beta, double xi, double lambda1, double lambda2, double w, double rho1, double rho2);
+RcppExport SEXP HyvarinenSSM_d1logdobs_SVLevy_multifactorleverage_cpp(SEXP YtSEXP, SEXP XtsSEXP, SEXP muSEXP, SEXP betaSEXP, SEXP xiSEXP, SEXP lambda1SEXP, SEXP lambda2SEXP, SEXP wSEXP, SEXP rho1SEXP, SEXP rho2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type Yt(YtSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Xts(XtsSEXP);
+    Rcpp::traits::input_parameter< double >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< double >::type xi(xiSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda1(lambda1SEXP);
+    Rcpp::traits::input_parameter< double >::type lambda2(lambda2SEXP);
+    Rcpp::traits::input_parameter< double >::type w(wSEXP);
+    Rcpp::traits::input_parameter< double >::type rho1(rho1SEXP);
+    Rcpp::traits::input_parameter< double >::type rho2(rho2SEXP);
+    __result = Rcpp::wrap(d1logdobs_SVLevy_multifactorleverage_cpp(Yt, Xts, mu, beta, xi, lambda1, lambda2, w, rho1, rho2));
+    return __result;
+END_RCPP
+}
+// d2logdobs_SVLevy_multifactorleverage_cpp
+NumericMatrix d2logdobs_SVLevy_multifactorleverage_cpp(NumericVector Yt, NumericMatrix Xts, double mu, double beta);
+RcppExport SEXP HyvarinenSSM_d2logdobs_SVLevy_multifactorleverage_cpp(SEXP YtSEXP, SEXP XtsSEXP, SEXP muSEXP, SEXP betaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type Yt(YtSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Xts(XtsSEXP);
+    Rcpp::traits::input_parameter< double >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
+    __result = Rcpp::wrap(d2logdobs_SVLevy_multifactorleverage_cpp(Yt, Xts, mu, beta));
     return __result;
 END_RCPP
 }
