@@ -3,7 +3,7 @@ using namespace Rcpp;
 using namespace std;
 
 // [[Rcpp::export]]
-NumericVector rtransition_logistic_c(NumericVector Xt, double delta_t, double dt, double sigma, double r, double b){
+NumericVector rtransition_logistic_cpp(NumericVector Xt, double delta_t, double dt, double sigma, double r, double b){
   RNGScope scope;
   int N = Xt.size();
   NumericVector logXtold = log(Xt);

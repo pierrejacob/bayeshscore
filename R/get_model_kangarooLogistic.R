@@ -75,7 +75,7 @@ get_model_kangarooLogistic = function(timesteps = data_kangaroo["time",],
   # outputs: updated states (dimX by Nx)
   model$rtransition = function(Xs,t,theta){
     delta_t = timesteps[t] - timesteps[t-1]
-    return(matrix(rtransition_logistic_c(c(Xs), delta_t, stepsize, theta[1], theta[3], theta[4]), ncol = ncol(Xs)))
+    return(matrix(rtransition_logistic_cpp(c(Xs), delta_t, stepsize, theta[1], theta[3], theta[4]), ncol = ncol(Xs)))
   }
   # observation density
   # inputs: single observation Yt (dimY by 1), states Xts (dimX by Nx), time t, theta (single vector), log (TRUE by default)
