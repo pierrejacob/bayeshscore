@@ -66,7 +66,6 @@ List KF_filtering_cpp(NumericMatrix Y,
   int nobservations = Y.ncol();
   List KF(nobservations);
   for (int t = 0; t < nobservations; t ++){
-    // KF = KF_assimilate_one_c(Y(_,t), t, initial_mean, initial_var, phi, psi, sigmaV2, sigmaW2, KF);
     KF = KF_assimilate_one_cpp(Y(_,t), t, initial_mean, initial_var, phi, psi, sigmaV2, sigmaW2, KF);
   }
   return KF;
