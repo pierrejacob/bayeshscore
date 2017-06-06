@@ -78,7 +78,7 @@ smc2_ = function(observations, model, algorithmic_parameters){
   logtargetdensities = apply(thetas,2,model$dprior) # log target density at current particles
   normw = rep(1/Ntheta, Ntheta) # normalized weights
   logw = rep(0, Ntheta) # log normalized weights
-  if (algorithmic_parameters$store_theta){
+  if (algorithmic_parameters$store_thetas_history){
     thetas_history[[1]] = thetas
     normw_history[[1]] = normw
   }
@@ -155,11 +155,11 @@ smc2_ = function(observations, model, algorithmic_parameters){
     if (!is.na(results$rejuvenation_rate)) {rejuvenation_rate = c(rejuvenation_rate, results$rejuvenation_rate)}
     if (!is.na(results$increase_Nx_times)) {increase_Nx_times = c(increase_Nx_times, results$increase_Nx_times)}
     if (!is.na(results$increase_Nx_values)) {increase_Nx_values = c(increase_Nx_values, results$increase_Nx_values)}
-    if (algorithmic_parameters$store_theta){
+    if (algorithmic_parameters$store_thetas_history){
       thetas_history[[t+1]] = thetas
       normw_history[[t+1]] = normw
     }
-    if (algorithmic_parameters$store_X){
+    if (algorithmic_parameters$store_X_history){
       PF_history[[t+1]] = PFs
     }
     #-------------------------------------------------------------------------------------------------------
@@ -182,7 +182,7 @@ smc2_ = function(observations, model, algorithmic_parameters){
                             increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values,
                             method = 'SMC2')
       # if the history of x-particles is not saved, just keep the most recent ones
-      if (algorithmic_parameters$store_X){
+      if (algorithmic_parameters$store_X_history){
         results_so_far$PF_history_no_tree = lapply(1:(t+1),function(j)lapply(1:Ntheta,function(i)PF_history[[j]][[i]][names(PF_history[[j]][[i]])!="tree"]))
         results_so_far$trees_attributes_history = lapply(1:(t+1),function(j)trees_getattributes(lapply(1:Ntheta,function(i)PF_history[[j]][[i]]$tree)))
       } else {
@@ -190,7 +190,7 @@ smc2_ = function(observations, model, algorithmic_parameters){
         required_to_resume$trees_attributes = trees_getattributes(lapply(1:Ntheta,function(i)PFs[[i]]$tree))
       }
       # if the history of theta-particles is not saved, just keep the most recent ones
-      if (!algorithmic_parameters$store_theta){
+      if (!algorithmic_parameters$store_thetas_history){
         required_to_resume$thetas = thetas
         required_to_resume$normw = normw
       }
@@ -212,8 +212,13 @@ smc2_ = function(observations, model, algorithmic_parameters){
     cat(paste("SMC2: T = ",toString(nobservations),", Ntheta = ",toString(Ntheta),", Nx (last) = ",toString(PFs[[1]]$Nx),"\n",sep=""))
     print(time_end)
   }
-  return(list(thetas_history = thetas_history, normw_history = normw_history, logtargetdensities = logtargetdensities,
-              PF_history = PF_history, logevidence = cumsum(incr_logevidence), hscore = cumsum(incr_hscore),
+  # If no need to store the latest particles or byproducts, set them to NULL before returning the results
+  if (!algorithmic_parameters$store_last_thetas) {thetas = NULL; normw = NULL}
+  if (!algorithmic_parameters$store_last_X) {PFs = NULL}
+  # Return the results as a list
+  return(list(thetas = thetas, normw = normw, PFs = PFs, logtargetdensities = logtargetdensities,
+              thetas_history = thetas_history, normw_history = normw_history, PF_history = PF_history,
+              logevidence = cumsum(incr_logevidence), hscore = cumsum(incr_hscore),
               ESS = ESS, rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
               increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values,
               method = 'SMC2', algorithmic_parameters = algorithmic_parameters))

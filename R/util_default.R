@@ -6,31 +6,44 @@
 #'@description Set the missing algorithmic parameters to their default values
 #'@export
 set_default_algorithmic_parameters = function(observations, model, algorithmic_parameters){
+  # Number of theta-particles // Number of x-particles
   if (is.null(algorithmic_parameters$Ntheta)) {algorithmic_parameters$Ntheta = model$dimtheta*(2^7)}
   if (is.null(algorithmic_parameters$Nx)) {algorithmic_parameters$Nx = 2^ceiling(log2(ncol(observations)*model$dimY))}
+  # Adaptive Nx or not // Maximum value for Nx // Acceptance rate threshold to trigger the increase Nx step
   if (is.null(algorithmic_parameters$adaptNx)) {algorithmic_parameters$adaptNx = TRUE}
   if (is.null(algorithmic_parameters$Nx_max)) {algorithmic_parameters$Nx_max = Inf}
   if (is.null(algorithmic_parameters$min_acceptance_rate)) {algorithmic_parameters$min_acceptance_rate = 0.20}
+  # ESS threshold to trigger the resample-move steps // Number of moves per rejuvenation steps
   if (is.null(algorithmic_parameters$ess_threshold)) {algorithmic_parameters$ess_threshold = 0.5}
   if (is.null(algorithmic_parameters$nmoves)) {algorithmic_parameters$nmoves = 1}
+  # Compute the Hyvarinen score or not
   if (is.null(algorithmic_parameters$hscore)) {algorithmic_parameters$hscore = TRUE}
-  if (is.null(algorithmic_parameters$store_theta)) {algorithmic_parameters$store_theta = TRUE}
-  if (is.null(algorithmic_parameters$store_X)) {algorithmic_parameters$store_X = FALSE}
-  if (is.null(algorithmic_parameters$store_byproducts)) {algorithmic_parameters$store_byproducts = FALSE}
+  # Keep all the history of theta-particles // x-particles // byproducts (e.g. auxiliary Kalman filters)
+  if (is.null(algorithmic_parameters$store_thetas_history)) {algorithmic_parameters$store_thetas_history = FALSE}
+  if (is.null(algorithmic_parameters$store_X_history)) {algorithmic_parameters$store_X_history = FALSE}
+  if (is.null(algorithmic_parameters$store_byproducts_history)) {algorithmic_parameters$store_byproducts_history = FALSE}
+  # Keep the most recent theta-particles // x-particles // byproducts (e.g. auxiliary Kalman filters)
+  if (is.null(algorithmic_parameters$store_last_thetas)) {algorithmic_parameters$store_last_thetas = TRUE}
+  if (is.null(algorithmic_parameters$store_last_X)) {algorithmic_parameters$store_last_X = TRUE}
+  if (is.null(algorithmic_parameters$store_last_byproducts)) {algorithmic_parameters$store_last_byproducts = TRUE}
+  # Display progress bar // Display diagnostic at each step
   if (is.null(algorithmic_parameters$progress)) {algorithmic_parameters$progress = FALSE}
   if (is.null(algorithmic_parameters$verbose)) {algorithmic_parameters$verbose = FALSE}
+  # Save intermediary results in RDS file // Allocate a time budget for the computation
+  # WARNING: allocating a time budget is only relevant when the option "save" is on, otherwise
+  # all the results will be lost if the time limit is reached and the computation gets interrupted.
   if (is.null(algorithmic_parameters$save)) {algorithmic_parameters$save = FALSE}
   if (is.null(algorithmic_parameters$time_budget)) {algorithmic_parameters$time_budget = NULL}
-  # WARNING: results are saved as RDS files (.rds extension)
-  # Save in the working directory by default with timestamp as name
+  # File name where the intermediary results will be saved
+  # WARNING: must be an RDS file (.rds). Save in the working directory by default with timestamp as name.
   if (is.null(algorithmic_parameters$savefilename)) {
     algorithmic_parameters$savefilename = paste("results_",format(Sys.time(), "%Y-%m-%d_%H-%M-%S"),".rds",sep="")
   }
-  # The default resampling scheme is: systematic resampling
+  # Resampling scheme: the default option is systematic resampling
   if (is.null(algorithmic_parameters$resampling)) {
     algorithmic_parameters$resampling = function(normw) systematic_resampling_n(normw, length(normw), runif(1))
   }
-  # The default proposal for rejuvenation steps is independent draws from a fitted mixture of Normals
+  # Proposal for rejuvenation steps: the default is independent draws from a fitted mixture of Normals
   if (is.null(algorithmic_parameters$proposalmove)) {
     algorithmic_parameters$proposalmove = get_proposal_mixture()
   }

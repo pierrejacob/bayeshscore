@@ -42,8 +42,8 @@ for (t in 1:nobservations){
   #        stat_function(fun = function(y)dnorm(y,mu_post[t],sqrt(sigma2post[t])),colour="blue",size=1.5))
 }
 # Checking last posterior distribution
-plot(ggplot(data.frame(theta = smc_result$thetas_history[[nobservations+1]][1,],
-                  weight = smc_result$normw_history[[nobservations+1]])) +
+plot(ggplot(data.frame(theta = smc_result$thetas[1,],
+                  weight = smc_result$normw)) +
        geom_density(aes(theta, weight=weight),fill='blue',alpha=0.3) +
        stat_function(fun = function(y)dnorm(y,mu_post[nobservations],sqrt(sigma2post[nobservations])),colour="blue",size=1.5))
 #--------------------------------------------------------------------------------------------

@@ -36,7 +36,10 @@ smc_resume = function(RDSsave=NULL, savefilename=NULL, next_observations=NULL, n
   }
   # Run the SMC with possible interruption
   results = tryCatch(smc_resume_(RDSsave, algorithmic_parameters, next_observations),
-                     error = function(e) {cat("Time limit reached: partial results",saveprompt,"\n"); NULL})
+                     error = function(e) {
+                       if (regexpr("time limit",e$message) == -1) {print(e); return (NULL)}
+                       else {cat("Time limit reached: partial results",saveprompt,"\n"); return (NULL)}
+                     })
   # Resets time budget to infinity
   setTimeLimit()
   return (results)
@@ -76,7 +79,7 @@ smc_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL){
                  method = 'SMC'))
   }
   # Get the latest particles and their normalized weights
-  if (algorithmic_parameters$store_theta) {
+  if (algorithmic_parameters$store_thetas_history) {
     thetas = thetas_history[[n_assimilated+1]]
     normw = normw_history[[n_assimilated+1]]
   } else {
@@ -84,7 +87,7 @@ smc_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL){
     normw = RDSsave$normw
   }
   # Get the latest byproducts
-  if (algorithmic_parameters$store_byproducts) {
+  if (algorithmic_parameters$store_byproducts_history) {
     byproducts = RDSsave$byproducts_history[[n_assimilated+1]]
   } else {
     byproducts = RDSsave$byproducts
@@ -131,8 +134,8 @@ smc_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL){
     ESS[t] = results$ESS
     if (!is.na(results$rejuvenation_time)) {rejuvenation_times = c(rejuvenation_times, results$rejuvenation_time)}
     if (!is.na(results$rejuvenation_rate)) {rejuvenation_rate = c(rejuvenation_rate, results$rejuvenation_rate)}
-    if (algorithmic_parameters$store_theta){thetas_history[[t+1]] = thetas; normw_history[[t+1]] = normw}
-    if (algorithmic_parameters$store_byproducts){byproducts_history[[t+1]] = byproducts}
+    if (algorithmic_parameters$store_thetas_history){thetas_history[[t+1]] = thetas; normw_history[[t+1]] = normw}
+    if (algorithmic_parameters$store_byproducts_history){byproducts_history[[t+1]] = byproducts}
     #-------------------------------------------------------------------------------------------------------
     # Update progress bar if needed
     if (algorithmic_parameters$progress) {
@@ -152,11 +155,11 @@ smc_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL){
                             rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
                             method = 'SMC')
       # if the history of theta-particles is not saved, just keep the most recent ones
-      if (!algorithmic_parameters$store_theta){
+      if (!algorithmic_parameters$store_thetas_history){
         required_to_resume$thetas = thetas; required_to_resume$normw = normw
       }
       # if the history of byproducts is not saved, just keep the most recent ones
-      if (algorithmic_parameters$store_byproducts){
+      if (algorithmic_parameters$store_byproducts_history){
         results_so_far$byproducts_history = byproducts_history
       }
       else {
@@ -174,10 +177,15 @@ smc_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL){
     cat(paste("SMC: T = ",toString(nobservations),", Ntheta = ",toString(Ntheta),"\n",sep=""))
     print(time_end)
   }
-  return (list(thetas_history = thetas_history, normw_history = normw_history, logtargetdensities = logtargetdensities,
-               byproducts_history = byproducts_history, logevidence = cumsum(incr_logevidence), hscore = cumsum(incr_hscore),
+  # If no need to store the latest particles or byproducts, set them to NULL before returning the results
+  if (!algorithmic_parameters$store_last_thetas) {thetas = NULL; normw = NULL}
+  if (!algorithmic_parameters$store_last_byproducts) {byproducts = NULL}
+  # Return the results as a list
+  return (list(thetas = thetas, normw = normw, byproducts = byproducts, logtargetdensities = logtargetdensities,
+               thetas_history = thetas_history, normw_history = normw_history, byproducts_history = byproducts_history,
+               logevidence = cumsum(incr_logevidence), hscore = cumsum(incr_hscore),
                ESS = ESS, rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
-               method = 'SMC'))
+               method = 'SMC', algorithmic_parameters = algorithmic_parameters))
 }
 
 

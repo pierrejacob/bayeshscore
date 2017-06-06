@@ -28,7 +28,7 @@ algorithmic_parameters = list()
 algorithmic_parameters$Ntheta = 2^10
 algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$ess_threshold = 0.5
-algorithmic_parameters$nmoves = 20 # purposely set high to check the coherence of acceptance rates
+algorithmic_parameters$nmoves = 5 # purposely set high to check the coherence of acceptance rates
 algorithmic_parameters$proposalmove = get_proposal_mixture()
 #--------------------------------------------------------------------------------------------
 # Remove likelihood and predictive in order to force the use of SMC2

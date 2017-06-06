@@ -36,7 +36,10 @@ smc2_resume = function(RDSsave=NULL, savefilename=NULL, next_observations=NULL, 
   }
   # Run the SMC with possible interruption
   results = tryCatch(smc2_resume_(RDSsave, algorithmic_parameters, next_observations),
-                     error = function(e) {cat("Time limit reached: partial results",saveprompt,"\n"); NULL})
+                     error = function(e) {
+                       if (regexpr("time limit",e$message) == -1) {print(e); return (NULL)}
+                       else {cat("Time limit reached: partial results",saveprompt,"\n"); return (NULL)}
+                     })
   # Resets time budget to infinity
   setTimeLimit()
   return (results)
@@ -54,7 +57,7 @@ smc2_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL)
   thetas_history = RDSsave$thetas_history
   normw_history = RDSsave$normw_history
   # Retrieve the X-particles history by reconstructings trees
-  if (algorithmic_parameters$store_X) {
+  if (algorithmic_parameters$store_X_history) {
     PF_history = lapply(1:n_assimilated,function(t)lapply(1:Ntheta,function(i)c(RDSsave$PF_history_no_tree[[t+1]][[i]], tree = tree_reconstruct(RDSsave$trees_attributes_history[[t+1]][[i]]))))
     PF_history = c(list(NULL),PF_history)
   } else {
@@ -84,7 +87,7 @@ smc2_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL)
                 increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values,method = 'SMC2'))
   } else {
     # Get the latest particles and their normalized weights
-    if (algorithmic_parameters$store_theta) {
+    if (algorithmic_parameters$store_thetas_history) {
       thetas = thetas_history[[n_assimilated+1]]
       normw = normw_history[[n_assimilated+1]]
     } else {
@@ -92,7 +95,7 @@ smc2_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL)
       normw = RDSsave$normw
     }
     # Get the latest particle filters
-    if (algorithmic_parameters$store_X) {
+    if (algorithmic_parameters$store_X_history) {
       PFs = PF_history[[n_assimilated+1]]
     } else {
       PFs = lapply(1:Ntheta,function(i)c(RDSsave$PFs_no_trees[[i]],tree=tree_reconstruct(RDSsave$trees_attributes[[i]])))
@@ -167,11 +170,11 @@ smc2_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL)
       if (!is.na(results$rejuvenation_rate)) {rejuvenation_rate = c(rejuvenation_rate, results$rejuvenation_rate)}
       if (!is.na(results$increase_Nx_times)) {increase_Nx_times = c(increase_Nx_times, results$increase_Nx_times)}
       if (!is.na(results$increase_Nx_values)) {increase_Nx_values = c(increase_Nx_values, results$increase_Nx_values)}
-      if (algorithmic_parameters$store_theta){
+      if (algorithmic_parameters$store_thetas_history){
         thetas_history[[t+1]] = thetas
         normw_history[[t+1]] = normw
       }
-      if (algorithmic_parameters$store_X){
+      if (algorithmic_parameters$store_X_history){
         PF_history[[t+1]] = PFs
       }
       # Update progress bar if needed
@@ -192,7 +195,7 @@ smc2_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL)
                               increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values,
                               method = 'SMC2')
         # if the history of x-particles is not saved, just keep the most recent ones
-        if (algorithmic_parameters$store_X){
+        if (algorithmic_parameters$store_X_history){
           results_so_far$PF_history_no_tree = lapply(1:(t+1),function(j)lapply(1:Ntheta,function(i)PF_history[[j]][[i]][names(PF_history[[j]][[i]])!="tree"]))
           results_so_far$trees_attributes_history = lapply(1:(t+1),function(j)trees_getattributes(lapply(1:Ntheta,function(i)PF_history[[j]][[i]]$tree)))
         } else {
@@ -200,7 +203,7 @@ smc2_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL)
           required_to_resume$trees_attributes = trees_getattributes(lapply(1:Ntheta,function(i)PFs[[i]]$tree))
         }
         # if the history of theta-particles is not saved, just keep the most recent ones
-        if (!algorithmic_parameters$store_theta){
+        if (!algorithmic_parameters$store_thetas_history){
           required_to_resume$thetas = thetas
           required_to_resume$normw = normw
         }
@@ -221,10 +224,15 @@ smc2_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL)
       cat(paste("SMC2: T = ",toString(nobservations),", Ntheta = ",toString(Ntheta),", Nx (last) = ",toString(PFs[[1]]$Nx),"\n",sep=""))
       print(time_end)
     }
-    return(list(thetas_history = thetas_history, normw_history = normw_history, logevidence = cumsum(incr_logevidence),
-                logtargetdensities = logtargetdensities, hscore = cumsum(incr_hscore), ESS = ESS,
-                rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
-                PF_history = PF_history, increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values,
-                method = 'SMC2'))
+    # If no need to store the latest particles or byproducts, set them to NULL before returning the results
+    if (!algorithmic_parameters$store_last_thetas) {thetas = NULL; normw = NULL}
+    if (!algorithmic_parameters$store_last_X) {PFs = NULL}
+    # Return the results as a list
+    return(list(thetas = thetas, normw = normw, PFs = PFs, logtargetdensities = logtargetdensities,
+                thetas_history = thetas_history, normw_history = normw_history, PF_history = PF_history,
+                logevidence = cumsum(incr_logevidence), hscore = cumsum(incr_hscore),
+                ESS = ESS, rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
+                increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values,
+                method = 'SMC2', algorithmic_parameters = algorithmic_parameters))
   }
 }

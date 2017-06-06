@@ -15,7 +15,32 @@ TreeClass <<- module_tree$Tree
 # Define model
 muprior = 0
 sigma2prior = 100
-model = get_model_iid_gaussian_unknown_mean(muprior,sigma2prior)
+{
+  model = list()
+  model$observation_type = 'continuous'
+  model$dimtheta = 1
+  model$dimY = 1
+  model$dimX = 1
+  model$sigma2 = 1
+  model$rprior = function(Ntheta){
+    return (rbind(rnorm(Ntheta,muprior,sqrt(sigma2prior))))
+  }
+  model$dprior = function(theta, log = TRUE){
+    return (dnorm(theta,muprior,sqrt(sigma2prior),log))
+  }
+  model$rinitial = function(theta,N){
+    return (matrix(0, ncol = N))
+  }
+  model$rtransition = function(Xt,t,theta){
+    return (matrix(0, ncol = ncol(Xt)))
+  }
+  model$dobs = function(Yt,Xts,t,theta,log = TRUE){
+    return (rep(dnorm(Yt,mean = theta, sd = sqrt(model$sigma2), log),ncol(Xts)))
+  }
+  model$dpredictive = function(observations,t,theta,log = TRUE){
+    return (dnorm(observations[,t], theta, model$sigma2, log))
+  }
+}
 # Generate some simulated data
 nobservations = 10
 Y = rnorm(nobservations,0,1)
@@ -29,11 +54,9 @@ algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$ess_threshold = 0.5
 algorithmic_parameters$nmoves = 5 # purposely set high to check the coherence of acceptance rates
 #--------------------------------------------------------------------------------------------
-# Remove likelihood and predictive in order to force the use of SMC2
-model_nolikelihood = model
-model_nolikelihood$likelihood = NULL
-model_nolikelihood$dpredictive = NULL
 # Run SMC2
+model_nolikelihood = model
+model_nolikelihood$dpredictive = NULL
 smc2_result = hscore(observations, model_nolikelihood, algorithmic_parameters)
 #--------------------------------------------------------------------------------------------
 sigma2post = rep(NA,nobservations)
@@ -49,8 +72,8 @@ for (t in 1:nobservations){
   #        stat_function(fun = function(y)dnorm(y,mu_post[t],sqrt(sigma2post[t])),colour="blue",size=1.5))
 }
 # Checking last posterior distribution
-plot(ggplot(data.frame(theta = smc2_result$thetas_history[[nobservations+1]][1,],
-                       weight = smc2_result$normw_history[[nobservations+1]])) +
+plot(ggplot(data.frame(theta = smc2_result$thetas[1,],
+                       weight = smc2_result$normw)) +
        geom_density(aes(theta, weight=weight),fill='blue',alpha=0.3) +
        stat_function(fun = function(y)dnorm(y,mu_post[nobservations],sqrt(sigma2post[nobservations])),colour="blue",size=1.5))
 #--------------------------------------------------------------------------------------------
