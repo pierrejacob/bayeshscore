@@ -10,6 +10,7 @@ library(ggplot2)
 library(gridExtra)
 library(doParallel)
 library(foreach)
+library(wesanderson)
 set.seed(29)
 
 # Define model and data
@@ -124,6 +125,7 @@ for (s in 1:length(sigma2prior_all)){
 ggplot(criteria.df, aes(color=factor(format(sigma2prior, scientific = FALSE)), group = interaction(type,repl,sigma2prior))) +
   geom_line(aes(time,value)) +
   scale_color_discrete(expression(bold(paste(" ",sigma[0]^2)))) +
+  # scale_color_manual(expression(bold(paste(" ",sigma[0]^2))),values = wes_palette("Zissou")[c(1,2,4,5)]) +
   ylab("") + xlab("Number of observations") + facet_grid(type ~ ., scales="free") +
   # guides(colour = guide_legend(override.aes = list(size = 2))) +
   theme(strip.text.y = element_text(size = 12, colour = "black")) +
@@ -132,5 +134,6 @@ ggplot(criteria.df, aes(color=factor(format(sigma2prior, scientific = FALSE)), g
   theme(axis.title.y=element_text(margin=margin(0,10,0,0))) +
   theme(axis.title.x=element_text(margin=margin(10,0,0,0)))
 
-ggsave("example_1_OHagan_normal_mean.png",dpi = 300)
+
+# ggsave("example_1_OHagan_normal_mean.png",dpi = 300)
 

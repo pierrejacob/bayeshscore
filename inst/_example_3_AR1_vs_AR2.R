@@ -142,7 +142,7 @@ ggplot(logbayesfactors) +
   theme(axis.title.y=element_text(margin=margin(0,10,0,0))) +
   theme(axis.title.x=element_text(margin=margin(10,0,0,0)))
 
-ggsave("example_3_AR1_AR2_logBF_1_vs_2.png",dpi = 300)
+# ggsave("example_3_AR1_AR2_logBF_1_vs_2.png",dpi = 300)
 
 # Hyvarinen factor
 ggplot(h_factors) +
@@ -157,4 +157,4 @@ ggplot(h_factors) +
   theme(axis.title.y=element_text(margin=margin(0,10,0,0))) +
   theme(axis.title.x=element_text(margin=margin(10,0,0,0)))
 
-ggsave("example_3_AR1_AR2_Hyvarinen_factor_1_vs_2.png",dpi = 300)
+# ggsave("example_3_AR1_AR2_Hyvarinen_factor_1_vs_2.png",dpi = 300)

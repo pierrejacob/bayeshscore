@@ -258,20 +258,6 @@ for (i in 1:4){
                                          case = factor(i),
                                          type = factor(paste("Case ",toString(i))),
                                          sim = -1))
-  # local({i = i;
-  # slope = slope;
-  # h_factors = h_factors;
-  # plot_hfactor[[i]] <<- ggplot(subset(h_factors, case==i)) +
-  #   geom_line(aes(time, hfactor, color = case, group = repl)) +
-  #   geom_line(aes(time, time*slope), col = "blue", linetype ="dashed") +
-  #   geom_hline(yintercept = 0,linetype="dotted",size=1) +
-  #   ylab("") + facet_grid(type ~ ., scales="free") + xlab("Number of observations") +
-  #   # guides(colour = guide_legend(override.aes = list(size = 2))) +
-  #   theme(strip.text.y = element_text(size = 12, colour = "black")) +
-  #   theme(legend.text=element_text(size=12)) +
-  #   theme(legend.title=element_text(size=12)) +
-  #   theme(legend.position="none")
-  # })
 }
 # Checking H-factor
 # top-left, top-right, bottom-left, bottom-right = case 1, 2, 3, 4.
@@ -288,4 +274,4 @@ ggplot(h_factors, aes(color = factor(sim), group = interaction(case,repl), linet
   theme(axis.title.y=element_text(margin=margin(0,10,0,0))) +
   theme(axis.title.x=element_text(margin=margin(10,0,0,0)))
 
-ggsave("example_2_OHagan_Hyvarinen_factor_1_versus_2.png",dpi = 300)
+# ggsave("example_2_OHagan_Hyvarinen_factor_1_versus_2.png",dpi = 300)
