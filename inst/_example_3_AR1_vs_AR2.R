@@ -1,5 +1,5 @@
 ##################################################################################################
-# Example 4: AR(1) vs AR(2)
+# Example 3: AR(1) vs AR(2)
 ##################################################################################################
 rm(list = ls())
 library(HyvarinenSSM)
@@ -33,7 +33,7 @@ nobservations = 100
 # Case 1: true model = AR(1)
 ##################################################################################################
 true_model = 1
-true_theta = c(0.5,2)
+true_theta = c(0.5,1)
 observations1 = simulateData(model(true_model),true_theta,nobservations)
 # observations in a matrix of dimensions dimy x nobservations
 #--------------------------------------------------------------------------------------------
@@ -68,7 +68,7 @@ ggplot(results_all1) +
 # Case 2: true model = AR(2)
 ##################################################################################################
 true_model = 2
-true_theta = c(0.5,0.25,2)
+true_theta = c(0.25,0.35,1)
 observations2 = simulateData(model(true_model),true_theta,nobservations)
 # observations in a matrix of dimensions dimy x nobservations
 #--------------------------------------------------------------------------------------------
@@ -100,8 +100,12 @@ ggplot(results_all2) +
 
 
 ##################################################################################################
-# Plot results
-##################################################################################################
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+# Generate plots for paper
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+# Compute the Hyvarinen factor
 results_all = list(results_all1,results_all2)
 logbayesfactors = data.frame()
 h_factors = data.frame()
@@ -111,24 +115,46 @@ for (r in 1:repl) {
   for (i in 1:nb_models) {
     results = results_all[[i]]
     logbayes_factor = subset(results,model==1&repl==r)$logevidence - subset(results,model==2&repl==r)$logevidence
-    logbayesfactors = rbind(logbayesfactors,data.frame(case = factor(i), time = 1:nobservations, repl = r, logbayesfactor = logbayes_factor))
+    logbayesfactors = rbind(logbayesfactors,data.frame(case = factor(i),
+                                                       time = 1:nobservations,
+                                                       repl = r,
+                                                       logbayesfactor = logbayes_factor,
+                                                       type = factor(paste("Case ",toString(i)))))
     h_factor = subset(results,model==2&repl==r)$hscore - subset(results,model==1&repl==r)$hscore
-    h_factors = rbind(h_factors,data.frame(case = factor(i), time = 1:nobservations, repl = r, hfactor = h_factor))
-    local({i = i;
-    BF_plots[[i]] <<- ggplot(subset(logbayesfactors, case==i)) +
-      geom_line(aes(time, logbayesfactor, color = case, group = repl)) +
-      geom_hline(yintercept = 0,linetype="dotted",size=1) +
-      ylab("log Bayes factor");
-    HF_plots[[i]] <<- ggplot(subset(h_factors, case==i)) +
-      geom_line(aes(time, hfactor, color = case, group = repl)) +
-      geom_hline(yintercept = 0,linetype="dotted",size=1) +
-      ylab("H factor")
-    })
+    h_factors = rbind(h_factors,data.frame(case = factor(i),
+                                           time = 1:nobservations,
+                                           repl = r,
+                                           hfactor = h_factor,
+                                           type = factor(paste("Case ",toString(i)))))
   }
 }
-# Plot log Bayes factor
-# left, right = case 1, 2
-do.call(grid.arrange,c(BF_plots, ncol = 2))
-# Plot H factor
-# left, right = case 1, 2
-do.call(grid.arrange,c(HF_plots, ncol = 2))
+
+# log Bayes factor
+ggplot(logbayesfactors) +
+  geom_line(aes(time, logbayesfactor, color = case, group = interaction(case,repl))) +
+  geom_hline(yintercept = 0,linetype="dotted",size=1) +
+  ylab("log Bayes factor  [1 vs 2]") + facet_grid(. ~ type) + xlab("Number of observations") +
+  # guides(colour = guide_legend(override.aes = list(size = 2))) +
+  theme(strip.text.y = element_text(size = 12, colour = "black")) +
+  theme(legend.text=element_text(size=12)) +
+  theme(legend.title=element_text(size=12)) +
+  theme(legend.position="none") +
+  theme(axis.title.y=element_text(margin=margin(0,10,0,0))) +
+  theme(axis.title.x=element_text(margin=margin(10,0,0,0)))
+
+ggsave("example_3_AR1_AR2_logBF_1_vs_2.png",dpi = 300)
+
+# Hyvarinen factor
+ggplot(h_factors) +
+  geom_line(aes(time, hfactor, color = case, group = interaction(case,repl))) +
+  geom_hline(yintercept = 0,linetype="dotted",size=1) +
+  ylab("Hyvrärinen factor  [1 vs 2]") + facet_grid(. ~ type) + xlab("Number of observations") +
+  # guides(colour = guide_legend(override.aes = list(size = 2))) +
+  theme(strip.text.y = element_text(size = 12, colour = "black")) +
+  theme(legend.text=element_text(size=12)) +
+  theme(legend.title=element_text(size=12)) +
+  theme(legend.position="none") +
+  theme(axis.title.y=element_text(margin=margin(0,10,0,0))) +
+  theme(axis.title.x=element_text(margin=margin(10,0,0,0)))
+
+ggsave("example_3_AR1_AR2_Hyvarinen_factor_1_vs_2.png",dpi = 300)

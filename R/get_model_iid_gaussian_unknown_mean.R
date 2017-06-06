@@ -9,6 +9,7 @@ get_model_iid_gaussian_unknown_mean <- function(muprior,sigma2prior){
   # dimension of parameter
   model$dimtheta = 1
   model$dimY = 1
+
   # fix some known parameters
   model$sigma2 = 1
 

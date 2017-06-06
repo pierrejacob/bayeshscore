@@ -12,8 +12,8 @@ library(doParallel)
 library(foreach)
 set.seed(29)
 
-# Generate some data
-nobservations = 20
+# Define model and data
+nobservations = 30
 Y = rnorm(nobservations,0,1)
 observations = matrix(Y, nrow = 1)# observations in a matrix of dimensions dimy x nobservations
 
@@ -22,56 +22,115 @@ observations = matrix(Y, nrow = 1)# observations in a matrix of dimensions dimy 
 algorithmic_parameters = list()
 algorithmic_parameters$Ntheta = 2^10
 algorithmic_parameters$verbose = TRUE
-algorithmic_parameters$store_theta = TRUE
 algorithmic_parameters$ess_threshold = 0.5
-algorithmic_parameters$min_acceptance_rate = 0.5
 # The remaining algorithmic parameters are set to their default values via the functions in util_default.R
 #--------------------------------------------------------------------------------------------
-sigma2prior_all = c(1000,10000)
+repl = 10 #number of replications
+registerDoParallel(cores=5) #number of workers in parallel
+#--------------------------------------------------------------------------------------------
+sigma2prior_all = c(100,1000,10000,100000)
 results_all = data.frame()
 post_all = data.frame()
 #--------------------------------------------------------------------------------------------
-repl = 5
 ### Compute logevidence and hscore for increasing vagueness
 for (s in 1:length(sigma2prior_all)){
   sigma2prior = sigma2prior_all[s]
+  results = foreach(i=1:repl,.packages=c('HyvarinenSSM'),.verbose = TRUE) %dorng% {
+    hscore(observations, get_model_iid_gaussian_unknown_mean(0,sigma2prior), algorithmic_parameters)
+  }
   for (r in 1:repl){
-    results = hscore(observations, get_model_iid_gaussian_unknown_mean(0,sigma2prior), algorithmic_parameters)
-    results_all = rbind(results_all,data.frame(logevidence = results$logevidence,
-                                               hscore = results$hscore,
+    results_all = rbind(results_all,data.frame(logevidence = results[[r]]$logevidence,
+                                               hscore = results[[r]]$hscore,
                                                time = 1:nobservations,
                                                sigma2prior = sigma2prior,
                                                repl = r))
-    post_all = rbind(post_all,data.frame(theta = c(results$thetas_history[[nobservations+1]]),
-                                         W = results$normw_history[[nobservations+1]],
-                                         sigma2prior = sigma2prior,
-                                         repl = r))
+    post_all = rbind(post_all,data.frame(theta = c(results[[r]]$thetas),
+                                                   W = c(results[[r]]$normw),
+                                                   sigma2prior = sigma2prior,
+                                                   repl = r))
   }
 }
 #--------------------------------------------------------------------------------------------
 # Checking sample from the posterior distribution (marginal histogram)
-ggplot(post_all) +
-  geom_density(aes(theta,weight=W,fill=factor(sigma2prior),group=interaction(sigma2prior,repl)),alpha=0.6)
+ggplot(post_all, aes(color=factor(format(sigma2prior, scientific = FALSE)))) +
+  geom_density(aes(theta,weight=W,group=interaction(sigma2prior,repl))) +
+  scale_color_discrete(expression(paste(" ",sigma[0]^2))) +
+  xlab(expression(theta)) + guides(colour = guide_legend(override.aes = list(size=2)))
 #--------------------------------------------------------------------------------------------
 # Check the log-evidence
-ggplot(results_all) +
-  geom_line(aes(time, -logevidence, color = factor(sigma2prior),group=interaction(sigma2prior,repl)))
+ggplot(results_all, aes(color=factor(format(sigma2prior, scientific = FALSE)), shape = factor(format(sigma2prior, scientific = FALSE)))) +
+  geom_line(aes(time, -logevidence, group=interaction(sigma2prior,repl))) +
+  # geom_point(aes(time, -logevidence)) +
+  scale_colour_discrete(expression(paste(" ",sigma[0]^2))) +
+  # scale_shape_manual("", values=15:18) +
+  # scale_colour_discrete("") +
+  ylab("- log evidence") + guides(colour = guide_legend(override.aes = list(size = 2)))
 #--------------------------------------------------------------------------------------------
 # Check the h-score
 ggplot(results_all) +
-  geom_line(aes(time, hscore, color = factor(sigma2prior),group=interaction(sigma2prior,repl)))
+  geom_line(aes(time, hscore, color = factor(format(sigma2prior, scientific = FALSE)),group=interaction(sigma2prior,repl))) +
+  scale_colour_discrete(expression(paste(" ",sigma[0]^2))) +
+  ylab("Hyvarinen score") + guides(colour = guide_legend(override.aes = list(size=2)))
 #--------------------------------------------------------------------------------------------
-# Check the partial log-evidence with training sample size m = 1 (RESCALED BY 1/t)
-m = 1
-partial_bayes = data.frame()
-for (i in 1: length(sigma2prior_all)){
+# Check the log-evidence
+ggplot(subset(results_all,time == nobservations)) +
+  geom_boxplot(aes(factor(sigma2prior),-logevidence, color = factor(sigma2prior)),outlier.shape = NA,size=1) +
+  ylab("- log evidence") + xlab(expression(paste(" ",sigma[0]^2))) + theme(legend.position="none")
+#--------------------------------------------------------------------------------------------
+# Check the h-score
+ggplot(subset(results_all,time == nobservations)) +
+  geom_boxplot(aes(factor(sigma2prior),hscore, color = factor(sigma2prior)),outlier.shape = NA,size=1) +
+  scale_colour_discrete(expression(paste(" ",sigma[0]^2))) +
+  ylab("Hyvarinen score") + xlab(expression(paste(" ",sigma[0]^2))) + theme(legend.position="none")
+# #--------------------------------------------------------------------------------------------
+# # Check the partial log-evidence with training sample size m = 1
+# m = 1
+# partial_bayes = data.frame()
+# for (i in 1: length(sigma2prior_all)){
+#   for (r in 1:repl){
+#     logevidence = subset(results_all,sigma2prior== sigma2prior_all[i]&repl==r)$logevidence
+#     partiallogevidence = logevidence[(m+1):nobservations] - logevidence[1:m]
+#     partial_bayes = rbind(partial_bayes,data.frame(time = (m+1):nobservations, sigma2prior = factor(format(sigma2prior_all[i], scientific = FALSE)), repl = r,
+#                                                    partiallogevidence = partiallogevidence))
+#   }
+# }
+# ggplot(partial_bayes) +
+#   geom_line(aes(time, -partiallogevidence, color = sigma2prior,group=interaction(sigma2prior,repl))) +
+#   scale_colour_discrete(expression(paste(" ",sigma[0]^2)))
+
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+# Generate plots for paper
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+criteria.df = data.frame()
+for (s in 1:length(sigma2prior_all)){
+  sigma2 = sigma2prior_all[s]
   for (r in 1:repl){
-    logevidence = subset(results_all,sigma2prior== sigma2prior_all[i]&repl==r)$logevidence
-    partiallogevidence = logevidence[(m+1):nobservations] - logevidence[1:m]
-    partial_bayes = rbind(partial_bayes,data.frame(time = (m+1):nobservations, sigma2prior = sigma2prior_all[i], repl = r,
-                                                   partiallogevidence = partiallogevidence))
+    result = subset(results_all,sigma2prior==sigma2&repl==r)
+    criteria.df = rbind(criteria.df,data.frame(time = 1:nobservations,
+                                               repl = r,
+                                               sigma2prior = sigma2,
+                                               value = result$logevidence,
+                                               type = factor("- log evidence")))
+    criteria.df = rbind(criteria.df,data.frame(time = 1:nobservations,
+                                               repl = r,
+                                               sigma2prior = sigma2,
+                                               value = result$hscore,
+                                               type = factor("Hyvärinen score")))
   }
 }
-ggplot(partial_bayes) +
-  geom_line(aes(time, -partiallogevidence, color = factor(sigma2prior),group=interaction(sigma2prior,repl)))
+# plot logevidence and hscore
+ggplot(criteria.df, aes(color=factor(format(sigma2prior, scientific = FALSE)), group = interaction(type,repl,sigma2prior))) +
+  geom_line(aes(time,value)) +
+  scale_color_discrete(expression(bold(paste(" ",sigma[0]^2)))) +
+  ylab("") + xlab("Number of observations") + facet_grid(type ~ ., scales="free") +
+  # guides(colour = guide_legend(override.aes = list(size = 2))) +
+  theme(strip.text.y = element_text(size = 12, colour = "black")) +
+  theme(legend.text=element_text(size=12)) +
+  theme(legend.title=element_text(size=12)) +
+  theme(axis.title.y=element_text(margin=margin(0,10,0,0))) +
+  theme(axis.title.x=element_text(margin=margin(10,0,0,0)))
+
+ggsave("example_1_OHagan_normal_mean.png",dpi = 300)
 

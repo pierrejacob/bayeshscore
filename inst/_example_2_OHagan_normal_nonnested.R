@@ -17,8 +17,8 @@ algorithmic_parameters$store_theta = TRUE
 #--------------------------------------------------------------------------------------------
 # set hyperparameters
 muprior = 0
-sigma2prior = 100
-nu0 = 1
+sigma2prior = 1000
+nu0 = 0.1
 s02 = 1
 # define models
 model = function(i){
@@ -49,8 +49,8 @@ for (m in 1:2){
                                                  time = 1:nobservations,
                                                  model = factor(m),
                                                  repl = factor(r)))
-    post1_all = rbind(post1_all,data.frame(theta = c(results[[r]]$thetas_history[[nobservations+1]]),
-                                           W = results[[r]]$normw_history[[nobservations+1]],
+    post1_all = rbind(post1_all,data.frame(theta = c(results[[r]]$thetas),
+                                           W = results[[r]]$normw,
                                            model = factor(m),
                                            repl = factor(r)))
   }
@@ -74,8 +74,8 @@ for (m in 1:2){
                                                  time = 1:nobservations,
                                                  model = factor(m),
                                                  repl = factor(r)))
-    post2_all = rbind(post2_all,data.frame(theta = c(results[[r]]$thetas_history[[nobservations+1]]),
-                                           W = results[[r]]$normw_history[[nobservations+1]],
+    post2_all = rbind(post2_all,data.frame(theta = c(results[[r]]$thetas),
+                                           W = results[[r]]$normw,
                                            model = factor(m),
                                            repl = factor(r)))
   }
@@ -99,8 +99,8 @@ for (m in 1:2){
                                                  time = 1:nobservations,
                                                  model = factor(m),
                                                  repl = factor(r)))
-    post3_all = rbind(post3_all,data.frame(theta = c(results[[r]]$thetas_history[[nobservations+1]]),
-                                           W = results[[r]]$normw_history[[nobservations+1]],
+    post3_all = rbind(post3_all,data.frame(theta = c(results[[r]]$thetas),
+                                           W = results[[r]]$normw,
                                            model = factor(m),
                                            repl = factor(r)))
   }
@@ -124,8 +124,8 @@ for (m in 1:2){
                                                  time = 1:nobservations,
                                                  model = factor(m),
                                                  repl = factor(r)))
-    post4_all = rbind(post4_all,data.frame(theta = c(results[[r]]$thetas_history[[nobservations+1]]),
-                                           W = results[[r]]$normw_history[[nobservations+1]],
+    post4_all = rbind(post4_all,data.frame(theta = c(results[[r]]$thetas),
+                                           W = results[[r]]$normw,
                                            model = factor(m),
                                            repl = factor(r)))
   }
@@ -173,56 +173,11 @@ grid.arrange(plot_post[[1]],plot_post[[2]],
              plot_post[[7]],plot_post[[8]],
              ncol = 4, widths = c(1,1.4,1,1.4))
 #--------------------------------------------------------------------------------------------
-# Checking h score
-#--------------------------------------------------------------------------------------------
-results_all = list(results1_all, results2_all, results3_all, results4_all)
-h_factors = data.frame()
-plot_hfactor = list()
-DGP_mu = c(0,1,2,0)
-DGP_sigma2 = c(5,1,3,1)
-theta1_star = rep(0, 4)
-theta2_star = rep(0, 4)
-for (i in 1:4){
-  for (r in 1:repl) {
-    h_factor = subset(results_all[[i]],model==2&repl==r)$hscore-subset(results_all[[i]],model==1&repl==r)$hscore
-    h_factors = rbind(h_factors,data.frame(time = 1:nobservations,
-                                           repl = r,
-                                           hfactor = h_factor,
-                                           case = factor(i)))
-    thetas1 = subset(post_all[[i]],model==1&repl==r)
-    thetas2 = subset(post_all[[i]],model==2&repl==r)
-    theta1_star[i] = theta1_star[i] + sum(thetas1$theta*thetas1$W)
-    theta2_star[i] = theta2_star[i] + sum(thetas2$theta*thetas2$W)
-  }
-  # Compute the theoretical (asymptotic) speed of convergence
-  theta1_star[i] = theta1_star[i]/repl
-  theta2_star[i] = theta2_star[i]/repl
-  expected_H_model1 = (DGP_sigma2[i]+(DGP_mu[i]-theta1_star[i])^2-2)
-  expected_H_model2 = (1/theta2_star[i]^2)*(DGP_sigma2[i]+DGP_mu[i]^2-2*theta2_star[i])
-  slope = expected_H_model2 - expected_H_model1
-  # Plot h-factor (hscore model 2 minus model 1)
-  # Thus: positive = in favor of model 1, negative = in favor of model 2
-  local({i = i;
-  slope = slope;
-  h_factors = h_factors;
-  plot_hfactor[[i]] <<- ggplot(subset(h_factors, case==i)) +
-    geom_line(aes(time, hfactor, color = case, group = repl)) +
-    geom_line(aes(time, time*slope), col = "blue", linetype ="dashed") +
-    geom_hline(yintercept = 0,linetype="dotted",size=1) +
-    ylab("H factor")
-  })
-}
-# Checking H-factor
-# top-left, top-right, bottom-left, bottom-right = case 1, 2, 3, 4
-do.call(grid.arrange,c(plot_hfactor, ncol = 2))
-
-
-
-
-#--------------------------------------------------------------------------------------------
 # Sanity check (exact computation)
 #--------------------------------------------------------------------------------------------
 M = 1000
+DGP_mu = c(0,1,2,0)
+DGP_sigma2 = c(5,1,3,1)
 plot_exact = list()
 for (i in 1:4){
   expected_H_model1_exact = rep(0,4)
@@ -264,5 +219,73 @@ for (i in 1:4){
 }
 do.call(grid.arrange,c(plot_exact, ncol = 2))
 
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+# Generate plots for paper
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+# Compute the Hyvarinen factor
+results_all = list(results1_all, results2_all, results3_all, results4_all)
+h_factors = data.frame()
+theta1_star = rep(0, 4)
+theta2_star = rep(0, 4)
+plot_hfactor = list()
+for (i in 1:4){
+  for (r in 1:repl) {
+    h_factor = subset(results_all[[i]],model==2&repl==r)$hscore-subset(results_all[[i]],model==1&repl==r)$hscore
+    h_factors = rbind(h_factors,data.frame(time = 1:nobservations,
+                                           repl = r,
+                                           hfactor = h_factor,
+                                           case = factor(i),
+                                           type = factor(paste("Case ",toString(i))),
+                                           sim = 1))
+    thetas1 = subset(post_all[[i]],model==1&repl==r)
+    thetas2 = subset(post_all[[i]],model==2&repl==r)
+    theta1_star[i] = theta1_star[i] + sum(thetas1$theta*thetas1$W)
+    theta2_star[i] = theta2_star[i] + sum(thetas2$theta*thetas2$W)
+  }
+  # Compute the theoretical (asymptotic) speed of convergence
+  theta1_star[i] = theta1_star[i]/repl
+  theta2_star[i] = theta2_star[i]/repl
+  expected_H_model1 = (DGP_sigma2[i]+(DGP_mu[i]-theta1_star[i])^2-2)
+  expected_H_model2 = (1/theta2_star[i]^2)*(DGP_sigma2[i]+DGP_mu[i]^2-2*theta2_star[i])
+  slope = expected_H_model2 - expected_H_model1
+  # Plot h-factor (hscore model 2 minus model 1)
+  # Thus: positive = in favor of model 1, negative = in favor of model 2
+  h_factors = rbind(h_factors,data.frame(time = 1:nobservations,
+                                         repl = -1,
+                                         hfactor = (1:nobservations)*slope,
+                                         case = factor(i),
+                                         type = factor(paste("Case ",toString(i))),
+                                         sim = -1))
+  # local({i = i;
+  # slope = slope;
+  # h_factors = h_factors;
+  # plot_hfactor[[i]] <<- ggplot(subset(h_factors, case==i)) +
+  #   geom_line(aes(time, hfactor, color = case, group = repl)) +
+  #   geom_line(aes(time, time*slope), col = "blue", linetype ="dashed") +
+  #   geom_hline(yintercept = 0,linetype="dotted",size=1) +
+  #   ylab("") + facet_grid(type ~ ., scales="free") + xlab("Number of observations") +
+  #   # guides(colour = guide_legend(override.aes = list(size = 2))) +
+  #   theme(strip.text.y = element_text(size = 12, colour = "black")) +
+  #   theme(legend.text=element_text(size=12)) +
+  #   theme(legend.title=element_text(size=12)) +
+  #   theme(legend.position="none")
+  # })
+}
+# Checking H-factor
+# top-left, top-right, bottom-left, bottom-right = case 1, 2, 3, 4.
+# Positive = choose model 1 // Negative == choose model 2.
+ggplot(h_factors, aes(color = factor(sim), group = interaction(case,repl), linetype = factor(sim))) +
+  geom_line(aes(time, hfactor)) + scale_linetype_manual(values=c("dashed","solid")) +
+  scale_color_manual(values=c("blue","red")) +
+  geom_hline(yintercept = 0,linetype="dotted",size=1) +
+  ylab("Hyvrärinen factor  [1 vs 2]") + facet_wrap( ~ type, ncol=2, scales="free") + xlab("Number of observations") +
+  theme(strip.text.y = element_text(size = 12, colour = "black")) +
+  theme(legend.text=element_text(size=12)) +
+  theme(legend.title=element_text(size=12)) +
+  theme(legend.position="none") +
+  theme(axis.title.y=element_text(margin=margin(0,10,0,0))) +
+  theme(axis.title.x=element_text(margin=margin(10,0,0,0)))
 
-
+ggsave("example_2_OHagan_Hyvarinen_factor_1_versus_2.png",dpi = 300)
