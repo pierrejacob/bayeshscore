@@ -13,7 +13,7 @@ NumericMatrix rinitial_SVLevy_cpp(int N, double t, double xi,
   NumericMatrix X(2, N);
   // Note: Rcpp's rgamma takes shape and SCALE (1/rate) parameter
   NumericVector z0 = rgamma(N,pow(xi,2)/w2,w2/xi);
-  NumericVector k = rpois(N,lambda);
+  NumericVector k = rpois(N,lambda*pow(xi,2)/w2);
   for (int ix = 0; ix < N; ix ++){
     NumericVector c1k = runif(k(ix),0,t);
     NumericVector e1k = rexp(k(ix),xi/w2);
@@ -29,7 +29,7 @@ NumericMatrix rtransition_SVLevy_cpp(NumericMatrix Xold, double t_1, double t,
   RNGScope scope;
   int N = Xold.ncol();
   NumericMatrix Xnew(2, N);
-  NumericVector k = rpois(N,lambda);
+  NumericVector k = rpois(N,lambda*pow(xi,2)/w2);
   for (int ix = 0; ix < N; ix ++){
     NumericVector c1k = runif(k(ix),t_1,t);
     NumericVector e1k = rexp(k(ix),xi/w2);
@@ -89,8 +89,8 @@ NumericMatrix rinitial_SVLevy_multifactor_cpp(int N, double t, double xi,
   // Note: Rcpp's rgamma takes shape and SCALE (1/rate) parameter
   NumericVector z01 = rgamma(N,pow(xi1,2)/w21,w21/xi1);
   NumericVector z02 = rgamma(N,pow(xi2,2)/w22,w22/xi2);
-  NumericVector k1 = rpois(N,lambda1);
-  NumericVector k2 = rpois(N,lambda2);
+  NumericVector k1 = rpois(N,lambda1*pow(xi1,2)/w21);
+  NumericVector k2 = rpois(N,lambda2*pow(xi2,2)/w22);
   for (int ix = 0; ix < N; ix ++){
     // First factor
     NumericVector c1k1 = runif(k1(ix),0,t);
@@ -119,8 +119,8 @@ NumericMatrix rtransition_SVLevy_multifactor_cpp(NumericMatrix Xold, double t_1,
   double xi2 = (1-w)*xi;
   double w22 = (1-w)*w2;
   NumericMatrix Xnew(4, N);
-  NumericVector k1 = rpois(N,lambda1);
-  NumericVector k2 = rpois(N,lambda2);
+  NumericVector k1 = rpois(N,lambda1*pow(xi1,2)/w21);
+  NumericVector k2 = rpois(N,lambda2*pow(xi2,2)/w22);
   for (int ix = 0; ix < N; ix ++){
     // First factor
     NumericVector c1k1 = runif(k1(ix),t_1,t);
@@ -188,8 +188,8 @@ NumericMatrix rinitial_SVLevy_multifactorleverage_cpp(int N, double t, double xi
   // Note: Rcpp's rgamma takes shape and SCALE (1/rate) parameter
   NumericVector z01 = rgamma(N,pow(xi1,2)/w21,w21/xi1);
   NumericVector z02 = rgamma(N,pow(xi2,2)/w22,w22/xi2);
-  NumericVector k1 = rpois(N,lambda1);
-  NumericVector k2 = rpois(N,lambda2);
+  NumericVector k1 = rpois(N,lambda1*pow(xi1,2)/w21);
+  NumericVector k2 = rpois(N,lambda2*pow(xi2,2)/w22);
   for (int ix = 0; ix < N; ix ++){
     // First factor
     NumericVector c1k1 = runif(k1(ix),0,t);
@@ -220,8 +220,8 @@ NumericMatrix rtransition_SVLevy_multifactorleverage_cpp(NumericMatrix Xold, dou
   double xi2 = (1-w)*xi;
   double w22 = (1-w)*w2;
   NumericMatrix Xnew(6, N);
-  NumericVector k1 = rpois(N,lambda1);
-  NumericVector k2 = rpois(N,lambda2);
+  NumericVector k1 = rpois(N,lambda1*pow(xi1,2)/w21);
+  NumericVector k2 = rpois(N,lambda2*pow(xi2,2)/w22);
   for (int ix = 0; ix < N; ix ++){
     // First factor
     NumericVector c1k1 = runif(k1(ix),t_1,t);

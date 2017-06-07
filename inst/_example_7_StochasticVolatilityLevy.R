@@ -13,10 +13,10 @@ set.seed(19)
 #--------------------------------------------------------------------------------------------
 # set algorithmic parameters
 algorithmic_parameters = list()
-algorithmic_parameters$Ntheta = 2^11
-algorithmic_parameters$Nx = 2^7
+algorithmic_parameters$Ntheta = 2^5
+algorithmic_parameters$Nx = 2^11
 algorithmic_parameters$verbose = TRUE
-algorithmic_parameters$save = TRUE
+algorithmic_parameters$save = FALSE
 algorithmic_parameters$store_X_history = FALSE
 algorithmic_parameters$store_thetas_history = FALSE
 algorithmic_parameters$store_last_X = FALSE
@@ -29,13 +29,13 @@ algorithmic_parameters$store_last_thetas = TRUE
 #--------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------
 # simulate observations
-nobservations = 20
+nobservations = 50
 timesteps = 1:nobservations
 theta = c(0, 0, 0.5, 0.0625, 0.01)
 observations = simulateData(get_model_SVLevy_singlefactor(timesteps),theta,nobservations)$Y
 #--------------------------------------------------------------------------------------------
 # define models
-nb_models = 3
+nb_models = 1
 model = function(i){
   if(i==1){return(get_model_SVLevy_singlefactor(timesteps))}
   if(i==2){return(get_model_SVLevy_multifactor_noleverage(timesteps))}
@@ -60,7 +60,7 @@ for (m in 1:nb_models){
   results = foreach(i=1:repl,.packages=c('HyvarinenSSM'),.verbose = TRUE) %dorng% {
     gc() # attempt to limit RAM usage
     sink(logfilename, append = TRUE) # Monitor progress in parallel via log file
-    algorithmic_parameters$savefilename = paste("model_",toString(m),"_repl_",toString(i),"_",format(Sys.time(),"%Y-%m-%d_%H-%M-%S"),".rds",sep="")
+    # algorithmic_parameters$savefilename = paste("model_",toString(m),"_repl_",toString(i),"_",format(Sys.time(),"%Y-%m-%d_%H-%M-%S"),".rds",sep="")
     hscore(observations, model(m), algorithmic_parameters)
   }
   post = data.frame()
@@ -137,27 +137,27 @@ ggplot(subset(results_all)) +
   geom_line(aes(time, hscore/time, color = model,group=interaction(model,repl)), size = 1) +
   ylab("Hyvarinen score / time") + guides(colour = guide_legend(override.aes = list(size=2))) +
   scale_color_manual(values = colors)
-#--------------------------------------------------------------------------------------------
-# Checking h factor
-#--------------------------------------------------------------------------------------------
-h_factors = data.frame()
-plot_hfactor = list()
-for (m in 1:(nb_models-1)){
-  for (r in 1:repl) {
-    case = factor(paste(toString(m+1),"/ 1"))
-    h_factor = subset(results_all,model==(m+1)&repl==r)$hscore-subset(results_all,model==1&repl==r)$hscore
-    h_factors = rbind(h_factors,data.frame(time = 1:nobservations,
-                                           repl = r,
-                                           hfactor = h_factor,
-                                           model = case))
-  }
-  local({m = m;
-  case = case;
-  plot_hfactor[[m]] <<- ggplot(subset(h_factors, case = case)) +
-    geom_line(aes(time, hfactor, group = repl)) +
-    ylab("H factor")
-  })
-}
-# Checking H-factor
-# top-left, top-right, bottom-left, bottom-right = case 1, 2, 3, 4
-do.call(grid.arrange,c(plot_hfactor, ncol = 2))
+# #--------------------------------------------------------------------------------------------
+# # Checking h factor
+# #--------------------------------------------------------------------------------------------
+# h_factors = data.frame()
+# plot_hfactor = list()
+# for (m in 1:(nb_models-1)){
+#   for (r in 1:repl) {
+#     case = factor(paste(toString(m+1),"/ 1"))
+#     h_factor = subset(results_all,model==(m+1)&repl==r)$hscore-subset(results_all,model==1&repl==r)$hscore
+#     h_factors = rbind(h_factors,data.frame(time = 1:nobservations,
+#                                            repl = r,
+#                                            hfactor = h_factor,
+#                                            model = case))
+#   }
+#   local({m = m;
+#   case = case;
+#   plot_hfactor[[m]] <<- ggplot(subset(h_factors, case = case)) +
+#     geom_line(aes(time, hfactor, group = repl)) +
+#     ylab("H factor")
+#   })
+# }
+# # Checking H-factor
+# # top-left, top-right, bottom-left, bottom-right = case 1, 2, 3, 4
+# do.call(grid.arrange,c(plot_hfactor, ncol = 2))
