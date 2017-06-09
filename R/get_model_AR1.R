@@ -68,5 +68,19 @@ get_model_AR1 <- function(nu0, sigma02){
     }
     return (Y)
   }
+
+  # OPTIONAL: simulate Ny draws of y_t given theta and the past y_1 to y_(t-1)
+  # (with the convention y_0 = NULL)
+  # outputs: matrix of Ny draws of Yt given theta and past (dimY by Ny matrix)
+  model$rpredictive = function(Ny,t,theta,y_past){
+    if (t == 1) {
+      Yt = matrix(rnorm(Ny, mean = 0, sd = sqrt(theta[2]/(1-theta[1]^2))), ncol = Ny)
+    } else if (t >= 2) {
+      Yt = theta[1]*repeat_column(Ny,y_past[,t-1,drop=FALSE]) + matrix(rnorm(Ny*model$dimY, mean = 0, sd = sqrt(theta[2])),ncol=Ny)
+    }
+    return (Yt)
+  }
+
+
   return(model)
 }
