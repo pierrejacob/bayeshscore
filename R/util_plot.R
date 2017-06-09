@@ -6,18 +6,34 @@
 #'@description This function generates artificial data from a model.
 #'@export
 simulateData = function(model,theta,nobservations) {
+  # If state-space model, generate latent states then observations
   if (!is.null(model$dimX)){
     X <- matrix(nrow = model$dimX, ncol = nobservations)
     Y <- matrix(nrow = model$dimY, ncol = nobservations)
-    X[,1] <- model$rinitial(theta,1)
-    Y[,1] <- model$robs(X[,1,drop=FALSE],1,theta)
-    for (t in 2:nobservations) {
-      X[,t] = model$rtransition(X[,t-1,drop=FALSE], t, theta)
-      Y[,t] = model$robs(X[,t,drop=FALSE], t, theta)
+    if (nobservations >= 1){
+      X[,1] <- model$rinitial(theta,1)
+      Y[,1] <- model$robs(X[,1,drop=FALSE],1,theta)
+    }
+    if (nobservations >= 2){
+      for (t in 2:nobservations) {
+        X[,t] = model$rtransition(X[,t-1,drop=FALSE], t, theta)
+        Y[,t] = model$robs(X[,t,drop=FALSE], t, theta)
+      }
     }
     return (list(X = X, Y = Y))
-  } else {
-    return (model$robs(nobservations,theta))
+  }
+  # If the model makes it possible, generate observations directly
+  else {
+    Y = matrix(nrow = model$dimY, ncol = nobservations)
+    if (nobservations >= 1) {
+      Y[,1] = model$rpredictive(1,1,theta,NULL)
+    }
+    if (nobservations >= 2) {
+      for (t in 2:nobservations) {
+        Y[,t] = model$rpredictive(1,t,theta,Y[,1:(t-1),drop=FALSE])
+      }
+    }
+    return (Y)
   }
 }
 #------------------------------------------------------------------------------#
