@@ -14,8 +14,8 @@ set.seed(19)
 # set algorithmic parameters
 algorithmic_parameters = list()
 algorithmic_parameters$Ntheta = 2^7
-algorithmic_parameters$Nx = 2^12
-algorithmic_parameters$nmoves = 3
+algorithmic_parameters$Nx = 2^7
+algorithmic_parameters$nmoves = 5
 algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$save = FALSE
 algorithmic_parameters$store_X_history = FALSE
@@ -36,7 +36,7 @@ theta = c(0, 0, 0.5, 0.0625, 0.01)
 observations = simulateData(get_model_SVLevy_singlefactor(timesteps),theta,nobservations)$Y
 #--------------------------------------------------------------------------------------------
 # define models
-nb_models = 1
+nb_models = 3
 model = function(i){
   if(i==1){return(get_model_SVLevy_singlefactor(timesteps))}
   if(i==2){return(get_model_SVLevy_multifactor_noleverage(timesteps))}
@@ -66,9 +66,6 @@ for (m in 1:nb_models){
   post_all[[m]] = post
 }
 #--------------------------------------------------------------------------------------------
-# close log file
-sink()
-#--------------------------------------------------------------------------------------------
 # Check posterior for each model
 post_plot_all = list()
 xlabels = list(xlab(expression(mu)), xlab(expression(beta)), xlab(expression(xi)),
@@ -91,8 +88,8 @@ for (m in 1:nb_models) {
 }
 # display plots
 do.call(grid.arrange,c(post_plot_all[[1]], ncol = 3, nrow = 3))
-# do.call(grid.arrange,c(post_plot_all[[2]], ncol = 3, nrow = 3))
-# do.call(grid.arrange,c(post_plot_all[[3]], ncol = 3, nrow = 3))
+do.call(grid.arrange,c(post_plot_all[[2]], ncol = 3, nrow = 3))
+do.call(grid.arrange,c(post_plot_all[[3]], ncol = 3, nrow = 3))
 #--------------------------------------------------------------------------------------------
 # Check the log-evidence
 ggplot(results_all) +

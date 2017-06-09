@@ -13,8 +13,9 @@ set.seed(19)
 #--------------------------------------------------------------------------------------------
 # set algorithmic parameters
 algorithmic_parameters = list()
-algorithmic_parameters$Ntheta = 2^5
-algorithmic_parameters$Nx = 2^11
+algorithmic_parameters$Ntheta = 2^7
+algorithmic_parameters$Nx = 2^7
+algorithmic_parameters$nmoves = 5
 algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$save = FALSE
 algorithmic_parameters$store_X_history = FALSE
@@ -29,7 +30,7 @@ algorithmic_parameters$store_last_thetas = TRUE
 #--------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------
 # simulate observations
-nobservations = 50
+nobservations = 5
 timesteps = 1:nobservations
 theta = c(0, 0, 0.5, 0.0625, 0.01)
 observations = simulateData(get_model_SVLevy_singlefactor(timesteps),theta,nobservations)$Y
