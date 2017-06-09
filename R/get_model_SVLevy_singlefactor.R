@@ -59,7 +59,12 @@ get_model_SVLevy_singlefactor <- function(timesteps,
     # xi = theta[3]
     # w2 = theta[4]
     # lambda = theta[5]
-    return (rinitial_SVLevy_cpp(Nx, timesteps[1], theta[3], theta[4], theta[5]))
+    # Note: to avoid numerical issues, we artificially set the variance vt to machine epsilon
+    # instead of 0 whenever needed
+    Xs = rinitial_SVLevy_cpp(Nx, timesteps[1], theta[3], theta[4], theta[5])
+    if (all(Xs[1,]<.Machine$double.eps)) {Xs[1,] = rep(.Machine$double.eps, Nx)}
+    if (all(Xs[2,]<.Machine$double.eps)) {Xs[2,] = rep(.Machine$double.eps, Nx)}
+    return (Xs)
   }
   # Sampler from the transition distribution of the latent states
   # inputs: current states Xs at time (t-1) (dimX by Nx matrix), time t (int), theta (single vector)
@@ -68,7 +73,12 @@ get_model_SVLevy_singlefactor <- function(timesteps,
     # xi = theta[3]
     # w2 = theta[4]
     # lambda = theta[5]
-    return (rtransition_SVLevy_cpp(Xs, timesteps[t-1], timesteps[t], theta[3], theta[4], theta[5]))
+    # Note: to avoid numerical issues, we artificially set the variance vt to machine epsilon
+    # instead of 0 whenever needed
+    new_Xs = rtransition_SVLevy_cpp(Xs, timesteps[t-1], timesteps[t], theta[3], theta[4], theta[5])
+    if (all(new_Xs[1,]<.Machine$double.eps)) {new_Xs[1,] = rep(.Machine$double.eps, ncol(Xs))}
+    if (all(new_Xs[2,]<.Machine$double.eps)) {new_Xs[2,] = rep(.Machine$double.eps, ncol(Xs))}
+    return (new_Xs)
   }
   # observation density
   # inputs: single observation Yt (dimY by 1), states Xts (dimX by Nx), time t, theta (single vector), log (TRUE by default)

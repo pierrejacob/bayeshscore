@@ -64,7 +64,12 @@ get_model_SVLevy_multifactor_noleverage <- function(timesteps,
     # lambda1 = theta[5]
     # lambda2 = theta[6]
     # w = theta[7]
-    return (rinitial_SVLevy_multifactor_cpp(Nx,timesteps[1],theta[3],theta[4],theta[5],theta[6],theta[7]))
+    Xs = rinitial_SVLevy_multifactor_cpp(Nx,timesteps[1],theta[3],theta[4],theta[5],theta[6],theta[7])
+    if (all(Xs[1,]+Xs[3,]<.Machine$double.eps)) {
+      Xs[1,] = rep(.Machine$double.eps, Nx)
+      Xs[3,] = rep(.Machine$double.eps, Nx)
+    }
+    return (Xs)
   }
   # Sampler from the transition distribution of the latent states
   # inputs: current states Xs at time (t-1) (dimX by Nx matrix), time t (int), theta (single vector)
@@ -75,7 +80,13 @@ get_model_SVLevy_multifactor_noleverage <- function(timesteps,
     # lambda1 = theta[5]
     # lambda2 = theta[6]
     # w = theta[7]
-    return (rtransition_SVLevy_multifactor_cpp(Xs,timesteps[t-1],timesteps[t],theta[3],theta[4],theta[5],theta[6],theta[7]))
+    new_Xs = rtransition_SVLevy_multifactor_cpp(Xs,timesteps[t-1],timesteps[t],theta[3],theta[4],theta[5],theta[6],theta[7])
+    if (all(new_Xs[1,]+new_Xs[3,]<.Machine$double.eps)) {
+      Nx = ncol(Xs)
+      new_Xs[1,] = rep(.Machine$double.eps, Nx)
+      new_Xs[3,] = rep(.Machine$double.eps, Nx)
+    }
+    return (new_Xs)
   }
   # observation density
   # inputs: single observation Yt (dimY by 1), states Xts (dimX by Nx), time t, theta (single vector), log (TRUE by default)
