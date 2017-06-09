@@ -71,6 +71,18 @@ get_model_nameOfTheModel <- function(){
     if (log) {return(lp)}
     else {return(exp(lp))}
   }
+
+  # The following sampler is only relevant if one plans to simulate data from the model,
+  # or use kernel density estimator to compute the Hyvarinen score
+  # OPTIONAL: Sample from the one-step predictive given theta
+  # (i.e. y_t given theta and past y_1 to y_(t-1), with the convention y_0 = NULL)
+  # inputs: number of draws Ny, time t, parameter theta (single vector), past Y (dimY by (t-1) matrix, or NULL if t=1)
+  # outputs: matrix of Ny draws of Yt given theta and past (dimY by Ny matrix)
+  model$rpredictive = function(Ny,t,theta,y_past){
+    ...
+    return (...)
+  }
+
   # OPTIONAL: derivatives of the predicitve density with respect to the observation at time t
   # inputs: observations (dimY by T matrix, with T >= t), time index t (int), theta (single vector),
   #         byproduct (OPTIONAL: auxiliary object needed to compute likelihood, e.g. Kalman filter)
@@ -138,7 +150,7 @@ get_model_nameOfTheModel <- function(){
     return (list(jacobian = ..., hessiandiag = ..))
   }
 
-  # sampler from the observation disctribution
+  # sampler from the observation distribution
   # inputs: single state Xt (dimX by 1), time t, theta (single vector)
   # outputs: single observation (dimY by 1 matrix)
   model$robs = function(Xt,t,theta){
