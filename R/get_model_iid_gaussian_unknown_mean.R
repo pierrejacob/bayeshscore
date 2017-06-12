@@ -46,5 +46,13 @@ get_model_iid_gaussian_unknown_mean <- function(muprior,sigma2prior){
   model$robs = function(nobservations,theta){
     return (matrix(rnorm(nobservations, theta, sqrt(model$sigma2)),ncol = nobservations))
   }
+
+  # OPTIONAL: simulate Ny draws of y_t given theta and the past y_1 to y_(t-1)
+  # (with the convention y_0 = NULL)
+  # outputs: matrix of Ny draws of Yt given theta and past (dimY by Ny matrix)
+  model$rpredictive = function(Ny,t,theta,y_past){
+    return (matrix(rnorm(Ny, theta, sqrt(model$sigma2)),ncol = Ny))
+  }
+
   return(model)
 }

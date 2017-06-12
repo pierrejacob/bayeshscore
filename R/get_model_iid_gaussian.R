@@ -52,9 +52,12 @@ get_model_iid_gaussian <- function(mu0,kappa0,nu0,sigma02){
   }
 
 
-  #OPTIONAL: simulate observations
-  model$robs = function(nobservations,theta){
-    return (matrix(rnorm(nobservations, mean = 0, sd = sqrt(theta)),ncol = nobservations))
+  # OPTIONAL: simulate Ny draws of y_t given theta and the past y_1 to y_(t-1)
+  # (with the convention y_0 = NULL)
+  # outputs: matrix of Ny draws of Yt given theta and past (dimY by Ny matrix)
+  model$rpredictive = function(Ny,t,theta,y_past){
+    return (matrix(rnorm(Ny, mean = 0, sd = sqrt(theta)),ncol = Ny))
   }
+
   return(model)
 }
