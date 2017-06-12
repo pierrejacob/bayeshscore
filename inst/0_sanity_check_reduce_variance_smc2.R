@@ -21,15 +21,21 @@ observations = matrix(Y, nrow = model$dimY)
 # set algorithmic parameters
 algorithmic_parameters = list()
 algorithmic_parameters$Ntheta = 2^10
-algorithmic_parameters$Nx = 2^11
+algorithmic_parameters$Nx = 2^7
 # algorithmic_parameters$Nx_max = 2^6
 algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$store_thetas_history = TRUE
 algorithmic_parameters$store_X_history = TRUE
 algorithmic_parameters$ess_threshold = 0.5
-algorithmic_parameters$min_acceptance_rate = 0.5 # purposely set high to trigger increase Nx step and test Nx_max
 algorithmic_parameters$nmoves = 5 # purposely set high for sanity check
+
+
+algorithmic_parameters$reduce_variance = TRUE
+algorithmic_parameters$Nc = 2^11
+algorithmic_parameters$Ncx = 2^11
+
 # The remaining algorithmic parameters are set to their default values via the functions in util_default.R
+#--------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------
 ### Run SMC
 smc_results = hscore(observations, model, algorithmic_parameters)

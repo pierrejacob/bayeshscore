@@ -27,8 +27,7 @@ algorithmic_parameters = list()
 algorithmic_parameters$Ntheta = 2^10
 algorithmic_parameters$Nx = 2^0
 algorithmic_parameters$verbose = TRUE
-algorithmic_parameters$store_theta = TRUE
-algorithmic_parameters$store_X = FALSE
+algorithmic_parameters$store_thetas_history = TRUE
 algorithmic_parameters$ess_threshold = 0.5
 algorithmic_parameters$nmoves = 2
 # The remaining algorithmic parameters are set to their default values via the functions in util_default.R

@@ -22,8 +22,8 @@ observations = matrix(Y, nrow = model$dimY)
 algorithmic_parameters = list()
 algorithmic_parameters$Ntheta = 2^10
 algorithmic_parameters$verbose = TRUE
-algorithmic_parameters$store_theta = TRUE
-algorithmic_parameters$store_X = TRUE
+algorithmic_parameters$store_thetas_history = TRUE
+algorithmic_parameters$store_X_history = TRUE
 algorithmic_parameters$ess_threshold = 0.5
 algorithmic_parameters$min_acceptance_rate = 0.45 # purposely set high to trigger increase Nx steps
 algorithmic_parameters$nmoves = 2

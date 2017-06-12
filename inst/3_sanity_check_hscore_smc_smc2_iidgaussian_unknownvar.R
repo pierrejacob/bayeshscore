@@ -81,8 +81,6 @@ algorithmic_parameters = list()
 algorithmic_parameters$Ntheta = 2^10
 algorithmic_parameters$Nx = 2^0
 algorithmic_parameters$verbose = TRUE
-algorithmic_parameters$store_theta = TRUE
-algorithmic_parameters$store_X = FALSE
 algorithmic_parameters$ess_threshold = 0.9 # purposely set high to force some resample-move steps
 algorithmic_parameters$min_acceptance_rate = 0.5
 algorithmic_parameters$nmoves = 2
@@ -103,11 +101,11 @@ smc2_results = hscore(observations, model_withoutlikelihood, algorithmic_paramet
 #########################################################################################
 #########################################################################################
 ########### BE CAREFUL, SMC starts with the prior sample at t = 1 #######################
-thetas_smc = smc_results$thetas_history[[nobservations+1]]
-normw_smc = smc_results$normw_history[[nobservations+1]]
+thetas_smc = smc_results$thetas
+normw_smc = smc_results$normw
 #
-thetas_smc2 = smc2_results$thetas_history[[nobservations+1]]
-normw_smc2 = smc2_results$normw_history[[nobservations+1]]
+thetas_smc2 = smc2_results$thetas
+normw_smc2 = smc2_results$normw
 
 
 #--------------------------------------------------------------------------------------------

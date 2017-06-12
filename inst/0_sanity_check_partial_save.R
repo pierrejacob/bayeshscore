@@ -10,7 +10,7 @@ module_tree <<- Module("module_tree", PACKAGE = "HyvarinenSSM")
 TreeClass <<- module_tree$Tree
 #--------------------------------------------------------------------------------------------
 # create data
-nobservations = 500
+nobservations = 100
 model = get_model_lineargaussian()
 theta_star = c(0.8,1,1,1)
 #--------------------------------------------------------------------------------------------
@@ -23,13 +23,13 @@ observations = matrix(Y, nrow = model$dimY)
 # set algorithmic parameters
 algorithmic_parameters = list()
 algorithmic_parameters$Ntheta = 2^10
-algorithmic_parameters$Nx = 2^5
+algorithmic_parameters$Nx = 2^10
 algorithmic_parameters$Nx_max = 2^10
 algorithmic_parameters$verbose = TRUE
-algorithmic_parameters$store_theta = TRUE
-algorithmic_parameters$store_X = TRUE
+algorithmic_parameters$store_thetas_history = TRUE
+algorithmic_parameters$store_X_history = TRUE
 algorithmic_parameters$ess_threshold = 0.5
-algorithmic_parameters$min_acceptance_rate = 0.8 # purposely set high to trigger increase Nx step and test Nx_max
+algorithmic_parameters$min_acceptance_rate = 0.2 # purposely set high to trigger increase Nx step and test Nx_max
 algorithmic_parameters$nmoves = 2
 algorithmic_parameters$save = TRUE
 # The remaining algorithmic parameters are set to their default values via the functions in util_default.R
@@ -44,14 +44,15 @@ algorithmic_parameters$save = TRUE
 #
 # WARNING: the save must be an RDS file (extension .rds)
 #
-setTimeLimit(elapsed = 15) # purposely set a time budget
-### Run SMC
+### Run SMC0
+setTimeLimit(elapsed = 20) # purposely set a time budget
 algorithmic_parameters$savefilename = "partial_smc_results.rds"
 tryCatch(hscore(observations,model,algorithmic_parameters), error = function(e) cat("--- Time out ---\n"))
 ### Run SMC_2
 model_nolikelihood = model
 model_nolikelihood$likelihood = NULL # this forces the use of SMC2
 model_nolikelihood$dpredictive = NULL # this forces the use of SMC2
+setTimeLimit(elapsed = 60) # purposely set a time budget
 algorithmic_parameters$savefilename = "partial_smc2_results.rds"
 tryCatch(hscore(observations,model_nolikelihood,algorithmic_parameters), error = function(e) cat("--- Time out ---\n"))
 #--------------------------------------------------------------------------------------------
@@ -153,22 +154,22 @@ ggplot(path.df) + geom_line(aes(time,x,group=index))
 
 
 #----------------------------------------------------------------------------------------------------------------#
-# NOTE: lapply vs for loop to reconstruct trees
-lapply_version = function() {
-  PF_history = lapply(1:partial_smc2_results$t,
-                      function(t)lapply(1:length(partial_smc2_results$trees_attributes_history[[t+1]]),
-                                        function(i)c(partial_smc2_results$PF_history_no_tree[[t+1]][[i]],
-                                                     tree = tree_reconstruct(partial_smc2_results$trees_attributes_history[[t+1]][[i]]))))
-}
-for_version = function() {
-  PF_history = vector("list",partial_smc2_results$t)
-  PFs = vector("list",Ntheta)
-  for (t in 1:partial_smc2_results$t){
-    for (i in 1:Ntheta){
-      PFs[[i]] = c(partial_smc2_results$PF_history_no_tree[[t+1]][[i]],
-                   tree = tree_reconstruct(partial_smc2_results$trees_attributes_history[[t+1]][[i]]))
-    }
-    PF_history[[t]] = PFs
-  }
-}
-microbenchmark::microbenchmark(lapply_version(),for_version(),times = 20)
+# # NOTE: lapply vs for loop to reconstruct trees
+# lapply_version = function() {
+#   PF_history = lapply(1:partial_smc2_results$t,
+#                       function(t)lapply(1:length(partial_smc2_results$trees_attributes_history[[t+1]]),
+#                                         function(i)c(partial_smc2_results$PF_history_no_tree[[t+1]][[i]],
+#                                                      tree = tree_reconstruct(partial_smc2_results$trees_attributes_history[[t+1]][[i]]))))
+# }
+# for_version = function() {
+#   PF_history = vector("list",partial_smc2_results$t)
+#   PFs = vector("list",Ntheta)
+#   for (t in 1:partial_smc2_results$t){
+#     for (i in 1:Ntheta){
+#       PFs[[i]] = c(partial_smc2_results$PF_history_no_tree[[t+1]][[i]],
+#                    tree = tree_reconstruct(partial_smc2_results$trees_attributes_history[[t+1]][[i]]))
+#     }
+#     PF_history[[t]] = PFs
+#   }
+# }
+# microbenchmark::microbenchmark(lapply_version(),for_version(),times = 20)

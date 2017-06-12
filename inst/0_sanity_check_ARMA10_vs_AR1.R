@@ -215,7 +215,6 @@ model = function(i){
 algorithmic_parameters = list()
 algorithmic_parameters$Ntheta = 2^10
 algorithmic_parameters$verbose = TRUE
-algorithmic_parameters$store_theta = TRUE
 # The remaining algorithmic parameters are set to their default values via the functions in util_default.R
 
 # generate some observations
@@ -240,9 +239,9 @@ for (m in 1:nb_models){
                                                time = 1:nobservations,
                                                model = factor(m),
                                                repl = r))
-    post_all = rbind(post_all,data.frame(phi1 = c(results[[r]]$thetas_history[[nobservations+1]][1,]),
-                                         sigma2 = c(results[[r]]$thetas_history[[nobservations+1]][2,]),
-                                         W = results[[r]]$normw_history[[nobservations+1]],
+    post_all = rbind(post_all,data.frame(phi1 = c(results[[r]]$thetas[1,]),
+                                         sigma2 = c(results[[r]]$thetas[2,]),
+                                         W = results[[r]]$normw,
                                          model = factor(m),
                                          repl = factor(r)))
   }

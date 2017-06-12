@@ -24,7 +24,7 @@ algorithmic_parameters = list()
 algorithmic_parameters$Ntheta = 2^10
 algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$ess_threshold = 0.5
-algorithmic_parameters$nmoves = 50 # purposely set high to check the coherence of acceptance rates
+algorithmic_parameters$nmoves = 10 # purposely set high to check the coherence of acceptance rates
 #--------------------------------------------------------------------------------------------
 # Run SMC
 smc_result = hscore(observations, model, algorithmic_parameters)

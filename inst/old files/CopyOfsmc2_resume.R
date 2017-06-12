@@ -123,7 +123,22 @@ smc2_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL)
     for (t in (n_assimilated+1):nobservations){
       # OPTIONAL: compute the incremental hscore for discrete observations
       if (algorithmic_parameters$hscore && (observation_type=="discrete")) {
-        incr_hscore[t] = hincrement_discrete_smc2(thetas, normw, PFs, t, observations, model, logtargetdensities, algorithmic_parameters)
+        # Construct particles targeting the one-step-ahead predictive (need to reconstruct since size Nx might change)
+        if (t > 1){
+          Nx = PFs[[1]]$Nx
+          Xpred = array(NA,dim = c(model$dimX,Nx,Ntheta)) # (need to reconstruct since size Nx might change)
+          for (itheta in 1:Ntheta){
+            X = Xprevious[,,itheta]
+            if (is.null(dim(X))){
+              Xpred[,,itheta] = model$rtransition(matrix(X,ncol = Nx), t, thetas[,itheta])
+            }
+            else{
+              Xpred[,,itheta] = model$rtransition(X, t, thetas[,itheta])
+            }
+          }
+        }
+        # compute incremental H score (with theta from time t-1, see formula in the paper)
+        incr_hscore[t] = Hd_smc2(t,model,observations[,t],thetas,normw,Xpred,XnormW_previous)
       }
       # Assimilate the next observation
       results = assimilate_one_smc2(thetas,PFs,t,observations,model,logtargetdensities,logw,normw,algorithmic_parameters)
@@ -135,8 +150,19 @@ smc2_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL)
       logtargetdensities = results$logtargetdensities
       incr_logevidence[t] = results$logcst
       # OPTIONAL: compute incremental hscore here for continuous observations and update particles for discrete case
-      if (algorithmic_parameters$hscore && observation_type=="continuous") {
-        incr_hscore[t] = hincrement_continuous_smc2(thetas, normw, PFs, t, observations, model, logtargetdensities, algorithmic_parameters)
+      if (algorithmic_parameters$hscore) {
+        if (observation_type=="continuous") {
+          incr_hscore[t] = hincrementContinuous_smc2(t,model,observations[,t,drop=FALSE],thetas,normw,PFs,Ntheta)
+        } else if (observation_type=="discrete") {
+          #matrix of normalized weights for X at previous step (need to reconstruct since size Nx might have changed)
+          Nx = PFs[[1]]$Nx
+          Xprevious = array(NA,dim = c(Nx, model$dimX, Ntheta))
+          XnormW_previous = matrix(NA, nrow = PFs[[1]]$Nx, ncol = Ntheta)
+          for (itheta in 1:Ntheta){
+            Xprevious[,,itheta] = PFs[[itheta]]$X
+            XnormW_previous[,itheta] = PFs[[itheta]]$xnormW
+          }
+        }
       }
       # do some book-keeping
       ESS[t] = results$ESS

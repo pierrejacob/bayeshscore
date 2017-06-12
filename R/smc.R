@@ -46,6 +46,7 @@ smc_ = function(observations, model, algorithmic_parameters){
   ESS = array(NA,dim = c(nobservations)) #ESS at successive times t
   incr_logevidence = array(NA,dim = c(nobservations)) #incremental log-evidence at successive times t
   incr_hscore = array(NA,dim = c(nobservations)) # OPTIONAL: incremental Hyvarinen score at successive times t
+  incr_hscore_kde = array(NA,dim = c(nobservations)) # OPTIONAL: incremental Hyvarinen score at successive times t using kernel density estimators
   rejuvenation_times = c() #successive times where resampling is triggered
   rejuvenation_rate = c() #successive acceptance rates of resampling
   thetas_history = list() #successive sets of particles theta
@@ -95,8 +96,8 @@ smc_ = function(observations, model, algorithmic_parameters){
     #-------------------------------------------------------------------------------------------------------
     # OPTIONAL: compute the incremental hscore for discrete observations
     if (algorithmic_parameters$hscore && (observation_type=="discrete")) {
-      # compute incremental H score (with theta from time t-1, see formula in the paper)
-      incr_hscore[t] = Hd_smc(t,model,observations,thetas,normw,Ntheta,byproducts)
+      incr_hscore[t] = hincrement_discrete_smc(thetas, normw, byproducts, t, observations, model,
+                                               logtargetdensities, algorithmic_parameters)
     }
     #-------------------------------------------------------------------------------------------------------
     # Assimilate the next observation
@@ -112,7 +113,8 @@ smc_ = function(observations, model, algorithmic_parameters){
     #-------------------------------------------------------------------------------------------------------
     # OPTIONAL: compute the incremental hscore for continuous observations
     if (algorithmic_parameters$hscore && (observation_type=="continuous")) {
-      incr_hscore[t] = hincrementContinuous_smc(t, model, observations,thetas,normw,byproducts,Ntheta)
+      incr_hscore[t] = hincrement_continuous_smc(thetas, normw, byproducts, t, observations, model,
+                                                 logtargetdensities, algorithmic_parameters)
     }
     #-------------------------------------------------------------------------------------------------------
     # do some book-keeping
@@ -147,7 +149,7 @@ smc_ = function(observations, model, algorithmic_parameters){
       results_so_far = list(thetas_history = thetas_history, normw_history = normw_history,
                             incr_logevidence = incr_logevidence[1:t], incr_hscore = incr_hscore[1:t],  ESS = ESS[1:t],
                             rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
-                            method = 'SMC')
+                            method = 'SMC', incr_hscore_kde = incr_hscore_kde)
       # if the history of theta-particles is not saved, just keep the most recent ones
       if (!algorithmic_parameters$store_thetas_history){
         required_to_resume$thetas = thetas; required_to_resume$normw = normw
@@ -177,7 +179,7 @@ smc_ = function(observations, model, algorithmic_parameters){
   # Return the results as a list
   return (list(thetas = thetas, normw = normw, byproducts = byproducts, logtargetdensities = logtargetdensities,
                thetas_history = thetas_history, normw_history = normw_history, byproducts_history = byproducts_history,
-               logevidence = cumsum(incr_logevidence), hscore = cumsum(incr_hscore),
+               logevidence = cumsum(incr_logevidence), hscore = cumsum(incr_hscore), hscoreKDE = cumsum(incr_hscore_kde),
                ESS = ESS, rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
                method = 'SMC', algorithmic_parameters = algorithmic_parameters))
 }

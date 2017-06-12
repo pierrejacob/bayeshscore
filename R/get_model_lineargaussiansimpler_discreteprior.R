@@ -63,12 +63,12 @@ get_model_lineargaussiansimpler_discreteprior <- function(){
   # The function is vectorized with respect to the states Xt (dimX by Nx), so that it outputs:
   # >> the jacobian (Nx by dimY matrix: each row is the transpose of the corresponding gradients row-wise)
   # >> the Hessian diagonals (Nx by dimY matrix: each row is the diagonal coeffs of the corresponding Hessian)
-  model$derivativelogdobs = function(Yt,Xt,t,theta,dimY){
+  model$derivativelogdobs = function(Yt,Xt,t,theta){
     psi = model$psi
     sigmaV2 = theta[1]
     N = ncol(Xt)
     d1 = t((psi*Xt-repeat_column(N,Yt))/sigmaV2)
-    d2 = matrix(-1/sigmaV2,nrow = N, ncol = dimY)
+    d2 = matrix(-1/sigmaV2,nrow = N, ncol = model$dimY)
     return (list(jacobian = d1, hessiandiag = d2))
   }
 

@@ -2,7 +2,8 @@
 #---------------------------- CONTINUOUS OBSERVATIONS -----------------------------------#
 #----------------------------------------------------------------------------------------#
 # smc2 version when predictive density is intractable
-hincrementContinuous_smc2 = function(t,model,observationt,thetas,Wtheta,PFs,Ntheta) {
+hincrement_continuous_smc2_ = function(t,model,observationt,thetas,Wtheta,PFs) {
+  Ntheta = ncol(thetas)
   hincrement = 0
   d1log = list()
   d2log = list()
@@ -44,7 +45,8 @@ hincrementContinuous_smc2 = function(t,model,observationt,thetas,Wtheta,PFs,Nthe
 }
 #-------------------------------------------------------------------------------------------
 # smc version when predictive density is available
-hincrementContinuous_smc = function(t,model,observations,thetas,Wtheta,byproducts,Ntheta) {
+hincrement_continuous_smc_ = function(t,model,observations,thetas,Wtheta,byproducts) {
+  Ntheta = ncol(thetas)
   hincrement = 0
   d1log = list()
   d2log = list()
@@ -77,7 +79,6 @@ hincrementContinuous_smc = function(t,model,observations,thetas,Wtheta,byproduct
   }
   return (hincrement)
 }
-
 #----------------------------------------------------------------------------------------#
 #------------------------------ DISCRETE OBSERVATIONS -----------------------------------#
 #----------------------------------------------------------------------------------------#
@@ -110,7 +111,8 @@ Hdk = function(k,a,b,d,y,py_minusek,py,py_plusek) {
 # This function computes the partial score term Hd
 # a,b are vectors of componentwise lower and upper bounds of the observations
 # d is the dimension of y
-Hd_smc2 = function(t,model,yt,thetas,thetanormw,Ntheta,Xpred,xprednormw) {
+Hd_smc2 = function(t,model,yt,thetas,thetanormw,Xpred,xprednormw) {
+  Ntheta = ncol(thetas)
   a = model$lower
   b = model$upper
   d = model$dimY
@@ -150,7 +152,8 @@ phat_smc = function(t,model,observations,thetas,thetanormw,Ntheta,byproducts) {
 # This function computes the partial score term Hd
 # a,b are vectors of componentwise lower and upper bounds of the observations
 # d is the dimension of y
-Hd_smc = function(t,model,observations,thetas,thetanormw,Ntheta,byproducts) {
+Hd_smc = function(t,model,observations,thetas,thetanormw,byproducts) {
+  Ntheta = ncol(thetas)
   a = model$lower
   b = model$upper
   d = model$dimY
@@ -169,3 +172,156 @@ Hd_smc = function(t,model,observations,thetas,thetanormw,Ntheta,byproducts) {
   }
   return (result)
 }
+#-------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------
+# Wrappers: the following function performs all the preprocessing needed to compute
+# the Hyvarinen score (e.g. generate x-particles from the one-step predictive distribution,
+# generate more theta-particles for variance reduction if needed, etc ...)
+#-------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------
+# Discrete case, SMC2: wrapper of Hd_smc2
+hincrement_discrete_smc2 = function(thetas, normw, PFs, t, observations, model,
+                                    logtargetdensities, algorithmic_parameters) {
+  # If reduce_variance: temporarily increase the number of particles before computing
+  # the Hyvarinen score.
+  if (algorithmic_parameters$reduce_variance) {
+    # generate additional theta-particles (and their associated particle filters)
+    larger_pool =  get_additional_particles_smc2(thetas, normw, PFs, t, observations, model,
+                                                 logtargetdensities, algorithmic_parameters)
+    thetas_pool = larger_pool$thetas
+    PFs_pool = larger_pool$PFs
+    normw_pool = rep(1/ncol(thetas_pool), ncol(thetas_pool))
+    # Get the new number of particles
+    Ntheta_pool = ncol(thetas_pool)
+    Nx_pool = PFs_pool[[1]]$Nx
+    # generate x-particles targeting the one-step predictive distribution which are already
+    # contained in the PFs after initialization
+    if (t==1) {
+      Xpred = array(NA,dim = c(model$dimX,Nx_pool,Ntheta_pool)) # (need to reconstruct since size Nx might change)
+      XnormW_previous = matrix(1/Nx_pool, nrow = Nx_pool, ncol = Ntheta_pool)
+      for (itheta in 1:Ntheta_pool){
+        Xpred[,,itheta] = PFs_pool[[itheta]]$X
+      }
+    }
+    # Construct particles targeting the one-step-ahead predictive
+    if (t > 1){
+      Xpred = array(NA,dim = c(model$dimX,Nx_pool,Ntheta_pool))
+      XnormW_previous = matrix(NA, nrow = Nx_pool, ncol = Ntheta_pool)
+      # At this point in the code, PFs[[itheta]]$X contains the x-particles from the filtering
+      # distribution at time (t-1)
+      for (itheta in 1:Ntheta_pool){
+        if (is.null(dim(PFs_pool[[itheta]]$X))){
+          XnormW_previous[,itheta] = PFs_pool[[itheta]]$xnormW
+          Xpred[,,itheta] = model$rtransition(matrix(PFs_pool[[itheta]]$X,ncol = Nx_pool), t, thetas_pool[,itheta])
+        }
+        else{
+          XnormW_previous[,itheta] = PFs_pool[[itheta]]$xnormW
+          Xpred[,,itheta] = model$rtransition(PFs_pool[[itheta]]$X, t, thetas_pool[,itheta])
+        }
+      }
+    }
+    # compute incremental H score (with theta from time t-1, see formula in the paper)
+    return (Hd_smc2(t,model,observations[,t],thetas_pool,normw_pool,Xpred,XnormW_previous))
+  } else {
+    Ntheta = ncol(thetas)
+    Nx = PFs_pool[[1]]$Nx
+    # Construct particles targeting the one-step-ahead predictive (need to reconstruct since size Nx might change)
+    if (t==1) {
+      Xpred = array(NA,dim = c(model$dimX, Nx, Ntheta))
+      XnormW_previous = matrix(1/Nx, nrow = Nx, ncol = Ntheta) #matrix of normalized weights for X at previous step
+      for (itheta in 1:Ntheta){
+        Xpred[,,itheta] = PFs[[itheta]]$X
+      }
+    }
+    if (t > 1){
+      Nx = PFs[[1]]$Nx
+      Xpred = array(NA,dim = c(model$dimX,Nx,Ntheta)) # (need to reconstruct since size Nx might change)
+      XnormW_previous = matrix(NA, nrow = Nx, ncol = Ntheta)
+      # At this point in the code, PFs[[itheta]]$X contains the x-particles from the filtering
+      # distribution at time (t-1)
+      for (itheta in 1:Ntheta){
+        if (is.null(dim(PFs[[itheta]]$X))){
+          XnormW_previous[,itheta] = PFs[[itheta]]$xnormW
+          Xpred[,,itheta] = model$rtransition(matrix(PFs[[itheta]]$X,ncol = Nx), t, thetas[,itheta])
+        }
+        else{
+          XnormW_previous[,itheta] = PFs[[itheta]]$xnormW
+          Xpred[,,itheta] = model$rtransition(PFs[[itheta]]$X, t, thetas[,itheta])
+        }
+      }
+    }
+    # compute incremental H score (with theta from time t-1, see formula in the paper)
+    return (Hd_smc2(t,model,observations[,t],thetas,normw,Xpred,XnormW_previous))
+  }
+}
+#-------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------
+# Discrete case, SMC: wrapper of Hd_smc
+hincrement_discrete_smc = function(thetas, normw, byproducts, t, observations, model,
+                                   logtargetdensities, algorithmic_parameters) {
+  # compute incremental H score (with theta from time t-1, see formula in the paper)
+  if (algorithmic_parameters$reduce_variance) {
+    # generate additional particles
+    larger_pool =  get_additional_particles_smc(algorithmic_parameters$Nc, thetas, normw,
+                                                byproducts, t, observations, model,
+                                                logtargetdensities, algorithmic_parameters)
+    thetas_pool = larger_pool$thetas
+    byproducts_pool = larger_pool$byproducts
+    normw_pool = rep(1/ncol(thetas_pool), ncol(thetas_pool))
+    # compute Hyvarinen score with more particles
+    return (Hd_smc(t,model,observations,thetas_pool,normw_pool,byproducts_pool))
+  } else {
+    return (Hd_smc(t,model,observations,thetas,normw,byproducts))
+  }
+}
+#-------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------
+# Continuous case, SMC2: wrapper of hincrement_continuous_smc2_
+hincrement_continuous_smc2 = function(thetas, normw, PFs, t, observations, model,
+                                      logtargetdensities, algorithmic_parameters) {
+  # If reduce_variance: temporarily increase the number of particles before computing
+  # the Hyvarinen score.
+  if (algorithmic_parameters$reduce_variance) {
+    # generate additional theta-particles (and their associated particle filters)
+    larger_pool =  get_additional_particles_smc2(thetas, normw, PFs, t, observations, model,
+                                                 logtargetdensities, algorithmic_parameters)
+    thetas_pool = larger_pool$thetas
+    PFs_pool = larger_pool$PFs
+    normw_pool = rep(1/ncol(thetas_pool), ncol(thetas_pool))
+    return (hincrement_continuous_smc2_(t,model,observations[,t,drop=FALSE],thetas_pool,normw_pool,PFs_pool))
+  } else {
+    return (hincrement_continuous_smc2_(t,model,observations[,t,drop=FALSE],thetas,normw,PFs))
+  }
+}
+#-------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------
+# Continuous case, SMC: wrapper of hincrement_continuous_smc_
+hincrement_continuous_smc = function(thetas, normw, byproducts, t, observations, model,
+                                     logtargetdensities, algorithmic_parameters) {
+  # If reduce_variance: temporarily increase the number of particles before computing
+  # the Hyvarinen score.
+  if (algorithmic_parameters$reduce_variance) {
+    # generate additional particles
+    larger_pool =  get_additional_particles_smc(algorithmic_parameters$Nc, thetas, normw,
+                                                byproducts, t, observations, model,
+                                                logtargetdensities, algorithmic_parameters)
+    thetas_pool = larger_pool$thetas
+    byproducts_pool = larger_pool$byproducts
+    normw_pool = rep(1/ncol(thetas_pool), ncol(thetas_pool))
+    # compute Hyvarinen score with more particles
+    return (hincrement_continuous_smc_(t, model, observations,thetas_pool,normw_pool,byproducts_pool))
+  } else {
+    return (hincrement_continuous_smc_(t, model, observations,thetas,normw,byproducts))
+  }
+}
+
+#-------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------
+# Additional implementations using Kernel density estimators
+#-------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------
+# in progress ...
+
+
+
+

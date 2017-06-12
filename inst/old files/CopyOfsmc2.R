@@ -96,7 +96,8 @@ smc2_ = function(observations, model, algorithmic_parameters){
     #-------------------------------------------------------------------------------------------------------
     # OPTIONAL: compute the incremental hscore for discrete observations
     if (algorithmic_parameters$hscore && (observation_type=="discrete")) {
-      incr_hscore[t] = hincrement_discrete_smc2(thetas, normw, PFs, t, observations, model, logtargetdensities, algorithmic_parameters)
+      incr_hscore[t] = hincrement_discrete_smc2(thetas, normw, PFs, t, observations, model,
+                                                logtargetdensities, algorithmic_parameters)
     }
     #-------------------------------------------------------------------------------------------------------
     # Assimilate the next observation
@@ -111,8 +112,10 @@ smc2_ = function(observations, model, algorithmic_parameters){
     incr_logevidence[t] = results$logcst
     #-------------------------------------------------------------------------------------------------------
     # OPTIONAL: compute incremental hscore here for continuous observations and update particles for discrete case
-    if (algorithmic_parameters$hscore && observation_type=="continuous") {
-      incr_hscore[t] = hincrement_continuous_smc2(thetas, normw, PFs, t, observations, model, logtargetdensities, algorithmic_parameters)
+    if (algorithmic_parameters$hscore) {
+      if (observation_type=="continuous") {
+        incr_hscore[t] = hincrement_continuous_smc2(thetas, normw, PFs, t, observations, model, logtargetdensities, algorithmic_parameters)
+      }
     }
     #-------------------------------------------------------------------------------------------------------
     # do some book-keeping
@@ -161,7 +164,13 @@ smc2_ = function(observations, model, algorithmic_parameters){
         required_to_resume$normw = normw
       }
       # save into RDS file
-      saveRDS(c(required_to_resume,results_so_far),file = algorithmic_parameters$savefilename)
+      if (algorithmic_parameters$hscore && (observation_type=="discrete")) {
+        # additional variables required for the discrete case
+        required_for_discrete = list(Xpred = Xpred, XnormW_previous = XnormW_previous)
+        saveRDS(c(required_to_resume,required_for_discrete,results_so_far),file = algorithmic_parameters$savefilename)
+      } else {
+        saveRDS(c(required_to_resume,results_so_far),file = algorithmic_parameters$savefilename)
+      }
     }
     #-------------------------------------------------------------------------------------------------------
   }

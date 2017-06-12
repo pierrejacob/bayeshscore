@@ -8,7 +8,7 @@ Description: More about what it does (maybe more than one line)
 License: What license is it under?
 LazyData: TRUE
 Depends:
-    Rcpp,RcppEigen,doRNG,foreach,dplyr,reshape2,ggplot2,BH,numDeriv,Rmixmod
+    Rcpp,RcppEigen,doRNG,foreach,dplyr,reshape2,ggplot2,BH,numDeriv,Rmixmod, ks
 Imports:
     Rcpp (>= 0.11.6),RcppEigen,BH
 LinkingTo: Rcpp,RcppEigen,BH

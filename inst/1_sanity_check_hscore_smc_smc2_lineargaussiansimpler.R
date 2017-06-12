@@ -44,10 +44,10 @@ model_withoutlikelihood$dpredictive = NULL # this forces the use of SMC2
 smc2_results = hscore(observations, model_withoutlikelihood, algorithmic_parameters)
 
 ########### BE CAREFUL, SMC starts with the prior sample at t = 1 #######################
-thetas_smc = smc_results$thetas_history[[nobservations+1]]
-normw_smc = smc_results$normw_history[[nobservations+1]]
-thetas_smc2 = smc2_results$thetas_history[[nobservations+1]]
-normw_smc2 = smc2_results$normw_history[[nobservations+1]]
+thetas_smc = smc_results$thetas
+normw_smc = smc_results$normw
+thetas_smc2 = smc2_results$thetas
+normw_smc2 = smc2_results$normw
 #--------------------------------------------------------------------------------------------
 ###########################################################################################
 ###########################################################################################
@@ -55,26 +55,41 @@ normw_smc2 = smc2_results$normw_history[[nobservations+1]]
 # Computes the posterior density (target)
 psi = model$psi
 sigmaV2 = model$sigmaV2
-kalman_module <<- Module( "kalman_mod", PACKAGE = "HyvarinenSSM")
+# kalman_module <<- Module( "kalman_mod", PACKAGE = "HyvarinenSSM")
+# dpost = function(theta, log = TRUE){
+#   Kalman <<- new(kalman_module$Kalman)
+#   Kalman$set_parameters(list(rho = theta[1], sigma = sqrt(theta[2]), eta = psi, tau = sqrt(sigmaV2)))
+#   Kalman$set_observations(matrix(observations, ncol = 1))
+#   Kalman$first_step()
+#   for (t in 1:nobservations){
+#     Kalman$filtering_step(t-1)
+#   }
+#   loglikelihood = sum(Kalman$get_incremental_ll())
+#   if (log){
+#     return (model$dprior(rbind(theta,psi,sigmaV2),log = TRUE) + loglikelihood)
+#   } else {
+#     return (exp((model$dprior(rbind(theta,psi,sigmaV2),log = TRUE) + loglikelihood)))
+#   }
+# }
 dpost = function(theta, log = TRUE){
-  Kalman <<- new(kalman_module$Kalman)
-  Kalman$set_parameters(list(rho = theta[1], sigma = sqrt(theta[2]), eta = psi, tau = sqrt(sigmaV2)))
-  Kalman$set_observations(matrix(observations, ncol = 1))
-  Kalman$first_step()
-  for (t in 1:nobservations){
-    Kalman$filtering_step(t-1)
-  }
-  loglikelihood = sum(Kalman$get_incremental_ll())
+  initial_mean = 0
+  initial_var = (theta[2])/(1-theta[1]^2)
+  KF = KF_filtering(observations,theta[1],psi,sigmaV2,theta[2],initial_mean,initial_var)
+  loglikelihood = sum(sapply(1:nobservations,function(t)KF_logdpredictive(observations[,t,drop=FALSE], t, KF)))
   if (log){
     return (model$dprior(rbind(theta,psi,sigmaV2),log = TRUE) + loglikelihood)
   } else {
     return (exp((model$dprior(rbind(theta,psi,sigmaV2),log = TRUE) + loglikelihood)))
   }
 }
+
+
+
+
 # Set parameters for Metropolis-Hastings
 burnin = 3000
 M = burnin + algorithmic_parameters$Ntheta
-MH_cov = (cov.wt(t(thetas_smc[1:2,]),wt=smc_results$normw_history[[nobservations+1]])$cov)/5
+MH_cov = (cov.wt(t(thetas_smc[1:2,]),wt=smc_results$normw)$cov)/5
 thetas_MH = matrix(NA,nrow = 2,ncol = M)
 thetas_MH[,1] = theta_star[1:2]
 accepts = 0
