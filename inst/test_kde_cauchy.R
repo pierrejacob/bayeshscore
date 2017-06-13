@@ -13,33 +13,41 @@ mu = 0
 sigma2 = 1
 
 Yt = rnorm(1,mu,sqrt(sigma2))
-
+upper <- -0.5
+lower <- -2
 # Define hyperparameters
 Ny = 10^3
-Y = rnorm(Ny,mu,sqrt(sigma2))
+Y = rep(NA,Ny)
+for (i in 1:Ny){
+  draw = rcauchy(1)
+  while ((draw < lower)||(draw > upper)){
+    draw = rcauchy(1)
+  }
+  Y[i] = draw
+}
 
 
 ##### compute density estimators
-xgrid = seq(-3,3,0.1)
+xgrid = seq(lower,upper,0.1)
 # exact log-density
-ll_exact = dnorm(xgrid,mu,sqrt(sigma2),log=TRUE)
+ll_exact = dcauchy(xgrid,log=TRUE) - log(pcauchy(upper) - pcauchy(lower))
 l_exact = exp(ll_exact)
 # via KDE
 l_kde = kdde(Y,deriv.order = 0,eval.points = xgrid)$estimate
 ll_kde = log(l_kde)
 # # first derivative of density
 d1_kde = kdde(Y,deriv.order = 1,eval.points = xgrid)$estimate
-d1_exact = grad(function(x)dnorm(x,mu,sqrt(sigma2)),xgrid)
+d1_exact = grad(function(x)dcauchy(x),xgrid)
 # first derivative of log-density
 d1ll_kde = d1_kde/l_kde
-d1ll_exact = -(xgrid-mu)/sigma2
+d1ll_exact = grad(func = function(x) dcauchy(x, log = TRUE), xgrid)
 
 # # second derivative of density
 d2_kde = kdde(Y,deriv.order = 2,eval.points = xgrid)$estimate
-d2_exact = sapply(xgrid,function(y)hessian(function(x)dnorm(x,mu,sqrt(sigma2)),y))
+d2_exact = sapply(xgrid, function(y) hessian(function(x) dcauchy(x), y))
 # second derivative of log-density
 d2ll_kde = d2_kde/l_kde - (d1_kde/l_kde)^2
-d2ll_exact = -1/sigma2
+d2ll_exact = sapply(xgrid, function(y) hessian(func = function(x) dcauchy(x, log = TRUE), y))
 
 # ll_ = function(x)log(kdde(Y,deriv.order = 0,eval.points = x)$estimate)
 # d1_kde = grad(ll_,xgrid)
@@ -108,11 +116,11 @@ grid.arrange(g0,g0bis,g1ll,g1llbis,g2ll,g2llbis,nrow=3)
 
 ## direct derivative estimation method
 
-Ny = 10^3
-Y = rnorm(Ny,mu,sqrt(sigma2))
+# Ny = 10^3
+# Y = rcauchy(Ny)
 
 regularizer <- 1
-sigma <- 1
+sigma <- 0.1
 psi <- function(ytilde, y) (ytilde - y) / (sigma^2) * exp(-(ytilde - y)^2 / (2*sigma^2))
 dpsi <- function(ytilde, y) (-1/(sigma^2) + (ytilde - y)^2/(sigma^4)) * exp(-(ytilde - y)^2 / (2*sigma^2))
 
