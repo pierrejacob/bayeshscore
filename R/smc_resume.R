@@ -56,6 +56,7 @@ smc_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL){
   # Retrieve the theta-particles history and byproducts history(possibly empty lists)
   thetas_history = RDSsave$thetas_history
   normw_history = RDSsave$normw_history
+  logtargetdensities_history = RDSsave$logtargetdensities_history
   byproducts_history = RDSsave$byproducts_history
   # Retrieve the results up to now
   logtargetdensities = RDSsave$logtargetdensities # log target density evaluations at latest particles
@@ -135,7 +136,11 @@ smc_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL){
     ESS[t] = results$ESS
     if (!is.na(results$rejuvenation_time)) {rejuvenation_times = c(rejuvenation_times, results$rejuvenation_time)}
     if (!is.na(results$rejuvenation_rate)) {rejuvenation_rate = c(rejuvenation_rate, results$rejuvenation_rate)}
-    if (algorithmic_parameters$store_thetas_history){thetas_history[[t+1]] = thetas; normw_history[[t+1]] = normw}
+    if (algorithmic_parameters$store_thetas_history){
+      thetas_history[[t+1]] = thetas
+      normw_history[[t+1]] = normw
+      logtargetdensities_history[[t+1]] = logtargetdensities
+    }
     if (algorithmic_parameters$store_byproducts_history){byproducts_history[[t+1]] = byproducts}
     #-------------------------------------------------------------------------------------------------------
     # Update progress bar if needed
@@ -152,6 +157,7 @@ smc_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL){
                                 algorithmic_parameters = algorithmic_parameters)
       # save the results obtained up to this time
       results_so_far = list(thetas_history = thetas_history, normw_history = normw_history,
+                            logtargetdensities_history = logtargetdensities_history,
                             incr_logevidence = incr_logevidence[1:t], incr_hscore = incr_hscore[1:t],  ESS = ESS[1:t],
                             rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
                             method = 'SMC')
@@ -183,7 +189,8 @@ smc_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL){
   if (!algorithmic_parameters$store_last_byproducts) {byproducts = NULL}
   # Return the results as a list
   return (list(thetas = thetas, normw = normw, byproducts = byproducts, logtargetdensities = logtargetdensities,
-               thetas_history = thetas_history, normw_history = normw_history, byproducts_history = byproducts_history,
+               thetas_history = thetas_history, normw_history = normw_history,
+               logtargetdensities_history = logtargetdensities_history, byproducts_history = byproducts_history,
                logevidence = cumsum(incr_logevidence), hscore = cumsum(incr_hscore),
                ESS = ESS, rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
                method = 'SMC', algorithmic_parameters = algorithmic_parameters))

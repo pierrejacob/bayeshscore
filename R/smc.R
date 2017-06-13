@@ -51,6 +51,7 @@ smc_ = function(observations, model, algorithmic_parameters){
   rejuvenation_rate = c() #successive acceptance rates of resampling
   thetas_history = list() #successive sets of particles theta
   normw_history = list() #successive sets of normalized weights for theta
+  logtargetdensities_history = list() #successive target log-densities for each particle theta
   byproducts_history = list() #successive byproducts (one for each theta at each time step)
   # # if we start from a proposal instead of the prior (e.g. improper prior)
   # # then the weights should be initialized differently
@@ -79,6 +80,7 @@ smc_ = function(observations, model, algorithmic_parameters){
   if (algorithmic_parameters$store_thetas_history){
     thetas_history[[1]] = thetas
     normw_history[[1]] = normw
+    logtargetdensities_history[[1]] = logtargetdensities
   }
   #-------------------------------------------------------------------------------------------------------
   # initialize possible byproducts (e.g. Kalman filters, etc ...)
@@ -98,6 +100,14 @@ smc_ = function(observations, model, algorithmic_parameters){
     if (algorithmic_parameters$hscore && (observation_type=="discrete")) {
       incr_hscore[t] = hincrement_discrete_smc(thetas, normw, byproducts, t, observations, model,
                                                logtargetdensities, algorithmic_parameters)
+    }
+    #-------------------------------------------------------------------------------------------------------
+    # OPTIONAL: compute the incremental hscore for continuous observations using kernel density estimators
+    if (algorithmic_parameters$hscore && (observation_type=="continuous") && algorithmic_parameters$use_kde) {
+      # compute incremental H score (with theta from time t-1)
+      incr_hscore_kde[t] = hincrementContinuous_smc_kde(t, model, observations,thetas,normw,
+                                                        byproducts, logtargetdensities,
+                                                        algorithmic_parameters)
     }
     #-------------------------------------------------------------------------------------------------------
     # Assimilate the next observation
@@ -128,6 +138,7 @@ smc_ = function(observations, model, algorithmic_parameters){
     if (algorithmic_parameters$store_thetas_history){
       thetas_history[[t+1]] = thetas
       normw_history[[t+1]] = normw
+      logtargetdensities_history[[t+1]] = logtargetdensities
     }
     if (algorithmic_parameters$store_byproducts_history){
       byproducts_history[[t+1]] = byproducts
@@ -147,6 +158,7 @@ smc_ = function(observations, model, algorithmic_parameters){
                                 algorithmic_parameters = algorithmic_parameters)
       # save the results obtained up to this time
       results_so_far = list(thetas_history = thetas_history, normw_history = normw_history,
+                            logtargetdensities_history = logtargetdensities_history,
                             incr_logevidence = incr_logevidence[1:t], incr_hscore = incr_hscore[1:t],  ESS = ESS[1:t],
                             rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
                             method = 'SMC', incr_hscore_kde = incr_hscore_kde)
@@ -178,7 +190,8 @@ smc_ = function(observations, model, algorithmic_parameters){
   if (!algorithmic_parameters$store_last_byproducts) {byproducts = NULL}
   # Return the results as a list
   return (list(thetas = thetas, normw = normw, byproducts = byproducts, logtargetdensities = logtargetdensities,
-               thetas_history = thetas_history, normw_history = normw_history, byproducts_history = byproducts_history,
+               thetas_history = thetas_history, normw_history = normw_history,
+               logtargetdensities_history = logtargetdensities_history, byproducts_history = byproducts_history,
                logevidence = cumsum(incr_logevidence), hscore = cumsum(incr_hscore), hscoreKDE = cumsum(incr_hscore_kde),
                ESS = ESS, rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
                method = 'SMC', algorithmic_parameters = algorithmic_parameters))

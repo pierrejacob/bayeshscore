@@ -54,6 +54,7 @@ smc2_ = function(observations, model, algorithmic_parameters){
   increase_Nx_values = c() #successive values of Nx
   thetas_history = list() #successive sets of particles theta
   normw_history = list() #successive sets of normalized weights for theta
+  logtargetdensities_history = list() #successive target log-densities for each particle theta
   PF_history = list() #successive particle filters (one for each theta at each time step)
   # # if we start from a proposal instead of the prior (e.g. improper prior)
   # # then the weights should be initialized differently
@@ -81,6 +82,7 @@ smc2_ = function(observations, model, algorithmic_parameters){
   if (algorithmic_parameters$store_thetas_history){
     thetas_history[[1]] = thetas
     normw_history[[1]] = normw
+    logtargetdensities_history[[1]] = logtargetdensities
   }
   #-------------------------------------------------------------------------------------------------------
   # Initialize filters (first observation passed as argument just to initialize the fields of PF)
@@ -124,6 +126,7 @@ smc2_ = function(observations, model, algorithmic_parameters){
     if (algorithmic_parameters$store_thetas_history){
       thetas_history[[t+1]] = thetas
       normw_history[[t+1]] = normw
+      logtargetdensities_history[[t+1]] = logtargetdensities
     }
     if (algorithmic_parameters$store_X_history){
       PF_history[[t+1]] = PFs
@@ -143,6 +146,7 @@ smc2_ = function(observations, model, algorithmic_parameters){
                                 algorithmic_parameters = algorithmic_parameters)
       # save the results obtained up to this time
       results_so_far = list(thetas_history = thetas_history, normw_history = normw_history,
+                            logtargetdensities_history = logtargetdensities_history,
                             incr_logevidence = incr_logevidence[1:t], incr_hscore = incr_hscore[1:t],  ESS = ESS[1:t],
                             rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
                             increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values,
@@ -177,7 +181,8 @@ smc2_ = function(observations, model, algorithmic_parameters){
   if (!algorithmic_parameters$store_last_X) {PFs = NULL}
   # Return the results as a list
   return(list(thetas = thetas, normw = normw, PFs = PFs, logtargetdensities = logtargetdensities,
-              thetas_history = thetas_history, normw_history = normw_history, PF_history = PF_history,
+              thetas_history = thetas_history, normw_history = normw_history,
+              logtargetdensities_history = logtargetdensities_history, PF_history = PF_history,
               logevidence = cumsum(incr_logevidence), hscore = cumsum(incr_hscore),
               ESS = ESS, rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
               increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values,
