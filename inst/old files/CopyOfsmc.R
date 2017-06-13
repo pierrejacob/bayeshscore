@@ -96,20 +96,8 @@ smc_ = function(observations, model, algorithmic_parameters){
     #-------------------------------------------------------------------------------------------------------
     # OPTIONAL: compute the incremental hscore for discrete observations
     if (algorithmic_parameters$hscore && (observation_type=="discrete")) {
-      # compute incremental H score (with theta from time t-1, see formula in the paper)
-      if (algorithmic_parameters$reduce_variance) {
-        # generate additional particles
-        larger_pool =  get_additional_particles_smc(algorithmic_parameters$Nc, thetas, normw,
-                                                    byproducts, t, observations, model,
-                                                    logtargetdensities, algorithmic_parameters)
-        thetas_pool = larger_pool$thetas
-        byproducts_pool = larger_pool$byproducts
-        normw_pool = rep(1/ncol(thetas_pool), ncol(thetas_pool))
-        # compute Hyvarinen score with more particles
-        incr_hscore[t] = Hd_smc(t,model,observations,thetas_pool,normw_pool,byproducts_pool)
-      } else {
-        incr_hscore[t] = Hd_smc(t,model,observations,thetas,normw,byproducts)
-      }
+      incr_hscore[t] = hincrement_discrete_smc(thetas, normw, byproducts, t, observations, model,
+                                               logtargetdensities, algorithmic_parameters)
     }
     #-------------------------------------------------------------------------------------------------------
     # OPTIONAL: compute the incremental hscore for continuous observations using kernel density estimators
@@ -133,19 +121,8 @@ smc_ = function(observations, model, algorithmic_parameters){
     #-------------------------------------------------------------------------------------------------------
     # OPTIONAL: compute the incremental hscore for continuous observations
     if (algorithmic_parameters$hscore && (observation_type=="continuous")) {
-      if (algorithmic_parameters$reduce_variance) {
-        # generate additional particles
-        larger_pool =  get_additional_particles_smc(algorithmic_parameters$Nc, thetas, normw,
-                                                    byproducts, t, observations, model,
-                                                    logtargetdensities, algorithmic_parameters)
-        thetas_pool = larger_pool$thetas
-        byproducts_pool = larger_pool$byproducts
-        normw_pool = rep(1/ncol(thetas_pool), ncol(thetas_pool))
-        # compute Hyvarinen score with more particles
-        incr_hscore[t] = hincrementContinuous_smc(t, model, observations,thetas_pool,normw_pool,byproducts_pool)
-      } else {
-        incr_hscore[t] = hincrementContinuous_smc(t, model, observations,thetas,normw,byproducts)
-      }
+      incr_hscore[t] = hincrement_continuous_smc(thetas, normw, byproducts, t, observations, model,
+                                                 logtargetdensities, algorithmic_parameters)
     }
     #-------------------------------------------------------------------------------------------------------
     # do some book-keeping

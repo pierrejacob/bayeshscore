@@ -45,7 +45,7 @@ hincrement_continuous_smc2_ = function(t,model,observationt,thetas,Wtheta,PFs) {
 }
 #-------------------------------------------------------------------------------------------
 # smc version when predictive density is available
-hincrementContinuous_smc = function(t,model,observations,thetas,Wtheta,byproducts) {
+hincrement_continuous_smc_ = function(t,model,observations,thetas,Wtheta,byproducts) {
   Ntheta = ncol(thetas)
   hincrement = 0
   d1log = list()
@@ -79,48 +79,6 @@ hincrementContinuous_smc = function(t,model,observations,thetas,Wtheta,byproduct
   }
   return (hincrement)
 }
-
-# smc version when predictive density is available, using Kernel density estimators
-# from the ks package
-hincrementContinuous_smc_kde = function(t,model,observations,thetas,normw,byproducts,
-                                        logtargetdensities, algorithmic_parameters){
-  Ny = algorithmic_parameters$parameters_kde$Ny
-  # generate additional particles until we have at least Ny particles
-  larger_pool =  get_additional_particles_smc(Ny, thetas, normw, byproducts, t, observations, model,
-                                              logtargetdensities, algorithmic_parameters)
-  # Note that the particles thetas returned by get_additional_particles_smc are equally weighted
-  thetas_pool = larger_pool$thetas
-  Ntheta = ncol(thetas_pool)
-  # Draw one Yt for each particle theta
-  Yt_sim = matrix(NA, nrow = model$dimY, ncol = Ntheta)
-  if (t == 1){
-    for (i in 1:Ntheta){
-      Yt_sim[,i] = model$rpredictive(1,t,thetas_pool[,i],NULL)
-    }
-  } else if (t>=2){
-    for (i in 1:Ntheta){
-      Yt_sim[,i] = model$rpredictive(1,t,thetas_pool[,i],observations[,1:(t-1),drop=FALSE])
-    }
-  }
-
-
-  xgrid = seq(-5,5,0.1)
-  # print(Yt_sim)
-  g = ggplot() +  geom_histogram(aes(x=c(Yt_sim), y=..density..), alpha = 0.6) +
-    geom_line(aes(xgrid, kdde(t(Yt_sim), eval.points = xgrid)$estimate)) +
-    geom_vline(xintercept = observations[,t,drop=FALSE])
-  plot(g)
-
-
-
-  pred_kde = kdde(t(Yt_sim),deriv.order = 0,eval.points = observations[,t,drop=FALSE])$estimate
-  d1pred_kde = kdde(t(Yt_sim),deriv.order = 1,eval.points = observations[,t,drop=FALSE])$estimate
-  d2pred_kde = kdde(t(Yt_sim),deriv.order = 2,eval.points = observations[,t,drop=FALSE])$estimate
-  # return the h score increment
-  return (2*d2pred_kde/pred_kde - (d1pred_kde/pred_kde)^2)
-  # return (2*sum(diag(d2pred_kde))/pred_kde - (d1pred_kde%*%t(d1pred_kde)/pred_kde))
-}
-
 #----------------------------------------------------------------------------------------#
 #------------------------------ DISCRETE OBSERVATIONS -----------------------------------#
 #----------------------------------------------------------------------------------------#
@@ -298,6 +256,26 @@ hincrement_discrete_smc2 = function(thetas, normw, PFs, t, observations, model,
 }
 #-------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------
+# Discrete case, SMC: wrapper of Hd_smc
+hincrement_discrete_smc = function(thetas, normw, byproducts, t, observations, model,
+                                   logtargetdensities, algorithmic_parameters) {
+  # compute incremental H score (with theta from time t-1, see formula in the paper)
+  if (algorithmic_parameters$reduce_variance) {
+    # generate additional particles
+    larger_pool =  get_additional_particles_smc(algorithmic_parameters$Nc, thetas, normw,
+                                                byproducts, t, observations, model,
+                                                logtargetdensities, algorithmic_parameters)
+    thetas_pool = larger_pool$thetas
+    byproducts_pool = larger_pool$byproducts
+    normw_pool = rep(1/ncol(thetas_pool), ncol(thetas_pool))
+    # compute Hyvarinen score with more particles
+    return (Hd_smc(t,model,observations,thetas_pool,normw_pool,byproducts_pool))
+  } else {
+    return (Hd_smc(t,model,observations,thetas,normw,byproducts))
+  }
+}
+#-------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------
 # Continuous case, SMC2: wrapper of hincrement_continuous_smc2_
 hincrement_continuous_smc2 = function(thetas, normw, PFs, t, observations, model,
                                       logtargetdensities, algorithmic_parameters) {
@@ -317,8 +295,71 @@ hincrement_continuous_smc2 = function(thetas, normw, PFs, t, observations, model
 }
 #-------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------
+# Continuous case, SMC: wrapper of hincrement_continuous_smc_
+hincrement_continuous_smc = function(thetas, normw, byproducts, t, observations, model,
+                                     logtargetdensities, algorithmic_parameters) {
+  # If reduce_variance: temporarily increase the number of particles before computing
+  # the Hyvarinen score.
+  if (algorithmic_parameters$reduce_variance) {
+    # generate additional particles
+    larger_pool =  get_additional_particles_smc(algorithmic_parameters$Nc, thetas, normw,
+                                                byproducts, t, observations, model,
+                                                logtargetdensities, algorithmic_parameters)
+    thetas_pool = larger_pool$thetas
+    byproducts_pool = larger_pool$byproducts
+    normw_pool = rep(1/ncol(thetas_pool), ncol(thetas_pool))
+    # compute Hyvarinen score with more particles
+    return (hincrement_continuous_smc_(t, model, observations,thetas_pool,normw_pool,byproducts_pool))
+  } else {
+    return (hincrement_continuous_smc_(t, model, observations,thetas,normw,byproducts))
+  }
+}
+
+#-------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------
+# Additional implementations using Kernel density estimators
+#-------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------
+# smc version when predictive density is available, using Kernel density estimators
+# from the ks package
+hincrementContinuous_smc_kde = function(t,model,observations,thetas,normw,byproducts,
+                                        logtargetdensities, algorithmic_parameters){
+  Ny = algorithmic_parameters$parameters_kde$Ny
+  # generate additional particles until we have at least Ny particles
+  larger_pool =  get_additional_particles_smc(Ny, thetas, normw, byproducts, t, observations, model,
+                                              logtargetdensities, algorithmic_parameters)
+  # Note that the particles thetas returned by get_additional_particles_smc are equally weighted
+  thetas_pool = larger_pool$thetas
+  Ntheta = ncol(thetas_pool)
+  # Draw one Yt for each particle theta
+  Yt_sim = matrix(NA, nrow = model$dimY, ncol = Ntheta)
+  if (t == 1){
+    for (i in 1:Ntheta){
+      Yt_sim[,i] = model$rpredictive(1,t,thetas_pool[,i],NULL)
+    }
+  } else if (t>=2){
+    for (i in 1:Ntheta){
+      Yt_sim[,i] = model$rpredictive(1,t,thetas_pool[,i],observations[,1:(t-1),drop=FALSE])
+    }
+  }
 
 
+  xgrid = seq(-5,5,0.1)
+  # print(Yt_sim)
+  g = ggplot() +  geom_histogram(aes(x=c(Yt_sim), y=..density..), alpha = 0.6) +
+    geom_line(aes(xgrid, kdde(t(Yt_sim), eval.points = xgrid)$estimate)) +
+    geom_vline(xintercept = observations[,t,drop=FALSE])
+  plot(g)
+
+
+
+  pred_kde = kdde(t(Yt_sim),deriv.order = 0,eval.points = observations[,t,drop=FALSE])$estimate
+  d1pred_kde = kdde(t(Yt_sim),deriv.order = 1,eval.points = observations[,t,drop=FALSE])$estimate
+  d2pred_kde = kdde(t(Yt_sim),deriv.order = 2,eval.points = observations[,t,drop=FALSE])$estimate
+  # return the h score increment
+  return (2*d2pred_kde/pred_kde - (d1pred_kde/pred_kde)^2)
+  # return (2*sum(diag(d2pred_kde))/pred_kde - (d1pred_kde%*%t(d1pred_kde)/pred_kde))
+}
 
 
 
