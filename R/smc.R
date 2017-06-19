@@ -159,9 +159,9 @@ smc_ = function(observations, model, algorithmic_parameters){
       # save the results obtained up to this time
       results_so_far = list(thetas_history = thetas_history, normw_history = normw_history,
                             logtargetdensities_history = logtargetdensities_history,
-                            incr_logevidence = incr_logevidence[1:t], incr_hscore = incr_hscore[1:t],  ESS = ESS[1:t],
+                            incr_logevidence = incr_logevidence[1:t], incr_hscore = incr_hscore[1:t], ESS = ESS[1:t],
                             rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
-                            method = 'SMC', incr_hscore_kde = incr_hscore_kde)
+                            method = 'SMC', incr_hscore_kde = incr_hscore_kde[1:t])
       # if the history of theta-particles is not saved, just keep the most recent ones
       if (!algorithmic_parameters$store_thetas_history){
         required_to_resume$thetas = thetas; required_to_resume$normw = normw

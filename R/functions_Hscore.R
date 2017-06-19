@@ -320,7 +320,41 @@ hincrement_continuous_smc = function(thetas, normw, byproducts, t, observations,
 # Additional implementations using Kernel density estimators
 #-------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------
-# in progress ...
+# smc version when predictive density is available, using density estimators
+# via local regression. WARNING: only implemented for univariate observations.
+hincrementContinuous_smc_kde = function(t,model,observations,thetas,normw,byproducts,
+                                        logtargetdensities, algorithmic_parameters){
+  if (t > algorithmic_parameters$kde_opt$nb_steps){
+    return (NA)
+  }
+  if (model$dimY!=1) {
+    print("WARNING: density estimation has only been implemented for univariate observations")
+    return (NA)
+  } else {
+    Ny = algorithmic_parameters$kde_opt$Ny
+    sigma20 = algorithmic_parameters$kde_opt$sigma2_order0
+    sigma21 = algorithmic_parameters$kde_opt$sigma2_order1
+    sigma22 = algorithmic_parameters$kde_opt$sigma2_order2
+    if (t == 1){
+      thetas_sim = model$rprior(Ny)
+      Yt_sim = apply(thetas_sim,MARGIN = 2, function(theta)model$rpredictive(1,1,theta,NULL))
+    }
+    if (t >=2){
+      # generate additional particles until we have at least Ny particles
+      larger_pool =  get_additional_particles_smc(Ny, thetas, normw, byproducts, t, observations, model,
+                                                  logtargetdensities, algorithmic_parameters)
+      # Note that the particles thetas returned by get_additional_particles_smc are equally weighted
+      thetas_pool = larger_pool$thetas
+      # Draw one Yt for each particle theta
+      Yt_sim = apply(thetas_pool,MARGIN = 2, function(theta)model$rpredictive(1,t,theta,observations[,1:(t-1),drop=FALSE]))
+    }
+    d0_est = get_derivative_RBFlocal(Yt_sim,observations[,t],sigma20,order = 0)
+    d1_est = get_derivative_RBFlocal(Yt_sim,observations[,t],sigma21,order = 1)
+    d2_est = get_derivative_RBFlocal(Yt_sim,observations[,t],sigma22,order = 2)
+    # compute h score via local estimation
+    return ((2*d2_est/d0_est)-((d1_est/d0_est)^2))
+  }
+}
 
 
 

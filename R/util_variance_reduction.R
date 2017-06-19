@@ -111,6 +111,12 @@ get_additional_particles_smc = function(Nc, thetas, normw, byproducts, t, observ
   # By convention, the first move corresponds to the current particles thetas.
   thetas_larger_sample[,1:Ntheta] = thetas
   if (!is.null(byproducts)) {byproducts_larger_sample[1:Ntheta] = byproducts}
+  if (algorithmic_parameters$verbose) {
+    Ntheta_total = nmoves*Ntheta
+    Ntheta_current = Ntheta
+    cat("\r Additional particles generated:",Ntheta_current,"out of",Ntheta_total,"(",floor(Ntheta_current/Ntheta_total*100),"%)")
+    flush.console()
+  }
   if (nmoves >= 2){
     for (imove in 2:nmoves){
       thetas_new_all = proposalmove$r(Ntheta)
@@ -161,7 +167,15 @@ get_additional_particles_smc = function(Nc, thetas, normw, byproducts, t, observ
         thetas_larger_sample[,((imove-1)*Ntheta+i)] = thetas[,i]
         if (!is.null(byproducts)) {byproducts_larger_sample[[((imove-1)*Ntheta+i)]] = byproducts[[i]]}
       }
+      if (algorithmic_parameters$verbose) {
+        Ntheta_current = Ntheta_current + Ntheta
+        cat("\r Additional particles generated:",Ntheta_current,"out of",Ntheta_total,"(",floor(Ntheta_current/Ntheta_total*100),"%)")
+        flush.console()
+      }
     }
+  }
+  if (algorithmic_parameters$verbose) {
+    cat("\n Done. \n")
   }
   return (list(thetas = thetas_larger_sample, byproducts = byproducts_larger_sample))
 }
