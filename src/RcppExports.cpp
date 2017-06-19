@@ -83,6 +83,164 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// phi_cpp
+double phi_cpp(double y, double yi, double sigma2);
+RcppExport SEXP HyvarinenSSM_phi_cpp(SEXP ySEXP, SEXP yiSEXP, SEXP sigma2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< double >::type y(ySEXP);
+    Rcpp::traits::input_parameter< double >::type yi(yiSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma2(sigma2SEXP);
+    __result = Rcpp::wrap(phi_cpp(y, yi, sigma2));
+    return __result;
+END_RCPP
+}
+// dphi_cpp
+double dphi_cpp(double y, double yi, double sigma2);
+RcppExport SEXP HyvarinenSSM_dphi_cpp(SEXP ySEXP, SEXP yiSEXP, SEXP sigma2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< double >::type y(ySEXP);
+    Rcpp::traits::input_parameter< double >::type yi(yiSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma2(sigma2SEXP);
+    __result = Rcpp::wrap(dphi_cpp(y, yi, sigma2));
+    return __result;
+END_RCPP
+}
+// d2phi_cpp
+double d2phi_cpp(double y, double yi, double sigma2);
+RcppExport SEXP HyvarinenSSM_d2phi_cpp(SEXP ySEXP, SEXP yiSEXP, SEXP sigma2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< double >::type y(ySEXP);
+    Rcpp::traits::input_parameter< double >::type yi(yiSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma2(sigma2SEXP);
+    __result = Rcpp::wrap(d2phi_cpp(y, yi, sigma2));
+    return __result;
+END_RCPP
+}
+// get_G_RBF_cpp
+NumericMatrix get_G_RBF_cpp(NumericVector x, double sigma2);
+RcppExport SEXP HyvarinenSSM_get_G_RBF_cpp(SEXP xSEXP, SEXP sigma2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma2(sigma2SEXP);
+    __result = Rcpp::wrap(get_G_RBF_cpp(x, sigma2));
+    return __result;
+END_RCPP
+}
+// get_h1_RBF_cpp
+NumericVector get_h1_RBF_cpp(NumericVector x, double sigma2);
+RcppExport SEXP HyvarinenSSM_get_h1_RBF_cpp(SEXP xSEXP, SEXP sigma2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma2(sigma2SEXP);
+    __result = Rcpp::wrap(get_h1_RBF_cpp(x, sigma2));
+    return __result;
+END_RCPP
+}
+// get_h2_RBF_cpp
+NumericVector get_h2_RBF_cpp(NumericVector x, double sigma2);
+RcppExport SEXP HyvarinenSSM_get_h2_RBF_cpp(SEXP xSEXP, SEXP sigma2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma2(sigma2SEXP);
+    __result = Rcpp::wrap(get_h2_RBF_cpp(x, sigma2));
+    return __result;
+END_RCPP
+}
+// loss_d1
+double loss_d1(NumericVector theta, double sigma2, NumericMatrix Gtraining, NumericVector xtraining, NumericVector xtest);
+RcppExport SEXP HyvarinenSSM_loss_d1(SEXP thetaSEXP, SEXP sigma2SEXP, SEXP GtrainingSEXP, SEXP xtrainingSEXP, SEXP xtestSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type theta(thetaSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma2(sigma2SEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Gtraining(GtrainingSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type xtraining(xtrainingSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type xtest(xtestSEXP);
+    __result = Rcpp::wrap(loss_d1(theta, sigma2, Gtraining, xtraining, xtest));
+    return __result;
+END_RCPP
+}
+// loss_d2
+double loss_d2(NumericVector theta, double sigma2, NumericMatrix Gtraining, NumericVector xtraining, NumericVector xtest);
+RcppExport SEXP HyvarinenSSM_loss_d2(SEXP thetaSEXP, SEXP sigma2SEXP, SEXP GtrainingSEXP, SEXP xtrainingSEXP, SEXP xtestSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type theta(thetaSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma2(sigma2SEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Gtraining(GtrainingSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type xtraining(xtrainingSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type xtest(xtestSEXP);
+    __result = Rcpp::wrap(loss_d2(theta, sigma2, Gtraining, xtraining, xtest));
+    return __result;
+END_RCPP
+}
+// K_cpp
+double K_cpp(double y, double ystar, double sigma2star);
+RcppExport SEXP HyvarinenSSM_K_cpp(SEXP ySEXP, SEXP ystarSEXP, SEXP sigma2starSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< double >::type y(ySEXP);
+    Rcpp::traits::input_parameter< double >::type ystar(ystarSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma2star(sigma2starSEXP);
+    __result = Rcpp::wrap(K_cpp(y, ystar, sigma2star));
+    return __result;
+END_RCPP
+}
+// dK_cpp
+double dK_cpp(double y, double ystar, double sigma2star);
+RcppExport SEXP HyvarinenSSM_dK_cpp(SEXP ySEXP, SEXP ystarSEXP, SEXP sigma2starSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< double >::type y(ySEXP);
+    Rcpp::traits::input_parameter< double >::type ystar(ystarSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma2star(sigma2starSEXP);
+    __result = Rcpp::wrap(dK_cpp(y, ystar, sigma2star));
+    return __result;
+END_RCPP
+}
+// d2K_cpp
+double d2K_cpp(double y, double ystar, double sigma2star);
+RcppExport SEXP HyvarinenSSM_d2K_cpp(SEXP ySEXP, SEXP ystarSEXP, SEXP sigma2starSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< double >::type y(ySEXP);
+    Rcpp::traits::input_parameter< double >::type ystar(ystarSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma2star(sigma2starSEXP);
+    __result = Rcpp::wrap(d2K_cpp(y, ystar, sigma2star));
+    return __result;
+END_RCPP
+}
+// get_derivative_cpp
+double get_derivative_cpp(NumericVector ys, double ystar, double sigma2star, int order);
+RcppExport SEXP HyvarinenSSM_get_derivative_cpp(SEXP ysSEXP, SEXP ystarSEXP, SEXP sigma2starSEXP, SEXP orderSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type ys(ysSEXP);
+    Rcpp::traits::input_parameter< double >::type ystar(ystarSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma2star(sigma2starSEXP);
+    Rcpp::traits::input_parameter< int >::type order(orderSEXP);
+    __result = Rcpp::wrap(get_derivative_cpp(ys, ystar, sigma2star, order));
+    return __result;
+END_RCPP
+}
 // KF_assimilate_one_cpp
 List KF_assimilate_one_cpp(NumericVector Yt, int t, NumericVector initial_mean, NumericMatrix initial_var, NumericMatrix phi, NumericMatrix psi, NumericMatrix sigmaV2, NumericMatrix sigmaW2, List KF_current);
 RcppExport SEXP HyvarinenSSM_KF_assimilate_one_cpp(SEXP YtSEXP, SEXP tSEXP, SEXP initial_meanSEXP, SEXP initial_varSEXP, SEXP phiSEXP, SEXP psiSEXP, SEXP sigmaV2SEXP, SEXP sigmaW2SEXP, SEXP KF_currentSEXP) {

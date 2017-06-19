@@ -25,6 +25,54 @@ systematic_resampling_n_ <- function(weights, ndraws, u) {
     .Call('HyvarinenSSM_systematic_resampling_n_', PACKAGE = 'HyvarinenSSM', weights, ndraws, u)
 }
 
+phi_cpp <- function(y, yi, sigma2) {
+    .Call('HyvarinenSSM_phi_cpp', PACKAGE = 'HyvarinenSSM', y, yi, sigma2)
+}
+
+dphi_cpp <- function(y, yi, sigma2) {
+    .Call('HyvarinenSSM_dphi_cpp', PACKAGE = 'HyvarinenSSM', y, yi, sigma2)
+}
+
+d2phi_cpp <- function(y, yi, sigma2) {
+    .Call('HyvarinenSSM_d2phi_cpp', PACKAGE = 'HyvarinenSSM', y, yi, sigma2)
+}
+
+get_G_RBF_cpp <- function(x, sigma2) {
+    .Call('HyvarinenSSM_get_G_RBF_cpp', PACKAGE = 'HyvarinenSSM', x, sigma2)
+}
+
+get_h1_RBF_cpp <- function(x, sigma2) {
+    .Call('HyvarinenSSM_get_h1_RBF_cpp', PACKAGE = 'HyvarinenSSM', x, sigma2)
+}
+
+get_h2_RBF_cpp <- function(x, sigma2) {
+    .Call('HyvarinenSSM_get_h2_RBF_cpp', PACKAGE = 'HyvarinenSSM', x, sigma2)
+}
+
+loss_d1 <- function(theta, sigma2, Gtraining, xtraining, xtest) {
+    .Call('HyvarinenSSM_loss_d1', PACKAGE = 'HyvarinenSSM', theta, sigma2, Gtraining, xtraining, xtest)
+}
+
+loss_d2 <- function(theta, sigma2, Gtraining, xtraining, xtest) {
+    .Call('HyvarinenSSM_loss_d2', PACKAGE = 'HyvarinenSSM', theta, sigma2, Gtraining, xtraining, xtest)
+}
+
+K_cpp <- function(y, ystar, sigma2star) {
+    .Call('HyvarinenSSM_K_cpp', PACKAGE = 'HyvarinenSSM', y, ystar, sigma2star)
+}
+
+dK_cpp <- function(y, ystar, sigma2star) {
+    .Call('HyvarinenSSM_dK_cpp', PACKAGE = 'HyvarinenSSM', y, ystar, sigma2star)
+}
+
+d2K_cpp <- function(y, ystar, sigma2star) {
+    .Call('HyvarinenSSM_d2K_cpp', PACKAGE = 'HyvarinenSSM', y, ystar, sigma2star)
+}
+
+get_derivative_cpp <- function(ys, ystar, sigma2star, order) {
+    .Call('HyvarinenSSM_get_derivative_cpp', PACKAGE = 'HyvarinenSSM', ys, ystar, sigma2star, order)
+}
+
 KF_assimilate_one_cpp <- function(Yt, t, initial_mean, initial_var, phi, psi, sigmaV2, sigmaW2, KF_current) {
     .Call('HyvarinenSSM_KF_assimilate_one_cpp', PACKAGE = 'HyvarinenSSM', Yt, t, initial_mean, initial_var, phi, psi, sigmaV2, sigmaW2, KF_current)
 }
