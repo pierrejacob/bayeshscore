@@ -49,10 +49,21 @@ set_default_algorithmic_parameters = function(observations, model, algorithmic_p
   }
   # Use kernel density estimators to compute the log-predictives and their derivatives
   if (is.null(algorithmic_parameters$use_kde)) {algorithmic_parameters$use_kde = FALSE}
-  # parameters for kernel density estimators
+  # parameters for density estimators via local regression
   if (algorithmic_parameters$use_kde) {
-    if (is.null(algorithmic_parameters$parameters_kde)) {
-      algorithmic_parameters$parameters_kde = list(Ny = 10000)
+    if (is.null(algorithmic_parameters$kde_opt)) {
+      # options for density estimation
+      algorithmic_parameters$kde_opt = list(Ny = 10^7,
+                                            sigma2_order0 = 0.001,
+                                            sigma2_order1 = 0.002,
+                                            sigma2_order2 = 0.01,
+                                            nb_steps = 1)
+    } else {
+      if (is.null(algorithmic_parameters$kde_opt$Ny)) {algorithmic_parameters$kde_opt$Ny = 10^7}
+      if (is.null(algorithmic_parameters$kde_opt$sigma2_order0)) {algorithmic_parameters$kde_opt$sigma2_order0 = 0.001}
+      if (is.null(algorithmic_parameters$kde_opt$sigma2_order1)) {algorithmic_parameters$kde_opt$sigma2_order1 = 0.002}
+      if (is.null(algorithmic_parameters$kde_opt$sigma2_order2)) {algorithmic_parameters$kde_opt$sigma2_order2 = 0.01}
+      if (is.null(algorithmic_parameters$kde_opt$nb_steps)) {algorithmic_parameters$kde_opt$nb_steps = 1}
     }
   }
   # Reduce variance: if TRUE, generate Nc additional (temporary) particles
