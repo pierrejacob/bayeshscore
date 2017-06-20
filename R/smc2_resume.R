@@ -18,7 +18,8 @@ smc2_resume = function(RDSsave=NULL, savefilename=NULL, next_observations=NULL, 
   }
   # update new algorithmic parameters and flags. NOTE: some parameters CANNOT be modified (e.g. Ntheta, model, ...)
   algorithmic_parameters = RDSsave$algorithmic_parameters
-  mutable = c("progress","verbose","save","savefilename","time_budget","ess_threshold","nmoves","resampling","proposalmove")
+  mutable = c("progress","verbose","save","savefilename","time_budget","ess_threshold","nmoves",
+              "resampling","proposalmove","kde_opt")
   for (i in 1:length(mutable)) {
     if (!is.null(new_algorithmic_parameters[[mutable[i]]])) {
       algorithmic_parameters[[mutable[i]]] = new_algorithmic_parameters[[mutable[i]]]
@@ -71,9 +72,11 @@ smc2_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL)
   incr_logevidence = array(NA,dim = c(nobservations)) #incremental log-evidence at successive times
   incr_logevidence[1:n_assimilated] = RDSsave$incr_logevidence #reload previous logevidence
   incr_hscore = array(NA,dim = c(nobservations))
+  incr_hscore_kde = array(NA,dim = c(nobservations))
   if (algorithmic_parameters$hscore) {
     # OPTIONAL: incremental Hyvarinen score
     incr_hscore[1:n_assimilated] = RDSsave$incr_hscore
+    incr_hscore_kde[1:n_assimilated] = RDSsave$incr_hscore_kde
   }
   # Retrieve the diagnostics up to now
   rejuvenation_times = RDSsave$rejuvenation_times
@@ -85,7 +88,8 @@ smc2_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL)
     return(list(thetas_history = thetas_history, normw_history = normw_history, logtargetdensities = logtargetdensities,
                 PF_history = PF_history, logevidence = cumsum(incr_logevidence), hscore = cumsum(incr_hscore),
                 ESS = ESS, rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
-                increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values,method = 'SMC2'))
+                increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values,
+                method = 'SMC2', hscoreKDE = cumsum(incr_hscore_kde)))
   } else {
     # Get the latest particles and their normalized weights
     if (algorithmic_parameters$store_thetas_history) {
@@ -125,6 +129,12 @@ smc2_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL)
       # OPTIONAL: compute the incremental hscore for discrete observations
       if (algorithmic_parameters$hscore && (observation_type=="discrete")) {
         incr_hscore[t] = hincrement_discrete_smc2(thetas, normw, PFs, t, observations, model, logtargetdensities, algorithmic_parameters)
+      }
+      #-------------------------------------------------------------------------------------------------------
+      # OPTIONAL: compute the incremental hscore for continuous observations using kernel density estimators
+      if (algorithmic_parameters$hscore && (observation_type=="continuous") && algorithmic_parameters$use_kde) {
+        # compute incremental H score (with theta from time t-1)
+        incr_hscore_kde[t] = hincrementContinuous_smc2_kde(t, model, observations,thetas,normw, PFs, logtargetdensities, algorithmic_parameters)
       }
       # Assimilate the next observation
       results = assimilate_one_smc2(thetas,PFs,t,observations,model,logtargetdensities,logw,normw,algorithmic_parameters)
@@ -170,7 +180,7 @@ smc2_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL)
                               incr_logevidence = incr_logevidence[1:t], incr_hscore = incr_hscore[1:t],  ESS = ESS[1:t],
                               rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
                               increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values,
-                              method = 'SMC2')
+                              method = 'SMC2', incr_hscore_kde = incr_hscore_kde[1:t])
         # if the history of x-particles is not saved, just keep the most recent ones
         if (algorithmic_parameters$store_X_history){
           results_so_far$PF_history_no_tree = lapply(1:(t+1),function(j)lapply(1:Ntheta,function(i)PF_history[[j]][[i]][names(PF_history[[j]][[i]])!="tree"]))
@@ -211,6 +221,7 @@ smc2_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL)
                 logevidence = cumsum(incr_logevidence), hscore = cumsum(incr_hscore),
                 ESS = ESS, rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
                 increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values,
-                method = 'SMC2', algorithmic_parameters = algorithmic_parameters))
+                method = 'SMC2', algorithmic_parameters = algorithmic_parameters,
+                hscoreKDE = cumsum(incr_hscore_kde)))
   }
 }

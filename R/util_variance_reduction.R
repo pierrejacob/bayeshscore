@@ -11,9 +11,8 @@
 #'distribution p(theta, xt | y_1, ..., y_t), whereas in the discrete case, they must target
 #'the posterior-one-step-predictive distribution p(theta, xt | y_1, ..., y_(t-1)).
 #'@export
-get_additional_particles_smc2 = function(thetas, normw, PFs, t, observations, model,
-                                         logtargetdensities, algorithmic_parameters) {
-  Nc = algorithmic_parameters$Nc
+get_additional_particles_smc2 = function(Nc, thetas, normw, PFs, t, observations, model,
+                                         logtargetdensities, algorithmic_parameters, Ncx = NULL) {
   Ntheta = ncol(thetas)
   # each moves generates Ntheta new particles thetas.
   # By convention, the first move corresponds to the current particles thetas, so that nmoves = 1
@@ -32,18 +31,24 @@ get_additional_particles_smc2 = function(thetas, normw, PFs, t, observations, mo
   # By convention, the first move corresponds to the current particles thetas.
   thetas_larger_sample[,1:Ntheta] = thetas
   # Generate more x-particles for the current thetas if needed
-  if (!is.null(algorithmic_parameters$Ncx)) {
-    if (algorithmic_parameters$Ncx > PFs[[1]]$Nx) {
+  if (!is.null(Ncx)) {
+    if (Ncx > PFs[[1]]$Nx) {
       for (i in 1:Ntheta) {
-        PFs[[i]] = conditional_particle_filter(observations[,1:t,drop=FALSE], model, thetas[,i], algorithmic_parameters$Ncx)
+        PFs[[i]] = conditional_particle_filter(observations[,1:t,drop=FALSE], model, thetas[,i], Ncx)
       }
     }
   }
   Nx = PFs[[1]]$Nx
   PFs_larger_sample[1:Ntheta] = PFs
+  if (algorithmic_parameters$verbose) {
+    Ntheta_total = nmoves*Ntheta
+    Ntheta_current = Ntheta
+    cat("\r Additional particles generated:",Ntheta_current,"out of",Ntheta_total,"(",floor(Ntheta_current/Ntheta_total*100),"%)")
+    flush.console()
+  }
   # Generate more theta-particles (and associated x-particles) if needed
   if (nmoves >= 2){
-    for (imove in 1:nmoves){
+    for (imove in 2:nmoves){
       theta_new_all = proposalmove$r(Ntheta)
       log_proposal_density_new_all = proposalmove$d(theta_new_all,log=TRUE)
       log_proposal_density_current = proposalmove$d(thetas,log=TRUE)
@@ -78,7 +83,15 @@ get_additional_particles_smc2 = function(thetas, normw, PFs, t, observations, mo
         thetas_larger_sample[,((imove-1)*Ntheta+i)] = thetas[,i]
         PFs_larger_sample[[((imove-1)*Ntheta+i)]] = PFs[[i]]
       }
+      if (algorithmic_parameters$verbose) {
+        Ntheta_current = Ntheta_current + Ntheta
+        cat("\r Additional particles generated:",Ntheta_current,"out of",Ntheta_total,"(",floor(Ntheta_current/Ntheta_total*100),"%)")
+        flush.console()
+      }
     }
+  }
+  if (algorithmic_parameters$verbose) {
+    cat("\n Done. \n")
   }
   return (list(thetas = thetas_larger_sample, PFs = PFs_larger_sample))
 }

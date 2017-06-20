@@ -202,9 +202,10 @@ smc_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL){
   return (list(thetas = thetas, normw = normw, byproducts = byproducts, logtargetdensities = logtargetdensities,
                thetas_history = thetas_history, normw_history = normw_history,
                logtargetdensities_history = logtargetdensities_history, byproducts_history = byproducts_history,
-               logevidence = cumsum(incr_logevidence), hscore = cumsum(incr_hscore), hscoreKDE = cumsum(incr_hscore_kde),
+               logevidence = cumsum(incr_logevidence), hscore = cumsum(incr_hscore),
                ESS = ESS, rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
-               method = 'SMC', algorithmic_parameters = algorithmic_parameters))
+               method = 'SMC', algorithmic_parameters = algorithmic_parameters,
+               hscoreKDE = cumsum(incr_hscore_kde)))
 }
 
 

@@ -4,7 +4,7 @@
 \alias{get_additional_particles_smc2}
 \title{get_additional_particles_smc2}
 \usage{
-get_additional_particles_smc2(thetas, normw, PFs, t, observations, model,
+get_additional_particles_smc2(Nc, thetas, normw, PFs, t, observations, model,
   logtargetdensities, algorithmic_parameters)
 }
 \description{

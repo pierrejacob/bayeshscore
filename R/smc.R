@@ -98,16 +98,13 @@ smc_ = function(observations, model, algorithmic_parameters){
     #-------------------------------------------------------------------------------------------------------
     # OPTIONAL: compute the incremental hscore for discrete observations
     if (algorithmic_parameters$hscore && (observation_type=="discrete")) {
-      incr_hscore[t] = hincrement_discrete_smc(thetas, normw, byproducts, t, observations, model,
-                                               logtargetdensities, algorithmic_parameters)
+      incr_hscore[t] = hincrement_discrete_smc(thetas, normw, byproducts, t, observations, model,logtargetdensities, algorithmic_parameters)
     }
     #-------------------------------------------------------------------------------------------------------
     # OPTIONAL: compute the incremental hscore for continuous observations using kernel density estimators
     if (algorithmic_parameters$hscore && (observation_type=="continuous") && algorithmic_parameters$use_kde) {
       # compute incremental H score (with theta from time t-1)
-      incr_hscore_kde[t] = hincrementContinuous_smc_kde(t, model, observations,thetas,normw,
-                                                        byproducts, logtargetdensities,
-                                                        algorithmic_parameters)
+      incr_hscore_kde[t] = hincrementContinuous_smc_kde(t, model, observations,thetas,normw, byproducts, logtargetdensities, algorithmic_parameters)
     }
     #-------------------------------------------------------------------------------------------------------
     # Assimilate the next observation
@@ -123,8 +120,7 @@ smc_ = function(observations, model, algorithmic_parameters){
     #-------------------------------------------------------------------------------------------------------
     # OPTIONAL: compute the incremental hscore for continuous observations
     if (algorithmic_parameters$hscore && (observation_type=="continuous")) {
-      incr_hscore[t] = hincrement_continuous_smc(thetas, normw, byproducts, t, observations, model,
-                                                 logtargetdensities, algorithmic_parameters)
+      incr_hscore[t] = hincrement_continuous_smc(thetas, normw, byproducts, t, observations, model, logtargetdensities, algorithmic_parameters)
     }
     #-------------------------------------------------------------------------------------------------------
     # do some book-keeping
@@ -192,8 +188,9 @@ smc_ = function(observations, model, algorithmic_parameters){
   return (list(thetas = thetas, normw = normw, byproducts = byproducts, logtargetdensities = logtargetdensities,
                thetas_history = thetas_history, normw_history = normw_history,
                logtargetdensities_history = logtargetdensities_history, byproducts_history = byproducts_history,
-               logevidence = cumsum(incr_logevidence), hscore = cumsum(incr_hscore), hscoreKDE = cumsum(incr_hscore_kde),
+               logevidence = cumsum(incr_logevidence), hscore = cumsum(incr_hscore),
                ESS = ESS, rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
-               method = 'SMC', algorithmic_parameters = algorithmic_parameters))
+               method = 'SMC', algorithmic_parameters = algorithmic_parameters,
+               hscoreKDE = cumsum(incr_hscore_kde)))
 }
 

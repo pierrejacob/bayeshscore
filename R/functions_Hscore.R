@@ -186,8 +186,9 @@ hincrement_discrete_smc2 = function(thetas, normw, PFs, t, observations, model,
   # the Hyvarinen score.
   if (algorithmic_parameters$reduce_variance) {
     # generate additional theta-particles (and their associated particle filters)
-    larger_pool =  get_additional_particles_smc2(thetas, normw, PFs, t, observations, model,
-                                                 logtargetdensities, algorithmic_parameters)
+    larger_pool =  get_additional_particles_smc2(algorithmic_parameters$Nc, thetas, normw, PFs, t,
+                                                 observations, model, logtargetdensities,
+                                                 algorithmic_parameters, algorithmic_parameters$Ncx)
     thetas_pool = larger_pool$thetas
     PFs_pool = larger_pool$PFs
     normw_pool = rep(1/ncol(thetas_pool), ncol(thetas_pool))
@@ -283,8 +284,9 @@ hincrement_continuous_smc2 = function(thetas, normw, PFs, t, observations, model
   # the Hyvarinen score.
   if (algorithmic_parameters$reduce_variance) {
     # generate additional theta-particles (and their associated particle filters)
-    larger_pool =  get_additional_particles_smc2(thetas, normw, PFs, t, observations, model,
-                                                 logtargetdensities, algorithmic_parameters)
+    larger_pool =  get_additional_particles_smc2(algorithmic_parameters$Nc, thetas, normw, PFs, t,
+                                                 observations, model, logtargetdensities,
+                                                 algorithmic_parameters, algorithmic_parameters$Ncx)
     thetas_pool = larger_pool$thetas
     PFs_pool = larger_pool$PFs
     normw_pool = rep(1/ncol(thetas_pool), ncol(thetas_pool))
@@ -327,6 +329,10 @@ hincrementContinuous_smc_kde = function(t,model,observations,thetas,normw,byprod
   if (t > algorithmic_parameters$kde_opt$nb_steps){
     return (NA)
   }
+  if (is.null(model$rpredictive)) {
+    print("Can't perform density estimation: no sampler 'rpredictive' provided")
+    return (NA)
+  }
   if (model$dimY!=1) {
     print("WARNING: density estimation has only been implemented for univariate observations")
     return (NA)
@@ -347,6 +353,56 @@ hincrementContinuous_smc_kde = function(t,model,observations,thetas,normw,byprod
       thetas_pool = larger_pool$thetas
       # Draw one Yt for each particle theta
       Yt_sim = apply(thetas_pool,MARGIN = 2, function(theta)model$rpredictive(1,t,theta,observations[,1:(t-1),drop=FALSE]))
+    }
+    d0_est = get_derivative_RBFlocal(Yt_sim,observations[,t],sigma20,order = 0)
+    d1_est = get_derivative_RBFlocal(Yt_sim,observations[,t],sigma21,order = 1)
+    d2_est = get_derivative_RBFlocal(Yt_sim,observations[,t],sigma22,order = 2)
+    # compute h score via local estimation
+    return ((2*d2_est/d0_est)-((d1_est/d0_est)^2))
+  }
+}
+# smc version when predictive density is available, using density estimators
+# via local regression. WARNING: only implemented for univariate observations.
+hincrementContinuous_smc2_kde = function(t,model,observations,thetas,normw,PFs,
+                                         logtargetdensities, algorithmic_parameters){
+  if (t > algorithmic_parameters$kde_opt$nb_steps){
+    return (NA)
+  }
+  if (is.null(model$robs)) {
+    print("Can't perform density estimation: no sampler 'robs' provided")
+    return (NA)
+  }
+  if (model$dimY!=1) {
+    print("WARNING: density estimation has only been implemented for univariate observations")
+    return (NA)
+  } else {
+    Ny = algorithmic_parameters$kde_opt$Ny
+    sigma20 = algorithmic_parameters$kde_opt$sigma2_order0
+    sigma21 = algorithmic_parameters$kde_opt$sigma2_order1
+    sigma22 = algorithmic_parameters$kde_opt$sigma2_order2
+    if (t == 1){
+      thetas_pool = model$rprior(Ny)
+      Xt_sim = apply(thetas_pool,MARGIN = 2, function(theta)model$rinitial(theta,1))
+      Ntheta_larger = ncol(thetas_pool)
+      Yt_sim = rep(NA,Ntheta_larger)
+      for (i in 1:Ntheta_larger){
+        Yt_sim[i] = model$robs(Xt_sim[,i,drop=FALSE],1,thetas_pool[,i,drop=FALSE])
+      }
+    }
+    if (t >=2){
+      # generate additional particles until we have at least Ny particles
+      larger_pool =  get_additional_particles_smc2(Ny, thetas, normw, PFs, t, observations, model,
+                                                   logtargetdensities, algorithmic_parameters, NULL)
+      # Note that the particles thetas returned by get_additional_particles_smc are equally weighted
+      thetas_pool = larger_pool$thetas
+      PFs_pool = larger_pool$PFs
+      Ntheta_larger = ncol(thetas_pool)
+      Yt_sim = rep(NA,Ntheta_larger)
+      for (i in 1:Ntheta_larger){
+        Xprev = PFs_pool[[i]]$X[,sample(1:PFs_pool[[i]]$Nx,size = 1,prob = PFs_pool[[i]]$xnormW),drop=FALSE]
+        Xt_sim = model$rtransition(Xprev,t,thetas_pool[,i])
+        Yt_sim[i] = model$robs(Xt_sim,t,thetas_pool[,i])
+      }
     }
     d0_est = get_derivative_RBFlocal(Yt_sim,observations[,t],sigma20,order = 0)
     d1_est = get_derivative_RBFlocal(Yt_sim,observations[,t],sigma21,order = 1)
