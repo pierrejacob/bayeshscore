@@ -40,6 +40,10 @@ algorithmic_parameters = list()
 algorithmic_parameters$Ntheta = 2^10
 algorithmic_parameters$Nx = 2^7
 algorithmic_parameters$verbose = TRUE
+
+algorithmic_parameters$nmoves = 5
+algorithmic_parameters$reduce_variance = TRUE
+algorithmic_parameters$Nc = 2^12
 # The remaining algorithmic parameters are set to their default values via the functions in util_default.R
 #--------------------------------------------------------------------------------------------
 repl = 5 #number of replications
@@ -168,7 +172,7 @@ ggplot(logbayesfactors) +
   theme(axis.title.y=element_text(margin=margin(0,10,0,0))) +
   theme(axis.title.x=element_text(margin=margin(10,0,0,0)))
 
-# ggsave("example_4_AR1_MA1_log_BF_1_vs_2.png",dpi = 300)
+# ggsave("example_4_AR1_MA1_log_BF_1_vs_2.png",dpi = 300,width = 10,height = 5)
 
 # Hyvarinen factor
 ggplot(h_factors) +
@@ -183,4 +187,4 @@ ggplot(h_factors) +
   theme(axis.title.y=element_text(margin=margin(0,10,0,0))) +
   theme(axis.title.x=element_text(margin=margin(10,0,0,0)))
 
-# ggsave("example_4_AR1_MA1_Hyvarinen_factor_1_vs_2.png",dpi = 300)
+# ggsave("example_4_AR1_MA1_Hyvarinen_factor_1_vs_2.png",dpi = 300,width = 10,height = 5)

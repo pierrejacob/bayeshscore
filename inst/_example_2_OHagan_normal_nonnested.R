@@ -175,6 +175,7 @@ grid.arrange(plot_post[[1]],plot_post[[2]],
 #--------------------------------------------------------------------------------------------
 # Sanity check (exact computation)
 #--------------------------------------------------------------------------------------------
+results_all = list(results1_all, results2_all, results3_all, results4_all)
 M = 1000
 DGP_mu = c(0,1,2,0)
 DGP_sigma2 = c(5,1,3,1)
@@ -224,8 +225,8 @@ do.call(grid.arrange,c(plot_exact, ncol = 2))
 # Generate plots for paper
 #--------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------
+colors = c("blue",wes_palette("Royal1")[2])
 # Compute the Hyvarinen factor
-results_all = list(results1_all, results2_all, results3_all, results4_all)
 h_factors = data.frame()
 theta1_star = rep(0, 4)
 theta2_star = rep(0, 4)
@@ -264,8 +265,8 @@ for (i in 1:4){
 # Positive = choose model 1 // Negative == choose model 2.
 ggplot(h_factors, aes(color = factor(sim), group = interaction(case,repl), linetype = factor(sim))) +
   geom_line(aes(time, hfactor)) + scale_linetype_manual(values=c("dashed","solid")) +
-  scale_color_manual(values=c("blue","red")) +
-  geom_hline(yintercept = 0,linetype="dotted",size=1) +
+  scale_color_manual(values=colors) +
+  geom_hline(yintercept = 0,alpha=0.3) +
   ylab("Hyvrärinen factor  [1 vs 2]") + facet_wrap( ~ type, ncol=2, scales="free") + xlab("Number of observations") +
   theme(strip.text.y = element_text(size = 12, colour = "black")) +
   theme(legend.text=element_text(size=12)) +
@@ -273,5 +274,4 @@ ggplot(h_factors, aes(color = factor(sim), group = interaction(case,repl), linet
   theme(legend.position="none") +
   theme(axis.title.y=element_text(margin=margin(0,10,0,0))) +
   theme(axis.title.x=element_text(margin=margin(10,0,0,0)))
-
-# ggsave("example_2_OHagan_Hyvarinen_factor_1_versus_2.png",dpi = 300)
+ggsave("example_2_OHagan_Hyvarinen_factor_1_versus_2.png",dpi = 300,width = 10,height = 5)

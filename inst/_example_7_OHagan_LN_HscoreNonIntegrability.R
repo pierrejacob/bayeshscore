@@ -37,32 +37,33 @@ model = function(i){
   if (i==2) {return(get_model_iid_lognormal(mu0, kappa0, nu0, sigma02))}
 }
 #--------------------------------------------------------------------------------------------
-# repl = 5 #number of replications
-# registerDoParallel(cores=5) #number of workers in parallel
-# #--------------------------------------------------------------------------------------------
-# # Monitor progress in parallel via log file
-# logfilename = "results.log"
-# writeLines(c(""), logfilename)
-# sink(logfilename, append = TRUE)
-# #--------------------------------------------------------------------------------------------
-# results = data.frame()
-# for (m in 1:2){
-#   gc() # attempt to limit RAM usage
-#   cat("Model ",toString(m)," started at:", toString(Sys.time()))
-#   result = foreach(i=1:repl,.packages=c('HyvarinenSSM'),.verbose = TRUE) %dorng% {
-#     gc() # attempt to limit RAM usage
-#     sink(logfilename, append = TRUE) # Monitor progress in parallel via log file
-#     hscore(observations, model(m), algorithmic_parameters)
-#   }
-#   for (r in 1:repl){
-#     results = rbind(results,data.frame(logevidence = result[[r]]$logevidence,
-#                                        hscore = result[[r]]$hscore,
-#                                        time = 1:nobservations,
-#                                        model = m,
-#                                        repl = r))
-#   }
-# }
-# sink()
+repl = 5 #number of replications
+registerDoParallel(cores=5) #number of workers in parallel
+models_to_run = c(2)
+#--------------------------------------------------------------------------------------------
+# Monitor progress in parallel via log file
+logfilename = "results.log"
+writeLines(c(""), logfilename)
+sink(logfilename, append = TRUE)
+#--------------------------------------------------------------------------------------------
+results = data.frame()
+for (m in models_to_run){
+  gc() # attempt to limit RAM usage
+  cat("Model ",toString(m)," started at:", toString(Sys.time()))
+  result = foreach(i=1:repl,.packages=c('HyvarinenSSM'),.verbose = TRUE) %dorng% {
+    gc() # attempt to limit RAM usage
+    sink(logfilename, append = TRUE) # Monitor progress in parallel via log file
+    hscore(observations, model(m), algorithmic_parameters)
+  }
+  for (r in 1:repl){
+    results = rbind(results,data.frame(logevidence = result[[r]]$logevidence,
+                                       hscore = result[[r]]$hscore,
+                                       time = 1:nobservations,
+                                       model = m,
+                                       repl = r))
+  }
+}
+sink()
 #--------------------------------------------------------------------------------------------
 M = 2^10
 # Compute the "exact" h-score for model 1 (exponential)
@@ -123,6 +124,23 @@ ggplot() +
   geom_line(aes(1:nobservations, hscore_analytical2/(1:nobservations)),col="blue")
 
 
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+# Generate plots for paper
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+# subsample time indexes for better readability of the graph
+index = seq(1,nobservations,100)
+ggplot() +
+  geom_line(data=subset(results,model==2),aes(time, hscore/time, color = factor(model), group=repl)) +
+  geom_point(aes(index, hscore_analytical2[index]/index),col="blue") +
+  ylab("Prequential Hyvärinen score / time") +
+  theme(legend.text=element_text(size=12)) +
+  theme(legend.title=element_text(size=12)) +
+  theme(axis.title.y=element_text(margin=margin(0,10,0,0))) +
+  theme(axis.title.x=element_text(margin=margin(10,0,0,0))) +
+  theme(legend.position="none")
+# ggsave("example_7_LN_HscoreNonIntegrableNoConvergence.png",dpi = 300,width = 10,height = 5)
 
 
 

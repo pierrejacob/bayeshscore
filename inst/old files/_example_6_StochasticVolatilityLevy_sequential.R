@@ -13,15 +13,19 @@ set.seed(19)
 #--------------------------------------------------------------------------------------------
 # set algorithmic parameters
 algorithmic_parameters = list()
-algorithmic_parameters$Ntheta = 2^7
+algorithmic_parameters$Ntheta = 2^10
 algorithmic_parameters$Nx = 2^7
+algorithmic_parameters$Nxmax = 2^12
 algorithmic_parameters$nmoves = 5
 algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$save = FALSE
-algorithmic_parameters$store_X_history = FALSE
-algorithmic_parameters$store_thetas_history = FALSE
-algorithmic_parameters$store_last_X = FALSE
-algorithmic_parameters$store_last_thetas = TRUE
+
+algorithmic_parameters$reduce_variance = TRUE
+algorithmic_parameters$Nc = 2^12
+algorithmic_parameters$Ncx = 2^10
+
+algorithmic_parameters$use_kde = TRUE
+algorithmic_parameters$kde_opt = list(Ny = 10^4, nb_steps = nobservations)
 #--------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------
@@ -30,13 +34,13 @@ algorithmic_parameters$store_last_thetas = TRUE
 #--------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------
 # simulate observations
-nobservations = 5
+nobservations = 100
 timesteps = 1:nobservations
 theta = c(0, 0, 0.5, 0.0625, 0.01)
 observations = simulateData(get_model_SVLevy_singlefactor(timesteps),theta,nobservations)$Y
 #--------------------------------------------------------------------------------------------
 # define models
-nb_models = 1
+nb_models = 3
 model = function(i){
   if(i==1){return(get_model_SVLevy_singlefactor(timesteps))}
   if(i==2){return(get_model_SVLevy_multifactor_noleverage(timesteps))}
@@ -44,28 +48,18 @@ model = function(i){
 }
 #--------------------------------------------------------------------------------------------
 repl = 5 #number of replications
-registerDoParallel(cores=5) #number of workers in parallel
+models_to_run = c(2,3)
 #--------------------------------------------------------------------------------------------
 ### Compute logevidence and hscore for each model
 results_all = data.frame()
 post_all = list()
 #--------------------------------------------------------------------------------------------
-# Monitor progress in parallel via log file
-logfilename = "results.log"
-writeLines(c(""), logfilename)
-sink(logfilename, append = TRUE)
-#--------------------------------------------------------------------------------------------
-for (m in 1:nb_models){
+for (m in models_to_run){
   gc() # attempt to limit RAM usage
-  cat("Model ",toString(m)," started at:", toString(Sys.time()))
-  results = foreach(i=1:repl,.packages=c('HyvarinenSSM'),.verbose = TRUE) %dorng% {
-    gc() # attempt to limit RAM usage
-    sink(logfilename, append = TRUE) # Monitor progress in parallel via log file
-    # algorithmic_parameters$savefilename = paste("model_",toString(m),"_repl_",toString(i),"_",format(Sys.time(),"%Y-%m-%d_%H-%M-%S"),".rds",sep="")
-    hscore(observations, model(m), algorithmic_parameters)
-  }
+  cat("Model ",toString(m)," started at:", toString(Sys.time()),"\n")
   post = data.frame()
   for (r in 1:repl){
+    results = hscore(observations, model(m), algorithmic_parameters)
     results_all = rbind(results_all,data.frame(logevidence = results[[r]]$logevidence,
                                                hscore = results[[r]]$hscore,
                                                time = 1:nobservations,
@@ -78,30 +72,6 @@ for (m in 1:nb_models){
   post_all[[m]] = post
 }
 #--------------------------------------------------------------------------------------------
-# for (m in 1:nb_models){
-#   cat("Model ",toString(m)," started at:", toString(Sys.time()))
-#   results = foreach(i=1:repl,.packages=c('HyvarinenSSM'),.verbose = TRUE) %dorng% {
-#     sink(logfilename, append = TRUE) # Monitor progress in parallel via log file
-#     algorithmic_parameters$savefilename = paste("model_",toString(m),"_repl_",toString(i),".rds",sep="")
-#     hscore(observations, model(m), algorithmic_parameters)
-#   }
-#   post = data.frame()
-#   for (r in 1:repl){
-#     results_all = rbind(results_all,data.frame(logevidence = results[[r]]$logevidence,
-#                                                hscore = results[[r]]$hscore,
-#                                                time = 1:nobservations,
-#                                                model = factor(m),
-#                                                repl = r))
-#     post = rbind(post,data.frame(t(results[[r]]$thetas),
-#                                  W = results[[r]]$normw,
-#                                  repl = r))
-#   }
-#   post_all[[m]] = post
-# }
-#--------------------------------------------------------------------------------------------
-# close log file
-sink()
-#--------------------------------------------------------------------------------------------
 # Check posterior for each model
 post_plot_all = list()
 xlabels = list(xlab(expression(mu)), xlab(expression(beta)), xlab(expression(xi)),
@@ -109,7 +79,7 @@ xlabels = list(xlab(expression(mu)), xlab(expression(beta)), xlab(expression(xi)
                xlab(expression(rho[1])), xlab(expression(rho[2])), xlab("w"))
 colors = wes_palette("Darjeeling")[c(1,3,5)]
 # Generate plots
-for (m in 1:nb_models) {
+for (m in models_to_run) {
   dimtheta = model(m)$dimtheta
   cnames = colnames(post_all[[m]])
   plot_post = list()
@@ -123,9 +93,10 @@ for (m in 1:nb_models) {
   post_plot_all[[m]] = plot_post
 }
 # display plots
-do.call(grid.arrange,c(post_plot_all[[1]], ncol = 3, nrow = 3))
-do.call(grid.arrange,c(post_plot_all[[2]], ncol = 3, nrow = 3))
-do.call(grid.arrange,c(post_plot_all[[3]], ncol = 3, nrow = 3))
+for (m in models_to_run) {
+  do.call(grid.arrange,c(post_plot_all[[m]], ncol = 3, nrow = 3))
+}
+
 #--------------------------------------------------------------------------------------------
 # Check the log-evidence
 ggplot(results_all) +
@@ -134,7 +105,7 @@ ggplot(results_all) +
   scale_color_manual(values = colors)
 #--------------------------------------------------------------------------------------------
 # Check the h-score
-ggplot(subset(results_all)) +
+ggplot(subset(results_all, time >= 1)) +
   geom_line(aes(time, hscore/time, color = model,group=interaction(model,repl)), size = 1) +
   ylab("Hyvarinen score / time") + guides(colour = guide_legend(override.aes = list(size=2))) +
   scale_color_manual(values = colors)
