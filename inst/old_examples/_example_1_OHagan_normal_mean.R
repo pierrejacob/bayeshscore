@@ -26,7 +26,7 @@ algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$ess_threshold = 0.5
 # The remaining algorithmic parameters are set to their default values via the functions in util_default.R
 #--------------------------------------------------------------------------------------------
-repl = 10 #number of replications
+repl = 50 #number of replications
 registerDoParallel(cores=5) #number of workers in parallel
 #--------------------------------------------------------------------------------------------
 sigma2prior_all = c(100,1000,10000,100000)
@@ -117,7 +117,7 @@ for (s in 1:length(sigma2prior_all)){
     criteria.df = rbind(criteria.df,data.frame(time = 1:nobservations,
                                                repl = r,
                                                sigma2prior = sigma2,
-                                               value = result$logevidence,
+                                               value = -result$logevidence,
                                                type = factor("- log evidence")))
     criteria.df = rbind(criteria.df,data.frame(time = 1:nobservations,
                                                repl = r,
@@ -155,8 +155,29 @@ equal_breaks <- function(n, s, ...){
 ggplot(subset(criteria.df,time == nobservations)) +
   scale_color_manual(expression(bold(paste(" ",sigma[0]^2))),values = colors) +
   geom_boxplot(aes(factor(format(sigma2prior, scientific = FALSE)),value, color = factor(format(sigma2prior, scientific = FALSE))),outlier.shape = NA,size=1) +
-  xlab(expression(paste(" ",sigma[0]^2))) + theme(legend.position="none") +
+  xlab(expression(paste(" ",sigma[0]^2))) +
   facet_grid(type ~ ., scales="free") + ylab("") +
+  theme(strip.text.y = element_text(size = 12, colour = "black")) +
+  theme(legend.text=element_text(size=12)) +
+  theme(legend.title=element_text(size=12)) +
+  theme(legend.position="none") +
+  theme(axis.title.y=element_text(margin=margin(0,10,0,0))) +
+  theme(axis.title.x=element_text(margin=margin(10,0,0,0))) +
   scale_y_continuous(labels=scaleFUNy,breaks=equal_breaks(n=5, s=0.1))
 # ggsave("example_1_OHagan_normal_mean_2.png",dpi = 300,width = 10,height = 5)
 #--------------------------------------------------------------------------------------------
+
+ggplot(subset(criteria.df,time == nobservations)) +
+  scale_color_manual(expression(bold(paste(" ",sigma[0]^2))),values = colors) +
+  geom_boxplot(aes(factor(format(sigma2prior, scientific = FALSE)),value, color = factor(format(sigma2prior, scientific = FALSE))),outlier.shape = NA,size=1) +
+  xlab(expression(paste(" ",sigma[0]^2))) +
+  facet_grid(type ~ ., scales="free") + ylab("") +
+  theme(strip.text.y = element_text(size = 16, colour = "black", face="plain")) +
+  theme(legend.position="none") +
+  theme(legend.text=element_text(size=20), legend.title=element_text(size=20)) +
+  theme(axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 15),
+        axis.title.x = element_text(size = 20, margin=margin(10,0,0,0)),
+        axis.title.y = element_text(size = 20, margin = margin(0,10,0,0))) +
+  scale_y_continuous(labels=scaleFUNy,breaks=equal_breaks(n=5, s=0.1))
+# ggsave("poster_example_1_OHagan_normal_mean_2.png",dpi = 300,width = 10,height = 5)
