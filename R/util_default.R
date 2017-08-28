@@ -48,22 +48,22 @@ set_default_algorithmic_parameters = function(observations, model, algorithmic_p
     algorithmic_parameters$proposalmove = get_proposal_mixture()
   }
   # Use kernel density estimators to compute the log-predictives and their derivatives
-  if (is.null(algorithmic_parameters$use_kde)) {algorithmic_parameters$use_kde = FALSE}
+  if (is.null(algorithmic_parameters$use_dde)) {algorithmic_parameters$use_dde = FALSE}
   # parameters for density estimators via local regression
-  if (algorithmic_parameters$use_kde) {
-    if (is.null(algorithmic_parameters$kde_opt)) {
+  if (algorithmic_parameters$use_dde) {
+    if (is.null(algorithmic_parameters$dde_options)) {
       # options for density estimation
-      algorithmic_parameters$kde_opt = list(Ny = 10^7,
+      algorithmic_parameters$dde_options = list(Ny = 10^4,
                                             sigma2_order0 = 0.001,
                                             sigma2_order1 = 0.002,
                                             sigma2_order2 = 0.01,
                                             nb_steps = 1)
     } else {
-      if (is.null(algorithmic_parameters$kde_opt$Ny)) {algorithmic_parameters$kde_opt$Ny = 10^7}
-      if (is.null(algorithmic_parameters$kde_opt$sigma2_order0)) {algorithmic_parameters$kde_opt$sigma2_order0 = 0.001}
-      if (is.null(algorithmic_parameters$kde_opt$sigma2_order1)) {algorithmic_parameters$kde_opt$sigma2_order1 = 0.002}
-      if (is.null(algorithmic_parameters$kde_opt$sigma2_order2)) {algorithmic_parameters$kde_opt$sigma2_order2 = 0.01}
-      if (is.null(algorithmic_parameters$kde_opt$nb_steps)) {algorithmic_parameters$kde_opt$nb_steps = 1}
+      if (is.null(algorithmic_parameters$dde_options$Ny)) {algorithmic_parameters$dde_options$Ny = 10^4}
+      if (is.null(algorithmic_parameters$dde_options$sigma2_order0)) {algorithmic_parameters$dde_options$sigma2_order0 = 0.001}
+      if (is.null(algorithmic_parameters$dde_options$sigma2_order1)) {algorithmic_parameters$dde_options$sigma2_order1 = 0.002}
+      if (is.null(algorithmic_parameters$dde_options$sigma2_order2)) {algorithmic_parameters$dde_options$sigma2_order2 = 0.01}
+      if (is.null(algorithmic_parameters$dde_options$nb_steps)) {algorithmic_parameters$dde_options$nb_steps = Inf}
     }
   }
   # Reduce variance: if TRUE, generate Nc additional (temporary) particles

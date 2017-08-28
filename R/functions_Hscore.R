@@ -324,9 +324,9 @@ hincrement_continuous_smc = function(thetas, normw, byproducts, t, observations,
 #-------------------------------------------------------------------------------------------
 # smc version when predictive density is available, using density estimators
 # via local regression. WARNING: only implemented for univariate observations.
-hincrementContinuous_smc_kde = function(t,model,observations,thetas,normw,byproducts,
+hincrementContinuous_smc_dde = function(t,model,observations,thetas,normw,byproducts,
                                         logtargetdensities, algorithmic_parameters){
-  if (t > algorithmic_parameters$kde_opt$nb_steps){
+  if (t > algorithmic_parameters$dde_options$nb_steps){
     return (NA)
   }
   if (is.null(model$rpredictive)) {
@@ -337,10 +337,10 @@ hincrementContinuous_smc_kde = function(t,model,observations,thetas,normw,byprod
     print("WARNING: density estimation has only been implemented for univariate observations")
     return (NA)
   } else {
-    Ny = algorithmic_parameters$kde_opt$Ny
-    sigma20 = algorithmic_parameters$kde_opt$sigma2_order0
-    sigma21 = algorithmic_parameters$kde_opt$sigma2_order1
-    sigma22 = algorithmic_parameters$kde_opt$sigma2_order2
+    Ny = algorithmic_parameters$dde_options$Ny
+    sigma20 = algorithmic_parameters$dde_options$sigma2_order0
+    sigma21 = algorithmic_parameters$dde_options$sigma2_order1
+    sigma22 = algorithmic_parameters$dde_options$sigma2_order2
     if (t == 1){
       thetas_sim = model$rprior(Ny)
       Yt_sim = apply(thetas_sim,MARGIN = 2, function(theta)model$rpredictive(1,1,theta,NULL))
@@ -363,9 +363,9 @@ hincrementContinuous_smc_kde = function(t,model,observations,thetas,normw,byprod
 }
 # smc version when predictive density is available, using density estimators
 # via local regression. WARNING: only implemented for univariate observations.
-hincrementContinuous_smc2_kde = function(t,model,observations,thetas,normw,PFs,
+hincrementContinuous_smc2_dde = function(t,model,observations,thetas,normw,PFs,
                                          logtargetdensities, algorithmic_parameters){
-  if (t > algorithmic_parameters$kde_opt$nb_steps){
+  if (t > algorithmic_parameters$dde_options$nb_steps){
     return (NA)
   }
   if (is.null(model$robs)) {
@@ -376,10 +376,10 @@ hincrementContinuous_smc2_kde = function(t,model,observations,thetas,normw,PFs,
     print("WARNING: density estimation has only been implemented for univariate observations")
     return (NA)
   } else {
-    Ny = algorithmic_parameters$kde_opt$Ny
-    sigma20 = algorithmic_parameters$kde_opt$sigma2_order0
-    sigma21 = algorithmic_parameters$kde_opt$sigma2_order1
-    sigma22 = algorithmic_parameters$kde_opt$sigma2_order2
+    Ny = algorithmic_parameters$dde_options$Ny
+    sigma20 = algorithmic_parameters$dde_options$sigma2_order0
+    sigma21 = algorithmic_parameters$dde_options$sigma2_order1
+    sigma22 = algorithmic_parameters$dde_options$sigma2_order2
     if (t == 1){
       thetas_pool = model$rprior(Ny)
       Xt_sim = apply(thetas_pool,MARGIN = 2, function(theta)model$rinitial(theta,1))

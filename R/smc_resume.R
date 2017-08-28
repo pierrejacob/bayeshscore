@@ -19,7 +19,7 @@ smc_resume = function(RDSsave=NULL, savefilename=NULL, next_observations=NULL, n
   # update new algorithmic parameters and flags. NOTE: some parameters CANNOT be modified (e.g. Ntheta, model, ...)
   algorithmic_parameters = RDSsave$algorithmic_parameters
   mutable = c("progress","verbose","save","savefilename","time_budget","ess_threshold","nmoves",
-              "resampling","proposalmove","kde_opt")
+              "resampling","proposalmove","dde_options")
   for (i in 1:length(mutable)) {
     if (!is.null(new_algorithmic_parameters[[mutable[i]]])) {
       algorithmic_parameters[[mutable[i]]] = new_algorithmic_parameters[[mutable[i]]]
@@ -66,11 +66,11 @@ smc_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL){
   incr_logevidence = array(NA,dim = c(nobservations)) #incremental log-evidence at successive times
   incr_logevidence[1:n_assimilated] = RDSsave$incr_logevidence #reload previous logevidence
   incr_hscore = array(NA,dim = c(nobservations))
-  incr_hscore_kde = array(NA,dim = c(nobservations))
+  incr_hscore_dde = array(NA,dim = c(nobservations))
   if (algorithmic_parameters$hscore) {
     # OPTIONAL: incremental Hyvarinen score
     incr_hscore[1:n_assimilated] = RDSsave$incr_hscore
-    incr_hscore_kde[1:n_assimilated] = RDSsave$incr_hscore_kde
+    incr_hscore_dde[1:n_assimilated] = RDSsave$incr_hscore_dde
   }
   # Retrieve the diagnostics up to now
   rejuvenation_times = RDSsave$rejuvenation_times
@@ -80,7 +80,7 @@ smc_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL){
     return (list(thetas_history = thetas_history, normw_history = normw_history, logtargetdensities = logtargetdensities,
                  byproducts_history = byproducts_history, logevidence = cumsum(incr_logevidence), hscore = cumsum(incr_hscore),
                  ESS = ESS, rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
-                 method = 'SMC', hscoreKDE = cumsum(incr_hscore_kde)))
+                 method = 'SMC', hscoreDDE = cumsum(incr_hscore_dde)))
   }
   # Get the latest particles and their normalized weights
   if (algorithmic_parameters$store_thetas_history) {
@@ -119,9 +119,9 @@ smc_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL){
     }
     #-------------------------------------------------------------------------------------------------------
     # OPTIONAL: compute the incremental hscore for continuous observations using kernel density estimators
-    if (algorithmic_parameters$hscore && (observation_type=="continuous") && algorithmic_parameters$use_kde) {
+    if (algorithmic_parameters$hscore && (observation_type=="continuous") && algorithmic_parameters$use_dde) {
       # compute incremental H score (with theta from time t-1)
-      incr_hscore_kde[t] = hincrementContinuous_smc_kde(t, model, observations,thetas,normw,
+      incr_hscore_dde[t] = hincrementContinuous_smc_dde(t, model, observations,thetas,normw,
                                                         byproducts, logtargetdensities,
                                                         algorithmic_parameters)
     }
@@ -171,7 +171,7 @@ smc_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL){
                             logtargetdensities_history = logtargetdensities_history,
                             incr_logevidence = incr_logevidence[1:t], incr_hscore = incr_hscore[1:t],  ESS = ESS[1:t],
                             rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
-                            method = 'SMC', incr_hscore_kde = incr_hscore_kde[1:t])
+                            method = 'SMC', incr_hscore_dde = incr_hscore_dde[1:t])
       # if the history of theta-particles is not saved, just keep the most recent ones
       if (!algorithmic_parameters$store_thetas_history){
         required_to_resume$thetas = thetas; required_to_resume$normw = normw
@@ -205,19 +205,6 @@ smc_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL){
                logevidence = cumsum(incr_logevidence), hscore = cumsum(incr_hscore),
                ESS = ESS, rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
                method = 'SMC', algorithmic_parameters = algorithmic_parameters,
-               hscoreKDE = cumsum(incr_hscore_kde)))
+               hscoreDDE = cumsum(incr_hscore_dde)))
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 

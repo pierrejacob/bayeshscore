@@ -48,7 +48,7 @@ smc2_ = function(observations, model, algorithmic_parameters){
   ESS = array(NA,dim = c(nobservations)) #ESS at successive times t
   incr_logevidence = array(NA,dim = c(nobservations)) #incremental log-evidence at successive times t
   incr_hscore = array(NA,dim = c(nobservations)) # OPTIONAL: incremental Hyvarinen score at successive times t
-  incr_hscore_kde = array(NA,dim = c(nobservations)) # OPTIONAL: incremental Hyvarinen score at successive times t using kernel density estimators
+  incr_hscore_dde = array(NA,dim = c(nobservations)) # OPTIONAL: incremental Hyvarinen score at successive times t using kernel density estimators
   rejuvenation_times = c() #successive times where resampling is triggered
   rejuvenation_rate = c() #successive acceptance rates of resampling
   increase_Nx_times = c() #successive times where increasing Nx is triggered
@@ -103,9 +103,9 @@ smc2_ = function(observations, model, algorithmic_parameters){
     }
     #-------------------------------------------------------------------------------------------------------
     # OPTIONAL: compute the incremental hscore for continuous observations using kernel density estimators
-    if (algorithmic_parameters$hscore && (observation_type=="continuous") && algorithmic_parameters$use_kde) {
+    if (algorithmic_parameters$hscore && (observation_type=="continuous") && algorithmic_parameters$use_dde) {
       # compute incremental H score (with theta from time t-1)
-      incr_hscore_kde[t] = hincrementContinuous_smc2_kde(t, model, observations,thetas,normw, PFs, logtargetdensities, algorithmic_parameters)
+      incr_hscore_dde[t] = hincrementContinuous_smc2_dde(t, model, observations,thetas,normw, PFs, logtargetdensities, algorithmic_parameters)
     }
     #-------------------------------------------------------------------------------------------------------
     # Assimilate the next observation
@@ -157,7 +157,7 @@ smc2_ = function(observations, model, algorithmic_parameters){
                             incr_logevidence = incr_logevidence[1:t], incr_hscore = incr_hscore[1:t],  ESS = ESS[1:t],
                             rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
                             increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values,
-                            method = 'SMC2', incr_hscore_kde = incr_hscore_kde[1:t])
+                            method = 'SMC2', incr_hscore_dde = incr_hscore_dde[1:t])
       # if the history of x-particles is not saved, just keep the most recent ones
       if (algorithmic_parameters$store_X_history){
         results_so_far$PF_history_no_tree = lapply(1:(t+1),function(j)lapply(1:Ntheta,function(i)PF_history[[j]][[i]][names(PF_history[[j]][[i]])!="tree"]))
@@ -194,5 +194,5 @@ smc2_ = function(observations, model, algorithmic_parameters){
               ESS = ESS, rejuvenation_times = rejuvenation_times, rejuvenation_rate = rejuvenation_rate,
               increase_Nx_times = increase_Nx_times, increase_Nx_values = increase_Nx_values,
               method = 'SMC2', algorithmic_parameters = algorithmic_parameters,
-              hscoreKDE = cumsum(incr_hscore_kde)))
+              hscoreDDE = cumsum(incr_hscore_dde)))
 }
