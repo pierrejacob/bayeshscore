@@ -1,5 +1,5 @@
 ##################################################################################################
-# Example 3: AR(1) vs AR(2)
+# Example 2 - AR(1) vs AR(2)
 ##################################################################################################
 rm(list = ls())
 library(HyvarinenSSM)
@@ -22,16 +22,16 @@ model = function(i){
 algorithmic_parameters = list()
 algorithmic_parameters$Ntheta = 2^10
 algorithmic_parameters$verbose = TRUE
-# The remaining algorithmic parameters are set to their default values via the functions in util_default.R
+# The remaining algorithmic parameters are set to their default values via util_default.R
 #--------------------------------------------------------------------------------------------
 repl = 5 #number of replications
 registerDoParallel(cores=5) #number of workers in parallel
 #--------------------------------------------------------------------------------------------
 nobservations = 1000
 
-##################################################################################################
+#############################################################################################
 # Case 1: true model = AR(1)
-##################################################################################################
+#############################################################################################
 true_model = 1
 true_theta = c(0.5,1)
 observations1 = simulateData(model(true_model),true_theta,nobservations)
@@ -46,27 +46,15 @@ for (m in 1:nb_models){
   }
   for (r in 1:repl){
     results_all1 = rbind(results_all1,data.frame(logevidence = results[[r]]$logevidence,
-                                               hscore = results[[r]]$hscore,
-                                               time = 1:nobservations,
-                                               model = factor(m),
-                                               repl = r))
+                                                 hscore = results[[r]]$hscore,
+                                                 time = 1:nobservations,
+                                                 model = factor(m),
+                                                 repl = r))
   }
 }
-#--------------------------------------------------------------------------------------------
-# Check the log-evidence
-ggplot(results_all1) +
-  geom_line(aes(time, -logevidence/time, color = model,group=interaction(model,repl))) +
-  ylab("- log evidence") + guides(colour = guide_legend(override.aes = list(size=2)))
-#--------------------------------------------------------------------------------------------
-# Check the h-score
-ggplot(results_all1) +
-  geom_line(aes(time, hscore/time, color = model,group=interaction(model,repl))) +
-  ylab("Hyvarinen score") + guides(colour = guide_legend(override.aes = list(size=2)))
-
-
-##################################################################################################
+#############################################################################################
 # Case 2: true model = AR(2)
-##################################################################################################
+#############################################################################################
 true_model = 2
 true_theta = c(0.25,0.35,1)
 observations2 = simulateData(model(true_model),true_theta,nobservations)
@@ -81,25 +69,13 @@ for (m in 1:nb_models){
   }
   for (r in 1:repl){
     results_all2 = rbind(results_all2,data.frame(logevidence = results[[r]]$logevidence,
-                                               hscore = results[[r]]$hscore,
-                                               time = 1:nobservations,
-                                               model = factor(m),
-                                               repl = r))
+                                                 hscore = results[[r]]$hscore,
+                                                 time = 1:nobservations,
+                                                 model = factor(m),
+                                                 repl = r))
   }
 }
-#--------------------------------------------------------------------------------------------
-# Check the log-evidence
-ggplot(results_all2) +
-  geom_line(aes(time, -logevidence/time, color = model,group=interaction(model,repl))) +
-  ylab("- log evidence") + guides(colour = guide_legend(override.aes = list(size=2)))
-#--------------------------------------------------------------------------------------------
-# Check the h-score
-ggplot(results_all2) +
-  geom_line(aes(time, hscore/time, color = model,group=interaction(model,repl))) +
-  ylab("Hyvarinen score") + guides(colour = guide_legend(override.aes = list(size=2)))
-
-
-##################################################################################################
+##############################################################################################
 #--------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------
 # Generate plots for paper

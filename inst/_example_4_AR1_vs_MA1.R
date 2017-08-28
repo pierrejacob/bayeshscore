@@ -42,14 +42,14 @@ algorithmic_parameters$Nx = 2^7
 algorithmic_parameters$verbose = TRUE
 
 algorithmic_parameters$nmoves = 5
-algorithmic_parameters$reduce_variance = TRUE
-algorithmic_parameters$Nc = 2^12
+# algorithmic_parameters$reduce_variance = TRUE
+# algorithmic_parameters$Nc = 2^12
 # The remaining algorithmic parameters are set to their default values via the functions in util_default.R
 #--------------------------------------------------------------------------------------------
 repl = 5 #number of replications
 registerDoParallel(cores=5) #number of workers in parallel
 #--------------------------------------------------------------------------------------------
-nobservations = 100
+nobservations = 1000
 
 ##################################################################################################
 # Case 1: true model = AR(1)
@@ -174,11 +174,20 @@ ggplot(logbayesfactors) +
 
 # ggsave("example_4_AR1_MA1_log_BF_1_vs_2.png",dpi = 300,width = 10,height = 5)
 
+case_label <- list(
+  'Case 1'=expression(paste("Case 1: ",M[1]," is well-specified",sep="")),
+  'Case 2'=expression(paste("Case 2: ",M[2]," is well-specified",sep=""))
+)
+case_labeller <- function(variable,value){
+  return(case_label[value])
+}
 # Hyvarinen factor
 ggplot(h_factors) +
   geom_line(aes(time, hfactor, color = case, group = interaction(case,repl))) +
   geom_hline(yintercept = 0,linetype="dotted",size=1) +
-  ylab("Hyvrärinen factor  [1 vs 2]") + facet_grid(. ~ type) + xlab("Number of observations") +
+  xlab("Number of observations") +
+  ylab("Hyvrärinen factor  [1 vs 2]") +
+  facet_grid(. ~ type, labeller = case_labeller) +
   # guides(colour = guide_legend(override.aes = list(size = 2))) +
   theme(strip.text.y = element_text(size = 12, colour = "black")) +
   theme(legend.text=element_text(size=12)) +

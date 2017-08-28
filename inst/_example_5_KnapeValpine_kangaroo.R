@@ -17,6 +17,32 @@ stepsize = 0.001
 observations = data_kangaroo[1:2,]
 nobservations = ncol(observations)
 
+# Plot kangaroo data
+kangaroo.df = data.frame(t(data_kangaroo))
+ggplot(kangaroo.df, aes(x = time)) +
+  geom_segment(aes(x = time, y = y1, xend = time, yend = y2),linetype="dashed",colour="black") +
+  geom_point(aes(y=y1),size=2,colour = wes_palette("Darjeeling2")[2]) +
+  geom_point(aes(y=y2),size=2,colour = wes_palette("Darjeeling")[1]) +
+  ylab("Number of red kangaroos\n") +
+  theme(legend.text=element_text(size=12)) +
+  theme(legend.title=element_text(size=12)) +
+  theme(axis.title.y=element_text(margin=margin(0,10,0,0))) +
+  theme(axis.title.x=element_text(margin=margin(10,0,0,0))) +
+  xlab("\n Time (years)")
+# ggsave("example_5_kangaroos_data.png",dpi = 300,width = 10,height = 5)
+ggplot(kangaroo.df, aes(x = time)) +
+  geom_segment(aes(x = time, y = y1, xend = time, yend = y2),linetype="dashed",colour="black") +
+  geom_point(aes(y=y1),size=2,colour = wes_palette("Darjeeling2")[2]) +
+  geom_point(aes(y=y2),size=2,colour = wes_palette("Darjeeling")[1]) +
+  ylab("Number of red kangaroos\n") +
+  theme(legend.text=element_text(size=20), legend.title=element_text(size=20)) +
+  theme(axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 15),
+        axis.title.x = element_text(size = 20, margin=margin(10,0,0,0)),
+        axis.title.y = element_text(size = 20, margin = margin(0,10,0,0))) +
+  xlab("\n Time (years)")
+# ggsave("poster_example_5_kangaroos_data.png",dpi = 300,width = 10,height = 5)
+
 # Define hyperparameters
 range_sigma = 10
 range_tau = 10
@@ -159,7 +185,8 @@ ggplot(results_all) +
 
 a= 0.95
 ggplot(subset(results_all, time >= 0 & repl != 0),aes(time, -logevidence/time, color = Model)) +
-  ylab("- log evidence / time") +
+  ylab("- log evidence / Time") +
+  xlab("Time") +
   # guides(shape = guide_legend(override.aes = list(size=2))) +
   scale_color_manual(values = colors) +
   scale_fill_manual(values = colors) +
@@ -175,7 +202,8 @@ ggplot(subset(results_all, time >= 0 & repl != 0),aes(time, -logevidence/time, c
 
 
 ggplot(subset(results_all, time >= 0 & repl != 0),aes(time, hscore/time, color = Model)) +
-  ylab("Prequential Hyvärinen score / time") +
+  ylab("Prequential Hyvärinen score / Time") +
+  xlab("Time") +
   # guides(shape = guide_legend(override.aes = list(size=2))) +
   scale_color_manual(values = colors) +
   scale_fill_manual(values = colors) +
@@ -188,4 +216,23 @@ ggplot(subset(results_all, time >= 0 & repl != 0),aes(time, hscore/time, color =
   theme(axis.title.y=element_text(margin=margin(0,10,0,0))) +
   theme(axis.title.x=element_text(margin=margin(10,0,0,0)))
 # ggsave("example_5_kangaroos_preqhyvarinenscore_CI.png",dpi = 300,width = 10,height = 5)
+
+
+ggplot(subset(results_all, time >= 0 & repl != 0),aes(time, hscore/time, color = Model)) +
+  ylab("Prequential Hyvärinen score / Time \n") +
+  xlab("\n Time (number of observations)") +
+  # guides(shape = guide_legend(override.aes = list(size=2))) +
+  scale_color_manual(values = colors) +
+  scale_fill_manual(values = colors) +
+  geom_line(aes(group=interaction(Model,repl)),linetype="dashed",alpha=0.5) +
+  stat_summary(aes(group=Model,fill=Model),geom="ribbon", fun.data=mean_cl_normal, fun.args=list(conf.int=a),alpha=0.3) +
+  stat_summary(aes(group=Model,shape = Model),geom="point", fun.y=mean,size=2) +
+  stat_summary(aes(group=Model),geom="line", fun.y=mean, size = 1) +
+  theme(legend.text=element_text(size=20), legend.title=element_text(size=20)) +
+  theme(axis.text.x = element_text(size = 15),
+        axis.text.y = element_text(size = 15),
+        axis.title.x = element_text(size = 20, margin=margin(10,0,0,0)),
+        axis.title.y = element_text(size = 18, margin = margin(0,10,0,0)))
+# ggsave("poster_example_5_kangaroos_preqhyvarinenscore_CI.png",dpi = 300,width = 10,height = 5)
+
 
