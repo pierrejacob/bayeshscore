@@ -1,7 +1,6 @@
 ##################################################################################################
-# Figure 1. iid Normal (example 3.2. in O'Hagan, 1995)
+# Example - iid Normal (example 3.2. in O'Hagan, 1995)
 ##################################################################################################
-rm(list = ls())
 library(HyvarinenSSM)
 library(ggplot2)
 library(gridExtra)
@@ -66,7 +65,6 @@ for (i in 1:length(DGP_mu)){
 # Generate plots for paper
 #--------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------
-colors = c("blue")
 # Compute the Hyvarinen factor
 h_factors = data.frame()
 plot_hfactor = list()
@@ -93,11 +91,12 @@ case_label <- list(
 case_labeller <- function(variable,value){
   return(case_label[value])
 }
+colors = c("blue")
 ggplot(h_factors, aes(color = factor(sim), group = interaction(case,repl), linetype = factor(sim))) +
   geom_line(aes(time, hfactor)) +
   # scale_linetype_manual(values=c("dashed","solid")) +
   scale_color_manual(values=colors) +
-  geom_hline(yintercept = 0,alpha=0.3) +
+  geom_hline(yintercept = 0,linetype = 2) +
   xlab("Number of observations") +
   ylab("Hyvrärinen factor  [1 vs 2]") +
   facet_wrap( ~ type, ncol=2, scales="free", labeller = case_labeller) +
@@ -107,7 +106,7 @@ ggplot(h_factors, aes(color = factor(sim), group = interaction(case,repl), linet
   theme(legend.position="none") +
   theme(axis.title.y=element_text(margin=margin(0,10,0,0))) +
   theme(axis.title.x=element_text(margin=margin(10,0,0,0)))
-# ggsave("example_2_OHagan_Hyvarinen_factor_1_versus_2.png",dpi = 300,width = 10,height = 5)
+# ggsave("example_consistency_iidNormal.png",dpi = 300,width = 10,height = 5)
 
 
 
