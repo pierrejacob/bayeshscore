@@ -19,7 +19,7 @@ smc_resume = function(RDSsave=NULL, savefilename=NULL, next_observations=NULL, n
   # update new algorithmic parameters and flags. NOTE: some parameters CANNOT be modified (e.g. Ntheta, model, ...)
   algorithmic_parameters = RDSsave$algorithmic_parameters
   mutable = c("progress","verbose","save","savefilename","time_budget","ess_threshold","nmoves",
-              "resampling","proposalmove","dde_options")
+              "resampling","proposalmove","dde_options","save_stepsize","save_schedule")
   for (i in 1:length(mutable)) {
     if (!is.null(new_algorithmic_parameters[[mutable[i]]])) {
       algorithmic_parameters[[mutable[i]]] = new_algorithmic_parameters[[mutable[i]]]
@@ -184,7 +184,8 @@ smc_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL){
         required_to_resume$byproducts = byproducts
       }
       # save into RDS file
-      saveRDS(c(required_to_resume,results_so_far),file = algorithmic_parameters$savefilename)
+      savefilename = paste(sub(".rds","",algorithmic_parameters$savefilename),"t=",toString(t),".rds",sep="")
+      saveRDS(c(required_to_resume,results_so_far),file = savefilename)
     }
     #-------------------------------------------------------------------------------------------------------
   }

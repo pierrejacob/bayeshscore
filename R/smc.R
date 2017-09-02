@@ -146,7 +146,7 @@ smc_ = function(observations, model, algorithmic_parameters){
     }
     #-------------------------------------------------------------------------------------------------------
     # save partial results if needed
-    if (algorithmic_parameters$save) {
+    if (algorithmic_parameters$save && (t %in% algorithmic_parameters$save_schedule)) {
       # save the variables required to resume and proceed further, in case of interrupted run
       # NOTE: thetas, normw, and PFs, are retrievable from the history stored in results_so_far
       required_to_resume = list(t = t, logw = logw, logtargetdensities = logtargetdensities,
@@ -170,7 +170,8 @@ smc_ = function(observations, model, algorithmic_parameters){
         required_to_resume$byproducts = byproducts
       }
       # save into RDS file
-      saveRDS(c(required_to_resume,results_so_far),file = algorithmic_parameters$savefilename)
+      savefilename = paste(sub(".rds","",algorithmic_parameters$savefilename),"t=",toString(t),".rds",sep="")
+      saveRDS(c(required_to_resume,results_so_far),file = savefilename)
     }
     #-------------------------------------------------------------------------------------------------------
   }

@@ -33,6 +33,15 @@ set_default_algorithmic_parameters = function(observations, model, algorithmic_p
   # WARNING: allocating a time budget is only relevant when the option "save" is on, otherwise
   # all the results will be lost if the time limit is reached and the computation gets interrupted.
   if (is.null(algorithmic_parameters$save)) {algorithmic_parameters$save = FALSE}
+  # Save results once every save_stepsize observations (only relevant if save = TRUE)
+  if (is.null(algorithmic_parameters$save_stepsize)) {algorithmic_parameters$save_stepsize = 1}
+  if (algorithmic_parameters$save) {
+    # Default schedule of times at which to save results
+    if (is.null(algorithmic_parameters$save_schedule)) {
+      algorithmic_parameters$save_schedule = seq(1,ncol(observations),algorithmic_parameters$save_stepsize)
+      algorithmic_parameters$save_schedule = c(algorithmic_parameters$save_schedule, ncol(observations))
+    }
+  }
   if (is.null(algorithmic_parameters$time_budget)) {algorithmic_parameters$time_budget = NULL}
   # File name where the intermediary results will be saved
   # WARNING: must be an RDS file (.rds). Save in the working directory by default with timestamp as name.

@@ -19,7 +19,7 @@ smc2_resume = function(RDSsave=NULL, savefilename=NULL, next_observations=NULL, 
   # update new algorithmic parameters and flags. NOTE: some parameters CANNOT be modified (e.g. Ntheta, model, ...)
   algorithmic_parameters = RDSsave$algorithmic_parameters
   mutable = c("progress","verbose","save","savefilename","time_budget","ess_threshold","nmoves",
-              "resampling","proposalmove","dde_options")
+              "resampling","proposalmove","dde_options","save_stepsize","save_schedule")
   for (i in 1:length(mutable)) {
     if (!is.null(new_algorithmic_parameters[[mutable[i]]])) {
       algorithmic_parameters[[mutable[i]]] = new_algorithmic_parameters[[mutable[i]]]
@@ -168,7 +168,7 @@ smc2_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL)
         setTxtProgressBar(progbar, t)
       }
       # save partial results if needed
-      if (algorithmic_parameters$save) {
+      if (algorithmic_parameters$save && (t %in% algorithmic_parameters$save_schedule)) {
         # save the variables required to resume and proceed further, in case of interrupted run
         # NOTE: thetas, normw, and PFs, are retrievable from the history stored in results_so_far
         required_to_resume = list(t = t, logw = logw, logtargetdensities = logtargetdensities,
@@ -195,12 +195,13 @@ smc2_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL)
           required_to_resume$normw = normw
         }
         # save into RDS file
+        savefilename = paste(sub(".rds","",algorithmic_parameters$savefilename),"t=",toString(t),".rds",sep="")
         if (algorithmic_parameters$hscore && (observation_type=="discrete")) {
           # additional variables required for the discrete case
           required_for_discrete = list(Xpred = Xpred, XnormW_previous = XnormW_previous)
-          saveRDS(c(required_to_resume,required_for_discrete,results_so_far),file = algorithmic_parameters$savefilename)
+          saveRDS(c(required_to_resume,required_for_discrete,results_so_far),file = savefilename)
         } else {
-          saveRDS(c(required_to_resume,results_so_far),file = algorithmic_parameters$savefilename)
+          saveRDS(c(required_to_resume,results_so_far),file = savefilename)
         }
       }
     }
