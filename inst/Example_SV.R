@@ -67,7 +67,7 @@ results = foreach(s=1:nrow(schedule),.packages=c('HyvarinenSSM'),.verbose = TRUE
   gc() # attempt to limit RAM usage
   sink(logfilename, append = TRUE) # Monitor progress in parallel via log file
   run = list()
-  # for convenience, if error due to lack of RAM, re-run until completion (hacky but the while loop only kicks in when R runs out of RAM)
+  # If error due to lack of RAM, re-run until completion (hacky but the while loop only kicks in when R runs out of RAM)
   while (length(run)==0){
     algorithmic_parameters$savefilename = paste("model_",toString(m),"_repl_",toString(r),"_",format(Sys.time(),"%Y-%m-%d_%H-%M-%S"),".rds",sep="")
     run =  tryCatch(hscore(observations, model(m), algorithmic_parameters),error = function(e){print(e);print("new attempt in progress ...");return (list())})
