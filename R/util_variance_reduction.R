@@ -43,7 +43,7 @@ get_additional_particles_smc2 = function(Nc, thetas, normw, PFs, t, observations
   if (algorithmic_parameters$verbose) {
     Ntheta_total = nmoves*Ntheta
     Ntheta_current = Ntheta
-    cat("\r Additional particles generated:",Ntheta_current,"out of",Ntheta_total,"(",floor(Ntheta_current/Ntheta_total*100),"%)")
+    cat("\n\r Additional particles generated:",Ntheta_current,"out of",Ntheta_total,"(",floor(Ntheta_current/Ntheta_total*100),"%)")
     flush.console()
   }
   # Generate more theta-particles (and associated x-particles) if needed
@@ -91,7 +91,7 @@ get_additional_particles_smc2 = function(Nc, thetas, normw, PFs, t, observations
     }
   }
   if (algorithmic_parameters$verbose) {
-    cat("\n Done. \n")
+    cat("\n Done.")
   }
   return (list(thetas = thetas_larger_sample, PFs = PFs_larger_sample))
 }
@@ -127,7 +127,7 @@ get_additional_particles_smc = function(Nc, thetas, normw, byproducts, t, observ
   if (algorithmic_parameters$verbose) {
     Ntheta_total = nmoves*Ntheta
     Ntheta_current = Ntheta
-    cat("\r Additional particles generated:",Ntheta_current,"out of",Ntheta_total,"(",floor(Ntheta_current/Ntheta_total*100),"%)")
+    cat("\n\r Additional particles generated:",Ntheta_current,"out of",Ntheta_total,"(",floor(Ntheta_current/Ntheta_total*100),"%)")
     flush.console()
   }
   if (nmoves >= 2){
@@ -188,7 +188,7 @@ get_additional_particles_smc = function(Nc, thetas, normw, byproducts, t, observ
     }
   }
   if (algorithmic_parameters$verbose) {
-    cat("\n Done. \n")
+    cat("\n Done.")
   }
   return (list(thetas = thetas_larger_sample, byproducts = byproducts_larger_sample))
 }

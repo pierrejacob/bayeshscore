@@ -91,7 +91,7 @@ assimilate_one_smc2 = function(thetas, PFs, t, observations, model,
     } else {
       if (ess_given_gamma(current_gamma) < ess_objective){
         gamma = current_gamma
-        cat(">>>>>> WARNING: ESS at current gamma too low; something went wrong <<<<<<\n")
+        cat("\n>>>>>> WARNING: ESS at current gamma too low; something went wrong <<<<<<")
       } else {
         gamma = search_gamma(current_gamma, ess_given_gamma, objective = ess_objective)$x
       }
@@ -111,7 +111,7 @@ assimilate_one_smc2 = function(thetas, PFs, t, observations, model,
     ESS = 1/(sum(normw^2))
     # display diagnostic
     if (algorithmic_parameters$verbose){
-      cat("Step", t, ", gamma = ", gamma, ", ESS = ", ESS, "\n")
+      cat("\nStep", t, ", gamma = ", gamma, ", ESS = ", ESS)
     }
     if (gamma<1){
       # we need to resample and move
@@ -169,7 +169,7 @@ assimilate_one_smc2 = function(thetas, PFs, t, observations, model,
           rejuvenation_rate = accepts/Ntheta
           rejuvenation_rate_average = rejuvenation_rate_average + rejuvenation_rate
           if (algorithmic_parameters$verbose){
-            cat("Acceptance rate (independent proposal): ", 100*rejuvenation_rate, "%\n")
+            cat("\nAcceptance rate (independent proposal): ", 100*rejuvenation_rate, "%")
           }
         }
         rejuvenation_rate_average = rejuvenation_rate_average/nmoves
@@ -182,7 +182,7 @@ assimilate_one_smc2 = function(thetas, PFs, t, observations, model,
             increase_Nx_times = t
             increase_Nx_values = PFs[[1]]$Nx
             if (algorithmic_parameters$verbose){
-              cat("Nx increased to: ", increase_Nx_values, "\n")
+              cat("\nNx increased to: ", increase_Nx_values)
             }
             # Perform the move steps one more time after increasing Nx
             for (imove in 1:nmoves){
@@ -222,7 +222,7 @@ assimilate_one_smc2 = function(thetas, PFs, t, observations, model,
               rejuvenation_rate = accepts/Ntheta
               rejuvenation_rate_average = rejuvenation_rate_average + rejuvenation_rate
               if (algorithmic_parameters$verbose){
-                cat("Acceptance rate (independent proposal): ", 100*rejuvenation_rate, "%\n")
+                cat("\nAcceptance rate (independent proposal): ", 100*rejuvenation_rate, "%")
               }
             }
           }

@@ -66,7 +66,7 @@ assimilate_one_smc = function(thetas, byproducts, t, observations, model,
     ESS = 1/(sum(normw^2))
     # display diagnostic
     if (algorithmic_parameters$verbose){
-      cat("Step", t, ", gamma = ", gamma, ", ESS = ", ESS, "\n")
+      cat("\nStep", t, ", gamma = ", gamma, ", ESS = ", ESS)
     }
     if (gamma<1){
       # we need to resample and move
@@ -138,7 +138,7 @@ assimilate_one_smc = function(thetas, byproducts, t, observations, model,
           rejuvenation_rate = accepts/Ntheta
           rejuvenation_rate_average = rejuvenation_rate_average + rejuvenation_rate
           if (algorithmic_parameters$verbose){
-            cat("Acceptance rate (independent proposal): ", 100*rejuvenation_rate, "%\n")
+            cat("\nAcceptance rate (independent proposal): ", 100*rejuvenation_rate, "%")
           }
         }
       }
