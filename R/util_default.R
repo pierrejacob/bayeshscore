@@ -64,9 +64,9 @@ set_default_algorithmic_parameters = function(observations, model, algorithmic_p
       # options for density estimation
       algorithmic_parameters$dde_options = list(Ny = 10^4,
                                             sigma2_order0 = 0.001,
-                                            sigma2_order1 = 0.002,
+                                            sigma2_order1 = 0.01,
                                             sigma2_order2 = 0.01,
-                                            nb_steps = 1)
+                                            nb_steps = Inf)
     } else {
       if (is.null(algorithmic_parameters$dde_options$Ny)) {algorithmic_parameters$dde_options$Ny = 10^4}
       if (is.null(algorithmic_parameters$dde_options$sigma2_order0)) {algorithmic_parameters$dde_options$sigma2_order0 = 0.001}
