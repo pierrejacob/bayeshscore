@@ -10,11 +10,12 @@ hscore <- function(observations, model, algorithmic_parameters){
     return(NULL)
   } else {
     intractable_likelihood = (is.null(model$likelihood))&&(is.null(model$dpredictive))
+    # set missing fields to automatic values (e.g. numerical derivatives)
+    model = set_default_model(model)
     # set missing algorithmic parameters to default values
     algorithmic_parameters$hscore = TRUE
     algorithmic_parameters = set_default_algorithmic_parameters(observations,model,algorithmic_parameters)
-    # set missing fields to automatic values (e.g. numerical derivatives)
-    model = set_default_model(model)
+    # print type of run (SMC or SMC2, discrete or continuous)
     cat("Hscore: type = ",tolower(model$observation_type),", Method = ",sep="")
     # Compute hscore using SMC2 (likelihood unavailable) or SMC (likelihood available)
     if (intractable_likelihood) {

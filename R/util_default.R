@@ -18,6 +18,11 @@ set_default_algorithmic_parameters = function(observations, model, algorithmic_p
   if (is.null(algorithmic_parameters$nmoves)) {algorithmic_parameters$nmoves = 1}
   # Compute the Hyvarinen score or not
   if (is.null(algorithmic_parameters$hscore)) {algorithmic_parameters$hscore = TRUE}
+  # For discrete observations, specify which differencing scheme to use
+  # ("forward" or "central", default is set to "central")
+  if (algorithmic_parameters$hscore && model$observation_type == "discrete") {
+    if (is.null(algorithmic_parameters$discrete_diff_type)) {algorithmic_parameters$discrete_diff_type = "central"}
+  }
   # Keep all the history of theta-particles // x-particles // byproducts (e.g. auxiliary Kalman filters)
   if (is.null(algorithmic_parameters$store_thetas_history)) {algorithmic_parameters$store_thetas_history = FALSE}
   if (is.null(algorithmic_parameters$store_X_history)) {algorithmic_parameters$store_X_history = FALSE}

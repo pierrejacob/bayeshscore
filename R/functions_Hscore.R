@@ -93,9 +93,9 @@ phat_smc2 = function(t,model,y,thetas,thetanormw,Ntheta,Xpred,xprednormw) {
   }
   return (py)
 }
-# This function computes the partial score term Hdk
+# This function computes the partial score term Hdk (forward difference version)
 # a,b are vectors of componentwise lower and upper bounds of the observations
-Hdk = function(k,a,b,d,y,py_minusek,py,py_plusek) {
+Hdk_forward = function(k,a,b,d,y,py_minusek,py,py_plusek) {
   if (y[k]==b[k]) {
     return (-2*(py-py_minusek)/py_minusek)
   }
@@ -108,10 +108,39 @@ Hdk = function(k,a,b,d,y,py_minusek,py,py_plusek) {
     }
   }
 }
+# This function computes the partial score term Hdk (central difference version)
+# a,b are vectors of componentwise lower and upper bounds of the observations
+Hdk_central = function(k,a,b,d,y,py_minus2ek,py_minusek,py,py_plusek,py_plus2ek) {
+  if (y[k]==b[k]) {
+    return (-(py-py_minus2ek)/(2*py_minusek))
+  }
+  if (y[k]==b[k]-1) {
+    return (-(py-py_minus2ek)/(2*py_minusek) + ((py_plusek-py_minusek)/(2*py))^2)
+  }
+  if (y[k]==a[k]) {
+    return ((py_plus2ek-py)/(2*py_plusek))
+  }
+  if (y[k]==a[k]+1) {
+    return ((py_plus2ek-py)/(2*py_plusek) + ((py_plusek-py_minusek)/(2*py))^2)
+  }
+  if (y[k]!=b[k] && y[k]!=b[k]-1 && y[k]!=a[k] && y[k]!=a[k]+1){
+    return ((py_plus2ek-py)/(2*py_plusek) - (py-py_minus2ek)/(2*py_minusek) + ((py_plusek-py_minusek)/(2*py))^2)
+  }
+}
+# This function computes the partial score term Hdk and is a wrapper of Hdk_forward and Hdk_central
+# a,b are vectors of componentwise lower and upper bounds of the observations
+Hdk = function(k,a,b,d,y,py_minusek,py,py_plusek,diff_type = "central",py_minus2ek = NULL,py_plus2ek = NULL) {
+  if (diff_type == "central"){
+    return (Hdk_central(k,a,b,d,y,py_minus2ek,py_minusek,py,py_plusek,py_plus2ek))
+  }
+  if (diff_type == "forward"){
+    return (Hdk_forward(k,a,b,d,y,py_minusek,py,py_plusek))
+  }
+}
 # This function computes the partial score term Hd
 # a,b are vectors of componentwise lower and upper bounds of the observations
 # d is the dimension of y
-Hd_smc2 = function(t,model,yt,thetas,thetanormw,Xpred,xprednormw) {
+Hd_smc2 = function(t,model,yt,thetas,thetanormw,Xpred,xprednormw, diff_type = "central") {
   Ntheta = ncol(thetas)
   a = model$lower
   b = model$upper
@@ -123,7 +152,14 @@ Hd_smc2 = function(t,model,yt,thetas,thetanormw,Xpred,xprednormw) {
     py = phat_smc2(t,model,yt,thetas,thetanormw,Ntheta,Xpred,xprednormw)
     py_minusek = phat_smc2(t,model,yt-ek,thetas,thetanormw,Ntheta,Xpred,xprednormw)
     py_plusek = phat_smc2(t,model,yt+ek,thetas,thetanormw,Ntheta,Xpred,xprednormw)
-    result = result + Hdk(k,a,b,d,yt,py_minusek,py,py_plusek)
+    if (diff_type == "central") {
+      py_minus2ek = phat_smc2(t,model,yt-2*ek,thetas,thetanormw,Ntheta,Xpred,xprednormw)
+      py_plus2ek = phat_smc2(t,model,yt+2*ek,thetas,thetanormw,Ntheta,Xpred,xprednormw)
+    } else {
+      py_minus2ek = NULL
+      py_plus2ek = NULL
+    }
+    result = result + Hdk(k,a,b,d,yt,py_minusek,py,py_plusek, diff_type, py_minus2ek, py_plus2ek)
   }
   return (result)
 }
@@ -152,7 +188,7 @@ phat_smc = function(t,model,observations,thetas,thetanormw,Ntheta,byproducts) {
 # This function computes the partial score term Hd
 # a,b are vectors of componentwise lower and upper bounds of the observations
 # d is the dimension of y
-Hd_smc = function(t,model,observations,thetas,thetanormw,byproducts) {
+Hd_smc = function(t,model,observations,thetas,thetanormw,byproducts, diff_type = "central") {
   Ntheta = ncol(thetas)
   a = model$lower
   b = model$upper
@@ -165,10 +201,26 @@ Hd_smc = function(t,model,observations,thetas,thetanormw,byproducts) {
     obsplusek = observations
     obsminusek[,t] = obsminusek[,t]-ek
     obsplusek[,t] = obsplusek[,t]+ek
+    if (diff_type == "central") {
+      obsminus2ek = observations
+      obsplus2ek = observations
+      obsminus2ek[,t] = obsminus2ek[,t]-2*ek
+      obsplus2ek[,t] = obsplus2ek[,t]+2*ek
+    } else {
+      obsminus2ek = NULL
+      obsplus2ek = NULL
+    }
     py = phat_smc(t,model,observations,thetas,thetanormw,Ntheta,byproducts)
     py_minusek = phat_smc(t,model,obsminusek,thetas,thetanormw,Ntheta,byproducts)
     py_plusek = phat_smc(t,model,obsplusek,thetas,thetanormw,Ntheta,byproducts)
-    result = result + Hdk(k,a,b,d,observations[,t],py_minusek,py,py_plusek)
+    if (diff_type == "central") {
+      py_minus2ek = phat_smc(t,model,obsminus2ek,thetas,thetanormw,Ntheta,byproducts)
+      py_plus2ek = phat_smc(t,model,obsplus2ek,thetas,thetanormw,Ntheta,byproducts)
+    } else {
+      py_minus2ek = NULL
+      py_plus2ek = NULL
+    }
+    result = result + Hdk(k,a,b,d,observations[,t],py_minusek,py,py_plusek, diff_type, py_minus2ek, py_plus2ek)
   }
   return (result)
 }
@@ -182,6 +234,7 @@ Hd_smc = function(t,model,observations,thetas,thetanormw,byproducts) {
 # Discrete case, SMC2: wrapper of Hd_smc2
 hincrement_discrete_smc2 = function(thetas, normw, PFs, t, observations, model,
                                     logtargetdensities, algorithmic_parameters) {
+  discrete_diff_type = algorithmic_parameters$discrete_diff_type
   # If reduce_variance: temporarily increase the number of particles before computing
   # the Hyvarinen score.
   if (algorithmic_parameters$reduce_variance) {
@@ -222,7 +275,7 @@ hincrement_discrete_smc2 = function(thetas, normw, PFs, t, observations, model,
       }
     }
     # compute incremental H score (with theta from time t-1, see formula in the paper)
-    return (Hd_smc2(t,model,observations[,t],thetas_pool,normw_pool,Xpred,XnormW_previous))
+    return (Hd_smc2(t,model,observations[,t],thetas_pool,normw_pool,Xpred,XnormW_previous, discrete_diff_type))
   } else {
     Ntheta = ncol(thetas)
     Nx = PFs_pool[[1]]$Nx
@@ -252,7 +305,7 @@ hincrement_discrete_smc2 = function(thetas, normw, PFs, t, observations, model,
       }
     }
     # compute incremental H score (with theta from time t-1, see formula in the paper)
-    return (Hd_smc2(t,model,observations[,t],thetas,normw,Xpred,XnormW_previous))
+    return (Hd_smc2(t,model,observations[,t],thetas,normw,Xpred,XnormW_previous, discrete_diff_type))
   }
 }
 #-------------------------------------------------------------------------------------------
@@ -260,6 +313,7 @@ hincrement_discrete_smc2 = function(thetas, normw, PFs, t, observations, model,
 # Discrete case, SMC: wrapper of Hd_smc
 hincrement_discrete_smc = function(thetas, normw, byproducts, t, observations, model,
                                    logtargetdensities, algorithmic_parameters) {
+  discrete_diff_type = algorithmic_parameters$discrete_diff_type
   # compute incremental H score (with theta from time t-1, see formula in the paper)
   if (algorithmic_parameters$reduce_variance) {
     # generate additional particles
@@ -311,9 +365,9 @@ hincrement_continuous_smc = function(thetas, normw, byproducts, t, observations,
     byproducts_pool = larger_pool$byproducts
     normw_pool = rep(1/ncol(thetas_pool), ncol(thetas_pool))
     # compute Hyvarinen score with more particles
-    return (hincrement_continuous_smc_(t, model, observations,thetas_pool,normw_pool,byproducts_pool))
+    return (hincrement_continuous_smc_(t, model, observations,thetas_pool,normw_pool,byproducts_pool,discrete_diff_type))
   } else {
-    return (hincrement_continuous_smc_(t, model, observations,thetas,normw,byproducts))
+    return (hincrement_continuous_smc_(t, model, observations,thetas,normw,byproducts,discrete_diff_type))
   }
 }
 
