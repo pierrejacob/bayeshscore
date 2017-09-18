@@ -91,14 +91,15 @@ case_label <- list(
 case_labeller <- function(variable,value){
   return(case_label[value])
 }
-colors = c("blue")
+colors = c("dodgerblue")
 ggplot(h_factors, aes(color = factor(sim), group = interaction(case,repl), linetype = factor(sim))) +
-  geom_line(aes(time, hfactor)) +
+  geom_line(aes(time, hfactor),alpha=0.6) +
   # scale_linetype_manual(values=c("dashed","solid")) +
   scale_color_manual(values=colors) +
   geom_hline(yintercept = 0,linetype = 2) +
   xlab("Number of observations") +
-  ylab("Hyvrärinen factor  [1 vs 2]") +
+  ylab("Hyvärinen factor  [1 vs 2]") +
+  # theme_bw() +
   facet_wrap( ~ type, ncol=2, scales="free", labeller = case_labeller) +
   theme(strip.text.y = element_text(size = 12, colour = "black")) +
   theme(legend.text=element_text(size=12)) +
@@ -109,6 +110,49 @@ ggplot(h_factors, aes(color = factor(sim), group = interaction(case,repl), linet
 # ggsave("example_consistency_iidNormal.png",dpi = 300,width = 10,height = 5)
 
 
+# Compute the Bayes factor
+logBFs = data.frame()
+plot_logBF = list()
+for (i in 1:4){
+  for (r in 1:repl) {
+    logBF = -subset(results_all[[i]],model==2&repl==r)$logevidence+subset(results_all[[i]],model==1&repl==r)$logevidence
+    logBFs = rbind(logBFs,data.frame(time = 1:nobservations,
+                                           repl = r,
+                                           logBF = logBF,
+                                           case = factor(i),
+                                           type = factor(paste("Case",toString(i))),
+                                           sim = 1))
+  }
+}
+# Checking H-factor
+# top-left, top-right, bottom-left, bottom-right = case 1, 2, 3, 4.
+# Positive = choose model 1 // Negative == choose model 2.
+case_label <- list(
+  'Case 1'=expression(paste("Case 1: ",M[1]," is well-specified",sep="")),
+  'Case 2'=expression(paste("Case 2: ",M[2]," is well-specified",sep="")),
+  'Case 3'=expression(paste("Case 3: both are misspecified",sep="")),
+  'Case 4'=expression(paste("Case 4: both are well-specified",sep=""))
+)
+case_labeller <- function(variable,value){
+  return(case_label[value])
+}
+colors = c("tomato3")
+ggplot(logBFs, aes(color = factor(sim), group = interaction(case,repl), linetype = factor(sim))) +
+  geom_line(aes(time, logBF),alpha=0.6) +
+  # scale_linetype_manual(values=c("dashed","solid")) +
+  scale_color_manual(values=colors) +
+  geom_hline(yintercept = 0,linetype = 2) +
+  xlab("Number of observations") +
+  ylab("log Bayes factor  [1 vs 2]") +
+  # theme_bw() +
+  facet_wrap( ~ type, ncol=2, scales="free", labeller = case_labeller) +
+  theme(strip.text.y = element_text(size = 12, colour = "black")) +
+  theme(legend.text=element_text(size=12)) +
+  theme(legend.title=element_text(size=12)) +
+  theme(legend.position="none") +
+  theme(axis.title.y=element_text(margin=margin(0,10,0,0))) +
+  theme(axis.title.x=element_text(margin=margin(10,0,0,0)))
+# ggsave("example_consistency_iidNormal_logBF.png",dpi = 300,width = 10,height = 5)
 
 
 # ################################################################################################
@@ -121,7 +165,7 @@ ggplot(h_factors, aes(color = factor(sim), group = interaction(case,repl), linet
 #   # scale_linetype_manual(values=c("dashed","solid")) +
 #   scale_color_manual(values=colors) +
 #   geom_hline(yintercept = 0,alpha=0.3) +
-#   ylab("Hyvrärinen factor  [1 vs 2]") +
+#   ylab("Hyvärinen factor  [1 vs 2]") +
 #   facet_wrap( ~ type, ncol=2, scales="free", labeller = case_labeller) +
 #   xlab("Number of observations") +
 #   theme(strip.text.x = element_text(size = 16, colour = "black", face="plain")) +

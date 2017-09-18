@@ -27,7 +27,8 @@ algorithmic_parameters$nmoves = 10
 algorithmic_parameters$verbose = TRUE
 # use direct density-estimation
 algorithmic_parameters$use_dde = TRUE
-algorithmic_parameters$dde_options = list(Ny = 2^14, nb_steps = Inf)
+algorithmic_parameters$dde_options = list(Ny = 2^10, nb_steps = Inf,
+                                          sigma2_order0 = 0.1, sigma2_order1 = 0.1, sigma2_order2 = 0.1)
 # save intermediary results every "save_stepsize" observations
 algorithmic_parameters$save = TRUE
 algorithmic_parameters$save_stepsize = 100
@@ -109,7 +110,7 @@ sink()
 post_plot_all = list()
 xlabels = list(xlab(expression(mu)), xlab(expression(beta)), xlab(expression(xi)),
                xlab(expression(omega^2)), xlab(expression(lambda[1])), xlab(expression(lambda[2])),
-               xlab(expression(rho[1])), xlab(expression(rho[2])), xlab("w"))
+               xlab("w"), xlab(expression(rho[1])), xlab(expression(rho[2])))
 colors = c(wes_palette("Darjeeling2")[c(2,3)],wes_palette("Darjeeling")[2])
 # Generate plots
 for (m in models_to_run) {
@@ -159,7 +160,7 @@ ggplot(results_all,aes(time,  -logevidence, color = model)) +
 
 # Check the h-score DDE
 ggplot(results_all,aes(time, hscoreDDE/time, color = model)) +
-  ylab("Hyvarinen score / time") +
+  ylab("Hyvärinen score / time") +
   # guides(shape = guide_legend(override.aes = list(size=2))) +
   scale_color_manual(values = colors) +
   scale_fill_manual(values = colors) +
@@ -169,14 +170,22 @@ ggplot(results_all,aes(time, hscoreDDE/time, color = model)) +
   stat_summary(aes(group=model),geom="line", fun.y=mean, size = 1)
 # ggsave("example_SV_hscore_rescaled.png",width = 10, height = 5,dpi = 300)
 
+
+colors = wes_palette("Darjeeling2")[c(2,3)]
+labels.df = data.frame(x = rep(1075,2), y = c(-2900,-2650),
+                       text = c("Model 1","Model 2"),
+                       type = factor(c("Model 1","Model 2")))
 # Check the h-score DDE
-ggplot(subset(results_all,time<50),aes(time, hscoreDDE, color = model)) +
-  ylab("Hyvarinen score / time") +
-  # guides(shape = guide_legend(override.aes = list(size=2))) +
+ggplot(subset(results_all),aes(time, hscoreDDE, color = model)) +
+  ylab("Prequential Hyvärinen score") +
+  xlim(0,1100) +
+  xlab("Time") +
+  geom_label(data = labels.df, aes(x,y,label = text,color=type), color = colors, fontface = "bold") +
+  theme(legend.position="none") +
   scale_color_manual(values = colors) +
   scale_fill_manual(values = colors) +
-  geom_line(aes(group=interaction(model,repl)),linetype="dashed",alpha=0.5) +
+  geom_line(aes(group=interaction(model,repl)),linetype="solid",alpha=0.5) +
   # stat_summary(aes(group=model,fill=model),geom="ribbon", fun.data=mean_cl_normal, fun.args=list(conf.int=a),alpha=0.3) +
   stat_summary(aes(group=model,shape = model),geom="point", fun.y=mean,size=2) +
   stat_summary(aes(group=model),geom="line", fun.y=mean, size = 1)
-# ggsave("example_SV_hscore.png",width = 10, height = 5,dpi = 300)
+ggsave("example_SV_hscore.png",width = 10, height = 5,dpi = 300)
