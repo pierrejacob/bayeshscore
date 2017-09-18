@@ -324,9 +324,9 @@ hincrement_discrete_smc = function(thetas, normw, byproducts, t, observations, m
     byproducts_pool = larger_pool$byproducts
     normw_pool = rep(1/ncol(thetas_pool), ncol(thetas_pool))
     # compute Hyvarinen score with more particles
-    return (Hd_smc(t,model,observations,thetas_pool,normw_pool,byproducts_pool))
+    return (Hd_smc(t,model,observations,thetas_pool,normw_pool,byproducts_pool,diff_type = discrete_diff_type))
   } else {
-    return (Hd_smc(t,model,observations,thetas,normw,byproducts))
+    return (Hd_smc(t,model,observations,thetas,normw,byproducts,diff_type = discrete_diff_type))
   }
 }
 #-------------------------------------------------------------------------------------------
@@ -365,9 +365,9 @@ hincrement_continuous_smc = function(thetas, normw, byproducts, t, observations,
     byproducts_pool = larger_pool$byproducts
     normw_pool = rep(1/ncol(thetas_pool), ncol(thetas_pool))
     # compute Hyvarinen score with more particles
-    return (hincrement_continuous_smc_(t, model, observations,thetas_pool,normw_pool,byproducts_pool,discrete_diff_type))
+    return (hincrement_continuous_smc_(t, model, observations,thetas_pool,normw_pool,byproducts_pool))
   } else {
-    return (hincrement_continuous_smc_(t, model, observations,thetas,normw,byproducts,discrete_diff_type))
+    return (hincrement_continuous_smc_(t, model, observations,thetas,normw,byproducts))
   }
 }
 
