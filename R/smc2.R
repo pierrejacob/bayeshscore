@@ -172,14 +172,8 @@ smc2_ = function(observations, model, algorithmic_parameters){
         required_to_resume$normw = normw
       }
       # save into RDS file
-      savefilename = paste(sub(".rds","",algorithmic_parameters$savefilename),"t=",toString(t),".rds",sep="")
-      if (algorithmic_parameters$hscore && (observation_type=="discrete")) {
-        # additional variables required for the discrete case
-        required_for_discrete = list(Xpred = Xpred, XnormW_previous = XnormW_previous)
-        saveRDS(c(required_to_resume,required_for_discrete,results_so_far),file = savefilename)
-      } else {
-        saveRDS(c(required_to_resume,results_so_far),file = savefilename)
-      }
+      savefilename = paste(sub(".rds","",algorithmic_parameters$savefilename),"_t=",toString(t),".rds",sep="")
+      saveRDS(c(required_to_resume,results_so_far),file = savefilename)
     }
     #-------------------------------------------------------------------------------------------------------
   }

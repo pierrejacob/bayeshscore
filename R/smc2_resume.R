@@ -105,17 +105,12 @@ smc2_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL)
     } else {
       PFs = lapply(1:Ntheta,function(i)c(RDSsave$PFs_no_trees[[i]],tree=tree_reconstruct(RDSsave$trees_attributes[[i]])))
     }
-    # update remaining parameters and # Get all the variables required to resume SMC2 run
+    # update remaining parameters and
+    # Get all the variables required to resume SMC2 run
     Nx = PFs[[1]]$Nx
     logw = RDSsave$logw
     model = RDSsave$model
     if (algorithmic_parameters$hscore) {observation_type = tolower(model$observation_type)}
-    #  OPTIONAL: For discrete hscore, retrieve array of most recent particles X targeting predictive distributions
-    if (algorithmic_parameters$hscore && (observation_type=="discrete")) {
-      Xprevious = RDSsave$Xprevious
-      Xpred = RDSsave$Xpred
-      XnormW_previous = RDSsave$XnormW_previous
-    }
     # Monitor progress if needed
     if (algorithmic_parameters$progress) {
       print(paste("Started at:",Sys.time()))
@@ -195,14 +190,8 @@ smc2_resume_ = function(RDSsave, algorithmic_parameters, next_observations=NULL)
           required_to_resume$normw = normw
         }
         # save into RDS file
-        savefilename = paste(sub(".rds","",algorithmic_parameters$savefilename),"t=",toString(t),".rds",sep="")
-        if (algorithmic_parameters$hscore && (observation_type=="discrete")) {
-          # additional variables required for the discrete case
-          required_for_discrete = list(Xpred = Xpred, XnormW_previous = XnormW_previous)
-          saveRDS(c(required_to_resume,required_for_discrete,results_so_far),file = savefilename)
-        } else {
-          saveRDS(c(required_to_resume,results_so_far),file = savefilename)
-        }
+        savefilename = paste(sub(".rds","",algorithmic_parameters$savefilename),"_t=",toString(t),".rds",sep="")
+        saveRDS(c(required_to_resume,results_so_far),file = savefilename)
       }
     }
     # Update progress bar if needed
