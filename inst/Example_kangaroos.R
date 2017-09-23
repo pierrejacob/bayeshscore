@@ -36,12 +36,12 @@ range_tau = 10
 range_r = 10
 range_b = 10
 # Define models
-nb_models = 3
 model = function(i){
   if (i==1){return(get_model_kangarooLogistic(timesteps,stepsize,range_sigma,range_tau,range_r,range_b))}
   if (i==2){return(get_model_kangarooExponential(timesteps,range_sigma,range_tau,range_r))}
   if (i==3){return(get_model_kangarooRandomwalk(timesteps,range_sigma,range_tau))}
 }
+models_to_run = c(1,2,3)
 # set algorithmic parameters
 Nthetas = c(2^14,2^12,2^12)
 Nxs = c(2^5,2^5,2^5)
@@ -49,8 +49,10 @@ Nxs = c(2^5,2^5,2^5)
 algorithmic_parameters = list()
 algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$save = TRUE
+algorithmic_parameters$save_stepsize = 5
 algorithmic_parameters$store_last_byproducts = FALSE
 algorithmic_parameters$nmoves = 2
+algorithmic_parameters$discrete_diff_type = "central"
 
 algorithmic_parameters$reduce_variance = TRUE
 Nc = c(2^15,2^13,2^12)
@@ -74,7 +76,7 @@ writeLines(c(""), logfilename)
 sink(file = logfilename, append = TRUE)
 cat("Start time:",toString(Sys.time()),"\n")
 #--------------------------------------------------------------------------------------------
-for (m in 1:nb_models){
+for (m in models_to_run){
   cat("Model",toString(m)," starting time:",toString(Sys.time()),"\n")
   algorithmic_parameters$Ntheta = Nthetas[m]
   algorithmic_parameters$Nx = Nxs[m]
@@ -115,7 +117,7 @@ saveRDS(list(results_all = results_all, post_all = post_all), file = savefilenam
 # plot posterior
 post_plot_all = list()
 colors = wes_palette("Darjeeling")[c(1,3,5)]
-for (m in 1:nb_models){
+for (m in models_to_run){
   dimtheta = model(m)$dimtheta
   post = data.frame(thetas = unlist(post_all[[m]][,1:dimtheta]),
                     repl = rep(post_all[[m]]$repl,dimtheta),
@@ -157,7 +159,7 @@ ggplot(results_all) +
   theme(axis.title.x=element_text(margin=margin(10,0,0,0)))
 # ggsave("example_5_kangaroos_logevidence.png",dpi = 300,width = 10,height = 5)
 
-labels.df = data.frame(x = rep(44,3), y = c(-0.0042,-0.0047,-0.0052),
+labels.df = data.frame(x = rep(44,3), y = c(-0.0040,-0.00445,-0.0048),
                        text = c("Model 1","Model 2","Model 3"),
                        type = factor(c("Model 1","Model 2","Model 3")))
 ggplot() +
@@ -180,5 +182,5 @@ ggplot() +
   theme(legend.title=element_text(size=12)) +
   theme(axis.title.y=element_text(margin=margin(0,10,0,0))) +
   theme(axis.title.x=element_text(margin=margin(10,0,0,0)))
-ggsave("example_kangaroos_preqhyvarinenscore.png",dpi = 300,width = 10,height = 5)
+# ggsave("example_kangaroos_preqhyvarinenscore.png",dpi = 300,width = 10,height = 5)
 

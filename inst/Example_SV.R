@@ -12,7 +12,7 @@ library(wesanderson)
 set.seed(19)
 #--------------------------------------------------------------------------------------------
 # Monitor progress in parallel via log file
-setwd("C:/Users/shao/Desktop/HyvarinenSSM")
+# setwd("C:/Users/shao/Desktop/HyvarinenSSM")
 logfilename = "results.log"
 writeLines(c(""), logfilename)
 sink(logfilename, append = TRUE)
@@ -53,7 +53,16 @@ model = function(i){
 #--------------------------------------------------------------------------------------------
 # simulate observations
 theta = c(0, 0, 0.5, 0.0625, 0.01)
-observations = simulateData(model(1),theta,nobservations)$Y
+observations = readRDS("../Harvard/MyHarvard/_Research/Model Selection for SSM (Pierre and Jie)/Simulation/Example 6 - Stochastic Volatility (Chopin et al., 2013)/T=1000_1/observations_1000.rds")
+
+# Plot observations
+ggplot() +
+  geom_line(aes(1:ncol(observations),observations[1,]), color = "forestgreen") +
+  ylab("Observations") +
+  scale_x_continuous(breaks=seq(0,1000,200)) +
+  xlab("Time")
+# ggsave("example_SV_observations.png",width = 10, height = 5,dpi = 300)
+
 # list of candidate models
 models_to_run = c(1,2,3)
 #--------------------------------------------------------------------------------------------
@@ -141,9 +150,6 @@ g1 = do.call(grid.arrange,c(post_plot_all[[1]], ncol = 3, nrow = 3))
 g2 = do.call(grid.arrange,c(post_plot_all[[2]], ncol = 3, nrow = 3))
 # ggsave("example_case3_SV_posterior_model_2.png",plot = g2,dpi = 300,width = 10, height = 5)
 
-g3 = do.call(grid.arrange,c(post_plot_all[[3]], ncol = 3, nrow = 3))
-# ggsave("example_case3_SV_posterior_model_3.png",plot = g3,dpi = 300,width = 10, height = 5)
-
 
 a = 0.95
 # Check the log-evidence
@@ -152,6 +158,7 @@ ggplot(results_all,aes(time,  -logevidence, color = model)) +
   # guides(shape = guide_legend(override.aes = list(size=2))) +
   scale_color_manual(values = colors) +
   scale_fill_manual(values = colors) +
+  scale_x_continuous(breaks=seq(0,1000,200)) +
   geom_line(aes(group=interaction(model,repl)),linetype="dashed",alpha=0.8) +
   # stat_summary(aes(group=model,fill=model),geom="ribbon", fun.data=mean_cl_normal, fun.args=list(conf.int=a),alpha=0.3) +
   stat_summary(aes(group=model,shape = model),geom="point", fun.y=mean,size=2) +
@@ -159,11 +166,12 @@ ggplot(results_all,aes(time,  -logevidence, color = model)) +
 # ggsave("example_SV_logevidence.png",dpi = 300,width = 10, height = 5)
 
 # Check the h-score DDE
-ggplot(results_all,aes(time, hscoreDDE/time, color = model)) +
-  ylab("Hyvärinen score / time") +
+ggplot(subset(results_all),aes(time, hscoreDDE/time, color = model)) +
+  ylab("Hyvarinen score / time") +
   # guides(shape = guide_legend(override.aes = list(size=2))) +
   scale_color_manual(values = colors) +
   scale_fill_manual(values = colors) +
+  scale_x_continuous(breaks=seq(0,1000,200)) +
   geom_line(aes(group=interaction(model,repl)),linetype="dashed",alpha=0.5) +
   # stat_summary(aes(group=model,fill=model),geom="ribbon", fun.data=mean_cl_normal, fun.args=list(conf.int=a),alpha=0.3) +
   stat_summary(aes(group=model,shape = model),geom="point", fun.y=mean,size=2) +
@@ -172,12 +180,39 @@ ggplot(results_all,aes(time, hscoreDDE/time, color = model)) +
 
 
 colors = wes_palette("Darjeeling2")[c(2,3)]
-labels.df = data.frame(x = rep(1075,2), y = c(-2900,-2650),
+labels.df = data.frame(x = rep(1075,2), y = c(-2900,-2680),
+                       text = c("Model 1","Model 2"),
+                       type = factor(c("Model 1","Model 2")))
+x_resolution = (1:nobservations)[(1:nobservations)%%10==0]
+# x_resolution = (1:nobservations)
+# Check the h-score DDE
+ggplot(subset(results_all,time%in%x_resolution),aes(time, hscoreDDE, color = model)) +
+  ylab("Prequential Hyvärinen score") +
+  xlab("Time") +
+  xlim(0,1100) +
+  scale_x_continuous(breaks=seq(0,1000,200)) +
+  geom_label(data = labels.df, aes(x,y,label = text,color=type), color = colors, fontface = "bold") +
+  theme(legend.position="none") +
+  scale_color_manual(values = colors) +
+  scale_fill_manual(values = colors) +
+  geom_line(aes(group=interaction(model,repl)),linetype="solid",alpha=0.5) +
+  # stat_summary(aes(group=model,fill=model),geom="ribbon", fun.data=mean_cl_normal, fun.args=list(conf.int=a),alpha=0.3) +
+  stat_summary(aes(group=model,shape = model),geom="point", fun.y=mean,size=2) +
+  stat_summary(aes(group=model),geom="line", fun.y=mean, size = 1)
+# ggsave("example_SV_hscore_every10steps.png",width = 10, height = 5,dpi = 300)
+
+
+x_resolution = (1:nobservations)[(1:nobservations)%%10==0]
+# x_resolution = (1:nobservations)
+centered = results_all
+centered$hscoreDDE = centered$hscoreDDE - rep(rowMeans(sapply(1:repl,function(i)subset(centered,model==1&repl==i)$hscoreDDE)),repl*length(unique(centered$model)))
+labels.df = data.frame(x = rep(1075,2), y = c(0,mean(subset(centered,time==1000 & model==2)$hscoreDDE)),
                        text = c("Model 1","Model 2"),
                        type = factor(c("Model 1","Model 2")))
 # Check the h-score DDE
-ggplot(subset(results_all),aes(time, hscoreDDE, color = model)) +
-  ylab("Prequential Hyvärinen score") +
+ggplot(subset(centered,time%in%x_resolution),aes(time, hscoreDDE, color = model)) +
+  ylab("Prequential Hyvärinen score (centered)") +
+  # guides(shape = guide_legend(override.aes = list(size=2))) +
   xlim(0,1100) +
   xlab("Time") +
   geom_label(data = labels.df, aes(x,y,label = text,color=type), color = colors, fontface = "bold") +
@@ -187,5 +222,8 @@ ggplot(subset(results_all),aes(time, hscoreDDE, color = model)) +
   geom_line(aes(group=interaction(model,repl)),linetype="solid",alpha=0.5) +
   # stat_summary(aes(group=model,fill=model),geom="ribbon", fun.data=mean_cl_normal, fun.args=list(conf.int=a),alpha=0.3) +
   stat_summary(aes(group=model,shape = model),geom="point", fun.y=mean,size=2) +
-  stat_summary(aes(group=model),geom="line", fun.y=mean, size = 1)
-ggsave("example_SV_hscore.png",width = 10, height = 5,dpi = 300)
+  stat_summary(aes(group=model),geom="line", fun.y=mean, size = 1) +
+  scale_x_continuous(breaks=seq(0,1000,200))
+# ggsave("example_SV_hscore_shift_every10steps.png",width = 10, height = 5,dpi = 300)
+
+
