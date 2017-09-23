@@ -1,2 +1,2 @@
 # HyvarinenSSM
-Implementation of Hyvarinen scoring rule for state space models
+Implementation of Hyvarinen scoring rule for iid, time series and state space models
