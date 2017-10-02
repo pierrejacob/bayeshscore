@@ -92,22 +92,27 @@ case_labeller <- function(variable,value){
   return(case_label[value])
 }
 colors = c("dodgerblue")
+axis_titlesize = 18
+axis_ticktextsize = 15
 ggplot(h_factors, aes(color = factor(sim), group = interaction(case,repl), linetype = factor(sim))) +
   geom_line(aes(time, hfactor),alpha=0.6) +
   # scale_linetype_manual(values=c("dashed","solid")) +
   scale_color_manual(values=colors) +
   geom_hline(yintercept = 0,linetype = 2) +
   xlab("Number of observations") +
-  ylab("Hyvärinen factor  [1 vs 2]") +
+  ylab("H-factor  [1 vs. 2]") +
   # theme_bw() +
   facet_wrap( ~ type, ncol=2, scales="free", labeller = case_labeller) +
-  theme(strip.text.y = element_text(size = 12, colour = "black")) +
-  theme(legend.text=element_text(size=12)) +
-  theme(legend.title=element_text(size=12)) +
-  theme(legend.position="none") +
-  theme(axis.title.y=element_text(margin=margin(0,10,0,0))) +
-  theme(axis.title.x=element_text(margin=margin(10,0,0,0)))
+  theme(axis.text.x = element_text(size = axis_ticktextsize),
+        axis.text.y = element_text(size = axis_ticktextsize),
+        axis.title.x = element_text(size = axis_titlesize, margin=margin(20,0,0,0)),
+        axis.title.y = element_text(size = axis_titlesize, angle = 90, margin = margin(0,20,0,0)),
+        strip.text.x = element_text(size = axis_titlesize, colour = "black"),
+        strip.background = element_rect(fill="gray88"),
+        panel.background = element_rect(fill="gray95",linetype = "solid", colour="white"),
+        legend.position = "none")
 # ggsave("example_consistency_iidNormal.png",dpi = 300,width = 10,height = 5)
+# ggsave("example_consistency_iidNormal.png",dpi = 300,width = 15,height = 9)
 
 
 # Compute the Bayes factor
@@ -143,16 +148,19 @@ ggplot(logBFs, aes(color = factor(sim), group = interaction(case,repl), linetype
   scale_color_manual(values=colors) +
   geom_hline(yintercept = 0,linetype = 2) +
   xlab("Number of observations") +
-  ylab("log Bayes factor  [1 vs 2]") +
+  ylab("log Bayes factor  [1 vs. 2]") +
   # theme_bw() +
   facet_wrap( ~ type, ncol=2, scales="free", labeller = case_labeller) +
-  theme(strip.text.y = element_text(size = 12, colour = "black")) +
-  theme(legend.text=element_text(size=12)) +
-  theme(legend.title=element_text(size=12)) +
-  theme(legend.position="none") +
-  theme(axis.title.y=element_text(margin=margin(0,10,0,0))) +
-  theme(axis.title.x=element_text(margin=margin(10,0,0,0)))
+  theme(axis.text.x = element_text(size = axis_ticktextsize),
+        axis.text.y = element_text(size = axis_ticktextsize),
+        axis.title.x = element_text(size = axis_titlesize, margin=margin(20,0,0,0)),
+        axis.title.y = element_text(size = axis_titlesize, angle = 90, margin = margin(0,20,0,0)),
+        strip.text.x = element_text(size = axis_titlesize, colour = "black"),
+        strip.background = element_rect(fill="gray88"),
+        panel.background = element_rect(fill="gray95",linetype = "solid", colour="white"),
+        legend.position = "none")
 # ggsave("example_consistency_iidNormal_logBF.png",dpi = 300,width = 10,height = 5)
+# ggsave("example_consistency_iidNormal_logBF.png",dpi = 300,width = 15,height = 9)
 
 
 # ################################################################################################

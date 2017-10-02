@@ -153,7 +153,7 @@ ggplot() +
   geom_line(data = h_factors, aes(time, hfactor, color = case, group = interaction(case,repl)),alpha=0.6) +
   geom_hline(yintercept = 0,linetype=2) +
   xlab("Number of observations") +
-  ylab("Hyvärinen factor  [1 vs 3]") +
+  ylab("H-factor  [1 vs. 3]") +
   theme(strip.text.y = element_text(size = 12, colour = "black")) +
   theme(legend.text=element_text(size=12)) +
   theme(legend.title=element_text(size=12)) +
@@ -172,13 +172,18 @@ ggplot() +
   geom_line(data = h_factors, aes(time, hfactor, color = case, group = interaction(case,repl)),alpha=0.6) +
   geom_hline(yintercept = 0,linetype=2) +
   xlab("Number of observations") +
-  ylab("Hyvärinen factor  [1 vs 3]") +
+  ylab("H-factor  [1 vs. 3]") +
   theme(strip.text.y = element_text(size = 12, colour = "black")) +
   theme(legend.text=element_text(size=12)) +
   theme(legend.title=element_text(size=12)) +
-  theme(legend.position="none") +
-  theme(axis.title.y=element_text(margin=margin(0,10,0,0))) +
-  theme(axis.title.x=element_text(margin=margin(10,0,0,0)))
+  theme(axis.text.x = element_text(size = axis_ticktextsize),
+        axis.text.y = element_text(size = axis_ticktextsize),
+        axis.title.x = element_text(size = axis_titlesize, margin=margin(10,0,0,0)),
+        axis.title.y = element_text(size = axis_titlesize, angle = 90, margin = margin(0,10,0,0)),
+        strip.text.x = element_text(size = axis_titlesize, colour = "black"),
+        strip.background = element_rect(fill="gray88"),
+        panel.background = element_rect(fill="gray95",linetype = "solid", colour="white"),
+        legend.position = "none")
 # ggsave("example_AR1_MA1_Hyvarinen_factor_1_vs_2_5_by_5.png",dpi = 300,width = 5,height = 5)
 
 
@@ -194,7 +199,7 @@ ggplot() +
   geom_line(data = logbayesfactors, aes(time, logbayesfactor, color = case, group = interaction(case,repl)),alpha=0.6) +
   geom_hline(yintercept = 0,linetype=2) +
   xlab("Number of observations") +
-  ylab("log Bayes factor  [1 vs 3]") +
+  ylab("log Bayes factor  [1 vs. 3]") +
   theme(strip.text.y = element_text(size = 12, colour = "black")) +
   ylim(c(min(h_factors$hfactor),max(h_factors$hfactor))) +
   theme(legend.text=element_text(size=12)) +
@@ -215,14 +220,19 @@ ggplot() +
   geom_line(data = logbayesfactors, aes(time, logbayesfactor, color = case, group = interaction(case,repl)),alpha=0.6) +
   geom_hline(yintercept = 0,linetype=2) +
   xlab("Number of observations") +
-  ylab("log Bayes factor  [1 vs 3]") +
+  ylab("log Bayes factor  [1 vs. 3]") +
   ylim(c(min(h_factors$hfactor),max(h_factors$hfactor))) +
   theme(strip.text.y = element_text(size = 12, colour = "black")) +
   theme(legend.text=element_text(size=12)) +
   theme(legend.title=element_text(size=12)) +
-  theme(legend.position="none") +
-  theme(axis.title.y=element_text(margin=margin(0,10,0,0))) +
-  theme(axis.title.x=element_text(margin=margin(10,0,0,0)))
+  theme(axis.text.x = element_text(size = axis_ticktextsize),
+        axis.text.y = element_text(size = axis_ticktextsize),
+        axis.title.x = element_text(size = axis_titlesize, margin=margin(10,0,0,0)),
+        axis.title.y = element_text(size = axis_titlesize, angle = 90, margin = margin(0,10,0,0)),
+        strip.text.x = element_text(size = axis_titlesize, colour = "black"),
+        strip.background = element_rect(fill="gray88"),
+        panel.background = element_rect(fill="gray95",linetype = "solid", colour="white"),
+        legend.position = "none")
 # ggsave("example_AR1_MA1_logBF_1_vs_2_5_by_5.png",dpi = 300,width = 5,height = 5)
 
 
