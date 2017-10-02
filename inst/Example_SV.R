@@ -149,7 +149,10 @@ g1 = do.call(grid.arrange,c(post_plot_all[[1]], ncol = 3, nrow = 3))
 
 g2 = do.call(grid.arrange,c(post_plot_all[[2]], ncol = 3, nrow = 3))
 # ggsave("example_case3_SV_posterior_model_2.png",plot = g2,dpi = 300,width = 10, height = 5)
-
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
 
 a = 0.95
 # Check the log-evidence
@@ -164,7 +167,9 @@ ggplot(results_all,aes(time,  -logevidence, color = model)) +
   stat_summary(aes(group=model,shape = model),geom="point", fun.y=mean,size=2) +
   stat_summary(aes(group=model),geom="line", fun.y=mean, size = 1)
 # ggsave("example_SV_logevidence.png",dpi = 300,width = 10, height = 5)
-
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
 # Check the h-score DDE
 ggplot(subset(results_all),aes(time, hscoreDDE/time, color = model)) +
   ylab("Hyvarinen score / time") +
@@ -177,8 +182,9 @@ ggplot(subset(results_all),aes(time, hscoreDDE/time, color = model)) +
   stat_summary(aes(group=model,shape = model),geom="point", fun.y=mean,size=2) +
   stat_summary(aes(group=model),geom="line", fun.y=mean, size = 1)
 # ggsave("example_SV_hscore_rescaled.png",width = 10, height = 5,dpi = 300)
-
-
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
 colors = wes_palette("Darjeeling2")[c(2,3)]
 labels.df = data.frame(x = rep(1075,2), y = c(-2900,-2680),
                        text = c("Model 1","Model 2"),
@@ -200,8 +206,9 @@ ggplot(subset(results_all,time%in%x_resolution),aes(time, hscoreDDE, color = mod
   stat_summary(aes(group=model,shape = model),geom="point", fun.y=mean,size=2) +
   stat_summary(aes(group=model),geom="line", fun.y=mean, size = 1)
 # ggsave("example_SV_hscore_every10steps.png",width = 10, height = 5,dpi = 300)
-
-
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
 x_resolution = (1:nobservations)[(1:nobservations)%%10==0]
 # x_resolution = (1:nobservations)
 centered = results_all
@@ -225,5 +232,64 @@ ggplot(subset(centered,time%in%x_resolution),aes(time, hscoreDDE, color = model)
   stat_summary(aes(group=model),geom="line", fun.y=mean, size = 1) +
   scale_x_continuous(breaks=seq(0,1000,200))
 # ggsave("example_SV_hscore_shift_every10steps.png",width = 10, height = 5,dpi = 300)
-
-
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+#### Artificially put all the things to be plotted into a single dataframe in order to use facets
+BHfactors.df = data.frame()
+for (r in 1:repl){
+  BHfactors.df = rbind(BHfactors.df, data.frame(value = subset(centered,model==2&repl==r)$hscoreDDE-subset(centered,model==1&repl==r)$hscoreDDE,
+                                                time = 1:nobservations,
+                                                repl = r,
+                                                type = factor("H",levels = c("data","log","H"))))
+  BHfactors.df = rbind(BHfactors.df, data.frame(value = -subset(centered,model==2&repl==r)$logevidence+subset(centered,model==1&repl==r)$logevidence,
+                                                time = 1:nobservations,
+                                                repl = r,
+                                                type = factor("log",levels = c("data","log","H"))))
+}
+BHfactors.df = rbind(BHfactors.df, data.frame(value = c(observations),
+                                              time = 1:nobservations,
+                                              repl = 0,
+                                              type = factor("data",levels = c("data","log","H"))))
+hlines.df = data.frame(yintercept = rep(0,2),
+                       type = factor(c("log","H"),levels = c("data","log","H")))
+#--------------------------------------------------------------------------------------------
+case_label <- list(
+  'data'=expression(paste("Observations",sep="")),
+  'log'=expression(paste("log BF 1 vs. 2",sep="")),
+  'H'=expression(paste("HF 1 vs. 2",sep=""))
+)
+case_labeller <- function(variable,value){
+  return(case_label[value])
+}
+colors = c("forestgreen","tomato",wes_palette("Darjeeling2")[2])
+mean_size = 1.5
+axis_titlesize = 18
+axis_ticktextsize = 15
+#--------------------------------------------------------------------------------------------
+ggplot() +
+  xlab("Time (number of observations)") +
+  ylab("") +
+  # scale_fill_manual(values = colors) +
+  facet_grid(type~., scales="free", labeller = case_labeller) +
+  # geom_line(data = subset(results.df,score_type=="data"), aes(time,score,group=repl), color = wes_palette("Darjeeling")[1]) +
+  geom_line(data = subset(BHfactors.df,type=="data"),aes(time, value),alpha=1,color = colors[1]) +
+  geom_hline(data = hlines.df, aes(yintercept = yintercept), linetype ="dashed") +
+  geom_line(data = subset(BHfactors.df,type=="H"),aes(time, value, group=repl),alpha=0.7,color = colors[3]) +
+  geom_line(data = subset(BHfactors.df,type=="log"),aes(time, value, group=repl),alpha=0.7,color = colors[2]) +
+  stat_summary(data = subset(BHfactors.df,type=="H"),aes(time, value) ,geom="line", fun.y=mean, size = mean_size,color = colors[3]) +
+  stat_summary(data = subset(BHfactors.df,type=="log"),aes(time, value) ,geom="line", fun.y=mean, size = mean_size,color = colors[2]) +
+  theme(axis.text.x = element_text(size = axis_ticktextsize),
+        axis.text.y = element_text(size = axis_ticktextsize),
+        axis.title.x = element_text(size = axis_titlesize, margin=margin(20,0,0,0)),
+        axis.title.y = element_text(size = axis_titlesize, angle = 90, margin = margin(0,20,0,0)),
+        strip.text.y = element_text(size = axis_titlesize, colour = "black"),
+        strip.background = element_rect(fill="gray88"),
+        panel.background = element_rect(fill="gray95",linetype = "solid", colour="white"),
+        legend.position = "none")
+# ggsave("example_SV_12_by_9.png",dpi = 300,width = 12,height = 9)
+# ggsave("example_SV_15_by_9.png",dpi = 300,width = 15,height = 9)

@@ -147,6 +147,9 @@ post_plot_all[[3]]
 # ggsave("example_5_kangaroos_posterior_model_3.png",plot = post_plot_all[[3]],dpi = 300,width = 10,height = 5)
 
 #--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
 colnames(results_all)[4] = "Model"
 # plot log-evidence
 ggplot(results_all) +
@@ -158,7 +161,10 @@ ggplot(results_all) +
   theme(axis.title.y=element_text(margin=margin(0,10,0,0))) +
   theme(axis.title.x=element_text(margin=margin(10,0,0,0)))
 # ggsave("example_5_kangaroos_logevidence.png",dpi = 300,width = 10,height = 5)
-
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
 labels.df = data.frame(x = rep(44,3), y = c(-0.0040,-0.00445,-0.0048),
                        text = c("Model 1","Model 2","Model 3"),
                        type = factor(c("Model 1","Model 2","Model 3")))
@@ -183,4 +189,79 @@ ggplot() +
   theme(axis.title.y=element_text(margin=margin(0,10,0,0))) +
   theme(axis.title.x=element_text(margin=margin(10,0,0,0)))
 # ggsave("example_kangaroos_preqhyvarinenscore.png",dpi = 300,width = 10,height = 5)
-
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------
+#### Artificially put all the things to be plotted into a single dataframe in order to use facets
+results.df = results_all
+results.df[1] = -results.df[1] # Turn the log-evidence into NEGATIVE log-evidence
+colnames(results.df)[1:2] = rep("score")
+results.df = rbind(results.df[,-2],results.df[,-1])
+results.df = cbind(results.df,rep(factor(c("log","H"),levels=c("data","log","H")),each=nrow(results.df)/2))
+colnames(results.df)[5] = "score_type"
+#--------------------------------------------------------------------------------------------
+#### Artificially put the observations into the same dataframe in order to plot them using facets
+temp = subset(results.df,Model==1&repl==1)
+temp$score = c(observations[1,],observations[2,])
+temp$Model = factor(0)
+temp$repl = factor(rep(c(1,2),each=41))
+temp$score_type = factor("data")
+results.df = rbind(results.df,temp)
+#--------------------------------------------------------------------------------------------
+#### Artificially arrange observations in the dataframe in order to plot SEGMENTS within the facets
+results.df$yend = 0
+results.df = rbind(results.df, data.frame(score = observations[1,],
+                                          time = 1:41,
+                                          Model = factor(0),
+                                          repl = factor(0),
+                                          score_type = factor("data"),
+                                          yend = observations[2,]))
+#--------------------------------------------------------------------------------------------
+case_label <- list(
+  'data'=expression(paste("Observations",sep="")),
+  'log'=expression(paste("log-score / Time",sep="")),
+  'H'=expression(paste("H-score / Time",sep=""))
+)
+case_labeller <- function(variable,value){
+  return(case_label[value])
+}
+#--------------------------------------------------------------------------------------------
+labels.df = data.frame(x = rep(43.5,6), y = c(13.1,13.6,14.1,-1.42e-4,-1e-4,-0.58e-4),
+                       text = rep(c("Model 1","Model 2","Model 3"),2),
+                       type = rep(factor(c("Model 1","Model 2","Model 3")),2),
+                       score_type = factor(rep(c("log","H"),each=3)))
+hlines.df = data.frame(yintercept = 12.8,
+                       score_type = factor("log",levels = c("data","log","H")))
+colors = wes_palette("Darjeeling")[c(1,3,5)]
+axis_titlesize = 18
+axis_ticktextsize = 15
+ggplot() +
+  xlab("Time (number of observations)") +
+  ylab("") +
+  xlim(0,43.5) +
+  scale_fill_manual(values = colors) +
+  facet_grid(score_type~., scales="free", labeller = case_labeller) +
+  # geom_line(data = subset(results.df,score_type=="data"), aes(time,score,group=repl), color = wes_palette("Darjeeling")[1]) +
+  geom_point(data = subset(results.df,score_type=="data"), aes(time,score), color = wes_palette("Darjeeling2")[2]) +
+  geom_segment(data = subset(results.df,score_type=="data"&repl==0),aes(x = time, y = score, xend = time, yend = yend),linetype="dotted",colour="black") +
+  geom_line(data = subset(results.df,score_type=="H"),aes(time, score/time, color = Model, group=interaction(Model,repl)),alpha=0.7) +
+  geom_line(data = subset(results.df,score_type=="log"),aes(time, score/time, color = Model, group=interaction(Model,repl)),alpha=0.7) +
+  geom_hline(data = hlines.df, aes(yintercept = yintercept), alpha=0) +
+  stat_summary(data = subset(results.df,score_type=="H"),aes(time, score/time, color = Model,group=interaction(Model),shape = Model),geom="point", fun.y=mean,size=2.5) +
+  stat_summary(data = subset(results.df,score_type=="H"),aes(time, score/time, color = Model,group=interaction(Model)),geom="line", fun.y=mean, size = 1) +
+  stat_summary(data = subset(results.df,score_type=="log"),aes(time, score/time, color = Model,group=interaction(Model),shape = Model),geom="point", fun.y=mean,size=2.5) +
+  stat_summary(data = subset(results.df,score_type=="log"),aes(time, score/time, color = Model,group=interaction(Model)),geom="line", fun.y=mean, size = 1) +
+  scale_color_manual(values = rep(colors,2)) +
+  geom_label(data = labels.df, aes(x,y,label = text,color=rep(colors,2),fontface="bold"),size=5) +
+  theme(axis.text.x = element_text(size = axis_ticktextsize),
+        axis.text.y = element_text(size = axis_ticktextsize),
+        axis.title.x = element_text(size = axis_titlesize, margin=margin(20,0,0,0)),
+        axis.title.y = element_text(size = axis_titlesize, angle = 90, margin = margin(0,20,0,0)),
+        strip.text.y = element_text(size = axis_titlesize, colour = "black"),
+        strip.background = element_rect(fill="gray88"),
+        panel.background = element_rect(fill="gray95",linetype = "solid", colour="white"),
+        legend.position = "none")
+# ggsave("example_kangaroos_12_by_9.png",dpi = 300,width = 12,height = 9)
+# ggsave("example_kangaroos_15_by_9.png",dpi = 300,width = 15,height = 9)
