@@ -265,3 +265,4 @@ ggplot() +
         legend.position = "none")
 # ggsave("example_kangaroos_12_by_9.png",dpi = 300,width = 12,height = 9)
 # ggsave("example_kangaroos_15_by_9.png",dpi = 300,width = 15,height = 9)
+
