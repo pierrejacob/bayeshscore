@@ -227,7 +227,7 @@ case_label <- list(
 case_labeller <- function(variable,value){
   return(case_label[value])
 }
-#--------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 labels.df = data.frame(x = rep(43.5,6), y = c(13.1,13.6,14.1,-1.42e-4,-1e-4,-0.58e-4),
                        text = rep(c("Model 1","Model 2","Model 3"),2),
                        type = rep(factor(c("Model 1","Model 2","Model 3")),2),
@@ -265,4 +265,3 @@ ggplot() +
         legend.position = "none")
 # ggsave("example_kangaroos_12_by_9.png",dpi = 300,width = 12,height = 9)
 # ggsave("example_kangaroos_15_by_9.png",dpi = 300,width = 15,height = 9)
-
