@@ -20,12 +20,13 @@ List KF_assimilate_one_cpp(NumericVector Yt, int t,
   List KF_updated = KF_current;
   // Create containers for the results
   int dimX = initial_var.nrow();
+  int dimY = sigmaV2.nrow();
   Eigen::VectorXd muX_t_t_1(dimX); // contains the means of X_t given Y_1,...,Y_t-1
   Eigen::VectorXd muX_t_t(dimX); // contains the means of X_t given Y_1,...,Y_t
-  Eigen::VectorXd muY_t_t_1(dimX); // contains the means of Y_t given Y_1,...,Y_t-1
+  Eigen::VectorXd muY_t_t_1(dimY); // contains the means of Y_t given Y_1,...,Y_t-1
   Eigen::MatrixXd PX_t_t_1(dimX,dimX); // contains the variances of X_t given Y_1,...,Y_t-1
   Eigen::MatrixXd PX_t_t(dimX,dimX); // contains the variances of X_t given Y_1,...,Y_t
-  Eigen::MatrixXd PY_t_t_1(dimX,dimX); // contains the variances of Y_t given Y_1,...,Y_t-1
+  Eigen::MatrixXd PY_t_t_1(dimY,dimY); // contains the variances of Y_t given Y_1,...,Y_t-1
   Eigen::MatrixXd Kt; // Kalman gain matrix
   if (t==0) {
     muX_t_t_1 = initial_mean_;
