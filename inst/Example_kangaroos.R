@@ -228,9 +228,9 @@ case_labeller <- function(variable,value){
   return(case_label[value])
 }
 #------------------------------------------------------------------------------
-labels.df = data.frame(x = rep(43.5,6), y = c(13.1,13.6,14.1,-1.42e-4,-1e-4,-0.58e-4),
+labels.df = data.frame(x = rep(43.5,6), y = c(14.1,13.6,13.1,-0.58e-4,-1e-4,-1.42e-4),
                        text = rep(c("Model 1","Model 2","Model 3"),2),
-                       type = rep(factor(c("Model 1","Model 2","Model 3")),2),
+                       type = factor(rep(c("Model 1","Model 2","Model 3"),2)),
                        score_type = factor(rep(c("log","H"),each=3)))
 hlines.df = data.frame(yintercept = 12.8,
                        score_type = factor("log",levels = c("data","log","H")))
@@ -254,7 +254,7 @@ ggplot() +
   stat_summary(data = subset(results.df,score_type=="log"),aes(time, score/time, color = Model,group=interaction(Model),shape = Model),geom="point", fun.y=mean,size=2.5) +
   stat_summary(data = subset(results.df,score_type=="log"),aes(time, score/time, color = Model,group=interaction(Model)),geom="line", fun.y=mean, size = 1) +
   scale_color_manual(values = rep(colors,2)) +
-  geom_label(data = labels.df, aes(x,y,label = text,color=rep(colors,2),fontface="bold"),size=5) +
+  geom_label(data = labels.df, aes(x,y,label = text,color=rep(colors[3:1],2),fontface="bold"),size=5) +
   theme(axis.text.x = element_text(size = axis_ticktextsize),
         axis.text.y = element_text(size = axis_ticktextsize),
         axis.title.x = element_text(size = axis_titlesize, margin=margin(20,0,0,0)),

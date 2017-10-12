@@ -14,11 +14,11 @@ set.seed(19)
 algorithmic_parameters = list()
 algorithmic_parameters$Ntheta = 2^10
 algorithmic_parameters$verbose = TRUE
-algorithmic_parameters$store_theta = TRUE
+algorithmic_parameters$store_theta = FALSE
 #--------------------------------------------------------------------------------------------
 # set hyperparameters
 muprior = 0
-sigma2prior = 100
+sigma2prior = 10
 nu0 = 0.1
 s02 = 1
 # define models
@@ -27,14 +27,16 @@ model = function(i){
   if(i==2){return(get_model_iid_gaussian_unknown_variance(nu0,s02))} #iid N(0, theta2)
 }
 #--------------------------------------------------------------------------------------------
-nobservations = 100
+nobservations = 1000
 #--------------------------------------------------------------------------------------------
 repl = 5 #number of replications
 registerDoParallel(cores=5) #number of workers in parallel
+DGP_mu = c(1,0,5,0)
+DGP_sigma2 = c(1,5,3,1)
 ##################################################################################################
 # Case 1: DGP = N(1,1), Model 1 is correct
 ##################################################################################################
-observations1 = matrix(rnorm(nobservations,1,sqrt(1)), nrow = 1)# observations (dimy by nobservations matrix)
+observations1 = matrix(rnorm(nobservations,DGP_mu[1],sqrt(DGP_sigma2[1])), nrow = 1)# observations (dimy by nobservations matrix)
 #-----------------------------------
 results1_all = data.frame()
 post1_all = data.frame()
@@ -59,7 +61,7 @@ for (m in 1:2){
 ##################################################################################################
 # Case 2: DGP = N(0,5), Model 2 is correct
 ##################################################################################################
-observations2 = matrix(rnorm(nobservations,0,5), nrow = 1)# observations (dimy by nobservations matrix)
+observations2 = matrix(rnorm(nobservations,DGP_mu[2],sqrt(DGP_sigma2[2])), nrow = 1)# observations (dimy by nobservations matrix)
 #-----------------------------------
 results2_all = data.frame()
 post2_all = data.frame()
@@ -82,9 +84,9 @@ for (m in 1:2){
   }
 }
 ##################################################################################################
-# Case 3: DGP = N(2,3), both model 1 and 2 are misspecified
+# Case 3: DGP = N(5,3), both model 1 and 2 are misspecified
 ##################################################################################################
-observations3 = matrix(rnorm(nobservations,2,sqrt(3)), nrow = 1)# observations (dimy by nobservations matrix)
+observations3 = matrix(rnorm(nobservations,DGP_mu[3],sqrt(DGP_sigma2[3])), nrow = 1)# observations (dimy by nobservations matrix)
 #-----------------------------------
 results3_all = data.frame()
 post3_all = data.frame()
@@ -109,7 +111,7 @@ for (m in 1:2){
 ##################################################################################################
 # Case 4: DGP = N(0,1), both model 1 and 2 are correct
 ##################################################################################################
-observations4 = matrix(rnorm(nobservations,0,1), nrow = 1)# observations (dimy by nobservations matrix)
+observations4 = matrix(rnorm(nobservations,DGP_mu[4],sqrt(DGP_sigma2[4])), nrow = 1)# observations (dimy by nobservations matrix)
 #-----------------------------------
 results4_all = data.frame()
 post4_all = data.frame()
@@ -140,90 +142,89 @@ for (m in 1:2){
 # # Checking posterior distributions (marginal)
 # #--------------------------------------------------------------------------------------------
 post_all = list(post1_all, post2_all, post3_all, post4_all)
-# observations = list(observations1, observations2, observations3, observations4)
-# #Compute exact posterior
-# sigma2_post = rep(NA, 4)
-# mu_post = rep(NA, 4)
-# nu_post = rep(NA, 4)
-# s2_post = rep(NA, 4)
-# plot_post = list()
-# for (i in 1:4) {
-#   sigma2_post[i] = 1/(nobservations + 1/sigma2prior)
-#   mu_post[i] = (sum(observations[[i]]) + (1/sigma2prior)*muprior)*sigma2_post[i]
-#   nu_post[i] = nu0 + nobservations
-#   s2_post[i] = (nu0*s02 + sum(observations[[i]]^2))/nu_post[i]
-#   # Plot posterior samples vs exact posterior
-#   local({i = i;
-#   # model 1
-#   plot_post[[2*i-1]] <<- ggplot(subset(post_all[[i]], model==1)) +
-#     geom_density(aes(theta, weight = W, fill = factor(i), group = interaction(repl,model)), alpha = 0.3) +
-#     stat_function(fun = function(y)dnorm(y,mu_post[i],sqrt(sigma2_post[i]),FALSE),colour="blue",size=1.5,linetype=1) +
-#     theme(legend.position="none") + xlab(expression(theta[1])) + ylab("");
-#   # model 2
-#   plot_post[[2*i]] <<- ggplot(subset(post_all[[i]], model==2)) +
-#     geom_density(aes(theta, weight = W, fill = factor(i), group = interaction(repl,model)), alpha = 0.3) +
-#     stat_function(fun = function(y)dinvchisq(y,nu_post[i],s2_post[i],FALSE),colour="blue",size=1.5,linetype=1) +
-#     xlab(expression(theta[2])) + ylab("") + scale_fill_discrete(name = "case");
-#   })
-# }
-# # Checking posterior distributions (marginal)
-# # One row for each case: theta1 for model 1, theta2 for model 2
-# grid.arrange(plot_post[[1]],plot_post[[2]],
-#              plot_post[[3]],plot_post[[4]],
-#              plot_post[[5]],plot_post[[6]],
-#              plot_post[[7]],plot_post[[8]],
-#              ncol = 4, widths = c(1,1.4,1,1.4))
+observations = list(observations1, observations2, observations3, observations4)
+#Compute exact posterior
+sigma2_post = rep(NA, 4)
+mu_post = rep(NA, 4)
+nu_post = rep(NA, 4)
+s2_post = rep(NA, 4)
+plot_post = list()
+for (i in 1:4) {
+  sigma2_post[i] = 1/(nobservations + 1/sigma2prior)
+  mu_post[i] = (sum(observations[[i]]) + (1/sigma2prior)*muprior)*sigma2_post[i]
+  nu_post[i] = nu0 + nobservations
+  s2_post[i] = (nu0*s02 + sum(observations[[i]]^2))/nu_post[i]
+  # Plot posterior samples vs exact posterior
+  local({i = i;
+  # model 1
+  plot_post[[2*i-1]] <<- ggplot(subset(post_all[[i]], model==1)) +
+    geom_density(aes(theta, weight = W, fill = factor(i), group = interaction(repl,model)), alpha = 0.3) +
+    stat_function(fun = function(y)dnorm(y,mu_post[i],sqrt(sigma2_post[i]),FALSE),colour="blue",size=1.5,linetype=1) +
+    theme(legend.position="none") + xlab(expression(theta[1])) + ylab("");
+  # model 2
+  plot_post[[2*i]] <<- ggplot(subset(post_all[[i]], model==2)) +
+    geom_density(aes(theta, weight = W, fill = factor(i), group = interaction(repl,model)), alpha = 0.3) +
+    stat_function(fun = function(y)dinvchisq(y,nu_post[i],s2_post[i],FALSE),colour="blue",size=1.5,linetype=1) +
+    xlab(expression(theta[2])) + ylab("") + scale_fill_discrete(name = "case");
+  })
+}
+# Checking posterior distributions (marginal)
+# One row for each case: theta1 for model 1, theta2 for model 2
+grid.arrange(plot_post[[1]],plot_post[[2]],
+             plot_post[[3]],plot_post[[4]],
+             plot_post[[5]],plot_post[[6]],
+             plot_post[[7]],plot_post[[8]],
+             ncol = 4, widths = c(1,1.4,1,1.4))
 # #--------------------------------------------------------------------------------------------
 # # Sanity check (exact computation)
 # #--------------------------------------------------------------------------------------------
 results_all = list(results1_all, results2_all, results3_all, results4_all)
-# M = 1000
-# DGP_mu = c(1,0,2,0)
-# DGP_sigma2 = c(1,5,3,1)
-# plot_exact = list()
-# for (i in 1:4){
-#   expected_H_model1_exact = rep(0,4)
-#   expected_H_model2_exact = rep(0,4)
-#   sigma2_post = rep(NA, nobservations)
-#   mu_post = rep(NA, nobservations)
-#   nu_post = rep(NA, nobservations)
-#   s2_post = rep(NA, nobservations)
-#   hexact1 = rep(NA, nobservations)
-#   hexact2 = rep(NA, nobservations)
-#   for (t in 1:nobservations) {
-#     sigma2_post[t] = 1/(t + 1/sigma2prior)
-#     mu_post[t] = (sum(observations[[i]][,1:t]) + (1/sigma2prior)*muprior)*sigma2_post[t]
-#     nu_post[t] = nu0 + t
-#     s2_post[t] = (nu0*s02 + sum(observations[[i]][,1:t]^2))/nu_post[t]
-#     theta2 = rinvchisq(M,nu_post[t],s2_post[t])
-#     if (t == 1){
-#       hexact1[t] = -2/(sigma2prior+1) + (observations[[i]][,t]^2)/((sigma2prior+1)^2)
-#     } else {
-#       hexact1[t] = -2/(sigma2_post[t-1]+1) + ((observations[[i]][,t]-mu_post[t-1])^2)/((sigma2_post[t-1]+1)^2)
-#     }
-#
-#     hexact2[t] = mean((1/(theta2^2))*((observations[[i]][,t]-0)^2-2*theta2)) + var(1/theta2)*(observations[[i]][,t])^2
-#   }
-#   hexact1 = cumsum(hexact1)
-#   hexact2 = cumsum(hexact2)
-#   expected_H_model1_exact[i] = (DGP_sigma2[i]+(DGP_mu[i]-mean(theta1))^2-2)
-#   expected_H_model2_exact[i] = (1/mean(theta2)^2)*(DGP_sigma2[i]+DGP_mu[i]^2-2*mean(theta2))
-#   local({
-#     i = i;
-#     hexact1 = hexact1;
-#     hexact2 = hexact2;
-#     expected_H_model1_exact = expected_H_model1_exact;
-#     expected_H_model2_exact = expected_H_model2_exact;
-#     results_all = results_all;
-#     plot_exact[[i]] <<-ggplot() +
-#       geom_line(data=results_all[[i]],aes(time,hscore/time,group=interaction(repl,model),col=model)) +
-#       geom_line(aes(1:nobservations,expected_H_model1_exact[i])) +
-#       geom_line(aes((1:nobservations),expected_H_model2_exact[i])) +
-#       geom_point(aes((1:nobservations),hexact1/(1:nobservations)),col="red") +
-#       geom_point(aes((1:nobservations),hexact2/(1:nobservations)),col="blue")
-#   })
-# }
-# do.call(grid.arrange,c(plot_exact, ncol = 2))
+M = 1000
+plot_exact = list()
+for (i in 1:4){
+  expected_H_model1_exact = rep(0,4)
+  expected_H_model2_exact = rep(0,4)
+  sigma2_post = rep(NA, nobservations)
+  mu_post = rep(NA, nobservations)
+  nu_post = rep(NA, nobservations)
+  s2_post = rep(NA, nobservations)
+  hexact1 = rep(NA, nobservations)
+  hexact2 = rep(NA, nobservations)
+  for (t in 1:nobservations) {
+    sigma2_post[t] = 1/(t + 1/sigma2prior)
+    mu_post[t] = (sum(observations[[i]][,1:t]) + (1/sigma2prior)*muprior)*sigma2_post[t]
+    nu_post[t] = nu0 + t
+    s2_post[t] = (nu0*s02 + sum(observations[[i]][,1:t]^2))/nu_post[t]
+    theta1 = rnorm(M,mu_post[t],sqrt(sigma2_post[t]))
+    theta2 = rinvchisq(M,nu_post[t],s2_post[t])
+    if (t == 1){
+      hexact1[t] = -2/(sigma2prior+1) + (observations[[i]][,t]^2)/((sigma2prior+1)^2)
+    } else {
+      hexact1[t] = -2/(sigma2_post[t-1]+1) + ((observations[[i]][,t]-mu_post[t-1])^2)/((sigma2_post[t-1]+1)^2)
+    }
+
+    hexact2[t] = mean((1/(theta2^2))*((observations[[i]][,t]-0)^2-2*theta2)) + var(1/theta2)*(observations[[i]][,t])^2
+  }
+  hexact1 = cumsum(hexact1)
+  hexact2 = cumsum(hexact2)
+  expected_H_model1_exact[i] = (DGP_sigma2[i]+(DGP_mu[i]-mean(theta1))^2-2)
+  expected_H_model2_exact[i] = (1/mean(theta2)^2)*(DGP_sigma2[i]+DGP_mu[i]^2-2*mean(theta2))
+  local({
+    i = i;
+    hexact1 = hexact1;
+    hexact2 = hexact2;
+    expected_H_model1_exact = expected_H_model1_exact;
+    expected_H_model2_exact = expected_H_model2_exact;
+    results_all = results_all;
+    plot_exact[[i]] <<-ggplot() +
+      geom_line(data=results_all[[i]],aes(time,hscore/time,group=interaction(repl,model),col=model)) +
+      geom_line(aes(1:nobservations,expected_H_model1_exact[i])) +
+      geom_line(aes((1:nobservations),expected_H_model2_exact[i])) +
+      geom_point(aes((1:nobservations),hexact1/(1:nobservations)),col="red") +
+      geom_point(aes((1:nobservations),hexact2/(1:nobservations)),col="blue")
+  })
+}
+do.call(grid.arrange,c(plot_exact, ncol = 2))
 
 #--------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------
@@ -231,8 +232,6 @@ results_all = list(results1_all, results2_all, results3_all, results4_all)
 #--------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------
 colors = c("blue",wes_palette("Royal1")[2])
-DGP_mu = c(1,0,2,0)
-DGP_sigma2 = c(1,5,3,1)
 # Compute the Hyvarinen factor
 h_factors = data.frame()
 theta1_star = rep(0, 4)
@@ -264,15 +263,16 @@ for (i in 1:4){
 
 
   slope = expected_H_model2 - expected_H_model1
+  print(slope)
   # Plot h-factor (hscore model 2 minus model 1)
   # Thus: positive = in favor of model 1, negative = in favor of model 2
 
-  # h_factors = rbind(h_factors,data.frame(time = 1:nobservations,
-  #                                        repl = -1,
-  #                                        hfactor = (1:nobservations)*slope,
-  #                                        case = factor(i),
-  #                                        type = factor(paste("Case",toString(i))),
-  #                                        sim = -1))
+  h_factors = rbind(h_factors,data.frame(time = 1:nobservations,
+                                         repl = -1,
+                                         hfactor = (1:nobservations)*slope,
+                                         case = factor(i),
+                                         type = factor(paste("Case",toString(i))),
+                                         sim = -1))
 }
 # Checking H-factor
 # top-left, top-right, bottom-left, bottom-right = case 1, 2, 3, 4.

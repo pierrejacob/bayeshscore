@@ -260,7 +260,7 @@ hlines.df = data.frame(yintercept = rep(0,2),
 #--------------------------------------------------------------------------------------------
 case_label <- list(
   'data'=expression(paste("Observations",sep="")),
-  'log'=expression(paste("log BF 1 vs. 2",sep="")),
+  'log'=expression(paste("log-BF 1 vs. 2",sep="")),
   'H'=expression(paste("HF 1 vs. 2",sep=""))
 )
 case_labeller <- function(variable,value){
