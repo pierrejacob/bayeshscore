@@ -42,7 +42,6 @@ timesteps = 1:nobservations
 model = function(i){
   if(i==1){return(get_model_SVLevy_singlefactor(timesteps))}
   if(i==2){return(get_model_SVLevy_multifactor_noleverage(timesteps))}
-  if(i==3){return(get_model_SVLevy_multifactor_withleverage(timesteps))}
 }
 #--------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------
@@ -115,40 +114,46 @@ for (m in models_to_run) {
 # close log file
 sink()
 #--------------------------------------------------------------------------------------------
+my_theme = theme(axis.text.x = element_text(size = axis_ticktextsize),
+                 axis.text.y = element_text(size = axis_ticktextsize),
+                 axis.title.x = element_text(size = axis_titlesize, margin=margin(20,0,0,0)),
+                 axis.title.y = element_text(size = axis_titlesize, angle = 90, margin = margin(0,20,0,0)),
+                 strip.text.y = element_text(size = axis_titlesize, colour = "black"),
+                 strip.text.x = element_text(size = axis_titlesize, colour = "black",margin = margin(0.3,0,0.3,0, "cm")),
+                 strip.background = element_rect(fill="gray88"),
+                 panel.background = element_rect(fill="gray95",linetype = "solid", colour="white"),
+                 legend.position = "none")
 # Check posterior for each model
 post_plot_all = list()
-xlabels = list(xlab(expression(mu)), xlab(expression(beta)), xlab(expression(xi)),
-               xlab(expression(omega^2)), xlab(expression(lambda[1])), xlab(expression(lambda[2])),
-               xlab("w"), xlab(expression(rho[1])), xlab(expression(rho[2])))
+axis_titlesize = 24
+axis_ticktextsize = 15
+xlabels = c(expression(mu), expression(beta), expression(xi), expression(omega^2),
+            expression(lambda[1]), expression(lambda[2]), "w", expression(rho[1]), expression(rho[2]))
 colors = c(wes_palette("Darjeeling2")[c(2,3)],wes_palette("Darjeeling")[2])
 # Generate plots
-for (m in models_to_run) {
+for (m in models_to_run){
   dimtheta = model(m)$dimtheta
-  cnames = colnames(post_all[[m]])
-  plot_post = list()
-  for (k in 1:dimtheta) {
-    local({k = k;
-    cnames = cnames;
-    plot_post[[k]] <<- ggplot(post_all[[m]]) +
-      geom_density(aes_string(cnames[k],weight = "W", group = "repl"),col=colors[m],size=1,alpha=0.3) +
-      theme(legend.position="none") + xlabels[[k]] + ylab("")})
-  }
-  post_plot_all[[m]] = plot_post
-}
-# display plots
-for (m in models_to_run) {
-  do.call(grid.arrange,c(post_plot_all[[m]], ncol = 3, nrow = 3))
-}
-#--------------------------------------------------------------------------------------------
-#--------------------------------------------------------------------------------------------
-#--------------------------------------------------------------------------------------------
-#--------------------------------------------------------------------------------------------
+  post = data.frame(thetas = unlist(post_all[[m]][,1:dimtheta]),
+                    repl = rep(post_all[[m]]$repl,dimtheta),
+                    w = rep(post_all[[m]]$W,dimtheta),
+                    variable = rep(factor(1:dimtheta),each=length(post_all[[m]]$repl)),
+                    type = factor("Posterior"))
+  if (m==1){levels(post$variable) = xlabels[1:5]; nbcol = 5}
+  if (m==2){levels(post$variable) = xlabels[1:7]; nbcol = 7}
 
-g1 = do.call(grid.arrange,c(post_plot_all[[1]], ncol = 3, nrow = 3))
-# ggsave("example_case3_SV_posterior_model_1.png",plot = g1,dpi = 300,width = 10, height = 5)
+  local({m = m;
+  post_plot_all[[m]] <<-ggplot(post) +
+    geom_density(aes(thetas, weight = w, group = interaction(variable,repl)),adjust = 2,col=colors[m],size=1,alpha=0.3) +
+    facet_wrap( ~ variable, ncol=nbcol, scales="free",labeller=label_parsed) + xlab("") + ylab("") +
+    my_theme})
+}
+post_plot_all[[1]]
+post_plot_all[[2]]
+# ggsave("example_SV_posterior_model_1_24_by_6.png",plot = post_plot_all[[1]],dpi = 300,width = 24,height = 6)
+# ggsave("example_SV_posterior_model_2_24_by_6.png",plot = post_plot_all[[2]],dpi = 300,width = 24,height = 6)
 
-g2 = do.call(grid.arrange,c(post_plot_all[[2]], ncol = 3, nrow = 3))
-# ggsave("example_case3_SV_posterior_model_2.png",plot = g2,dpi = 300,width = 10, height = 5)
+
+
 #--------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------
@@ -283,13 +288,122 @@ ggplot() +
   geom_line(data = subset(BHfactors.df,type=="log"),aes(time, value, group=repl),alpha=0.7,color = colors[2]) +
   stat_summary(data = subset(BHfactors.df,type=="H"),aes(time, value) ,geom="line", fun.y=mean, size = mean_size,color = colors[3]) +
   stat_summary(data = subset(BHfactors.df,type=="log"),aes(time, value) ,geom="line", fun.y=mean, size = mean_size,color = colors[2]) +
-  theme(axis.text.x = element_text(size = axis_ticktextsize),
-        axis.text.y = element_text(size = axis_ticktextsize),
-        axis.title.x = element_text(size = axis_titlesize, margin=margin(20,0,0,0)),
-        axis.title.y = element_text(size = axis_titlesize, angle = 90, margin = margin(0,20,0,0)),
-        strip.text.y = element_text(size = axis_titlesize, colour = "black"),
-        strip.background = element_rect(fill="gray88"),
-        panel.background = element_rect(fill="gray95",linetype = "solid", colour="white"),
-        legend.position = "none")
+  my_theme
 # ggsave("example_SV_12_by_9.png",dpi = 300,width = 12,height = 9)
 # ggsave("example_SV_15_by_9.png",dpi = 300,width = 15,height = 9)
+
+
+
+# #### Plot prior (WARNING: these are specific to a particular choice of prior, xmin and xmax were set manually
+# #### for better readability of the plots)
+# mu0mu = 0
+# sigma02mu = 10
+# mu0beta = 0
+# sigma02beta = 10
+# r0xi = 1/5
+# r0w2 = 1/5
+# r0lambda = 1
+# ### Model 1
+# M = 5000
+# axis_titlesize = 24
+# axis_ticktextsize = 15
+# my_theme = theme(axis.text.x = element_text(size = axis_ticktextsize),
+#                  axis.text.y = element_text(size = axis_ticktextsize),
+#                  axis.title.x = element_text(size = axis_titlesize, margin=margin(20,0,0,0)),
+#                  axis.title.y = element_text(size = axis_titlesize, angle = 90, margin = margin(0,20,0,0)),
+#                  strip.text.y = element_text(size = axis_titlesize, colour = "black"),
+#                  strip.text.x = element_text(size = axis_titlesize, colour = "black",margin = margin(0.3,0,0.3,0, "cm")),
+#                  strip.background = element_rect(fill="gray88"),
+#                  panel.background = element_rect(fill="gray95",linetype = "solid", colour="white"),
+#                  legend.position = "none")
+# xmin = -0.15; xmax = 0.17
+# prior1 = data.frame(thetas = seq(xmin,xmax,length.out = M),
+#                     dens = dnorm(seq(xmin,xmax,length.out = M),mu0mu, sqrt(sigma02mu)),
+#                     variable = factor(1),
+#                     type = factor("Prior"))
+# xmin = -0.5; xmax = 0.45
+# prior1 = rbind(prior1, data.frame(thetas = seq(xmin,xmax,0.0005),
+#                                   dens = dnorm(seq(xmin,xmax,0.0005),mu0beta, sqrt(sigma02beta)),
+#                                   variable = factor(2),
+#                                   type = factor("Prior")))
+# xmin = 0; xmax = 2.8
+# prior1 = rbind(prior1, data.frame(thetas = seq(xmin,xmax,length.out = M),
+#                                   dens = dexp(seq(xmin,xmax,length.out = M),r0xi),
+#                                   variable = factor(3),
+#                                   type = factor("Prior")))
+# xmin = 0; xmax = 6
+# prior1 = rbind(prior1, data.frame(thetas = seq(xmin,xmax,length.out = M),
+#                                   dens = dexp(seq(xmin,xmax,length.out = M),r0w2),
+#                                   variable = factor(4),
+#                                   type = factor("Prior")))
+# xmin = 0; xmax = 0.04
+# prior1 = rbind(prior1, data.frame(thetas = seq(xmin,xmax,length.out = M),
+#                                   dens = dexp(seq(xmin,xmax,length.out = M),r0lambda),
+#                                   variable = factor(5),
+#                                   type = factor("Prior")))
+# levels(prior1$variable) = xlabels[1:5]
+# ylim.df = data.frame(y = c(0.12,0.13,0.1,0.15,0,1,0,1,0,2),
+#                      variable = factor(rep(1:5,each=2)))
+# levels(ylim.df$variable) = xlabels[1:5]
+# ggplot(prior1) +
+#   geom_line(aes(thetas, dens), col=colors[1],size=1,alpha=0.8) +
+#   facet_wrap( ~ variable, ncol=5, scales="free",labeller=label_parsed) + xlab("") + ylab("") +
+#   geom_hline(data = ylim.df, aes(yintercept = y), alpha = 0) +
+#   my_theme
+# # ggsave("example_SV_prior_model_1_24_by_6.png",dpi = 300,width = 24,height = 6)
+#
+#
+# r0lambda1 = 1
+# r0lambda2_1 = 1/2
+# alpha0w = 1
+# beta0w = 1
+# ### Model 2
+# M = 5000
+# xmin = -0.2; xmax = 0.2
+# prior2 = data.frame(thetas = seq(xmin,xmax,length.out = M),
+#                     dens = dnorm(seq(xmin,xmax,length.out = M),mu0mu, sqrt(sigma02mu)),
+#                     variable = factor(1),
+#                     type = factor("Prior"))
+# xmin = -0.5; xmax = 0.5
+# prior2 = rbind(prior2, data.frame(thetas = seq(xmin,xmax,0.0005),
+#                                   dens = dnorm(seq(xmin,xmax,0.0005),mu0beta, sqrt(sigma02beta)),
+#                                   variable = factor(2),
+#                                   type = factor("Prior")))
+# xmin = 0.2; xmax = 0.8
+# prior2 = rbind(prior2, data.frame(thetas = seq(xmin,xmax,length.out = M),
+#                                   dens = dexp(seq(xmin,xmax,length.out = M),r0xi),
+#                                   variable = factor(3),
+#                                   type = factor("Prior")))
+# xmin = 0; xmax = 0.8
+# prior2 = rbind(prior2, data.frame(thetas = seq(xmin,xmax,length.out = M),
+#                                   dens = dexp(seq(xmin,xmax,length.out = M),r0w2),
+#                                   variable = factor(4),
+#                                   type = factor("Prior")))
+# xmin = 0; xmax = 0.05
+# prior2 = rbind(prior2, data.frame(thetas = seq(xmin,xmax,length.out = M),
+#                                   dens = dexp(seq(xmin,xmax,length.out = M),r0lambda1),
+#                                   variable = factor(5),
+#                                   type = factor("Prior")))
+# xmin = 0; xmax = 14
+# draws = model(2)$rprior(10^6)[6,]
+# # ggplot() + geom_histogram(aes(x = draws, y = ..density..))
+# kde = density(draws,bw = 1.5)
+# prior2 = rbind(prior2, data.frame(thetas = kde$x[kde$x>xmin & kde$x<xmax],
+#                                   dens = kde$y[kde$x>xmin & kde$x<xmax],
+#                                   variable = factor(6),
+#                                   type = factor("Prior")))
+# xmin = 0.35; xmax = 1
+# prior2 = rbind(prior2, data.frame(thetas = seq(xmin,xmax,length.out = M),
+#                                   dens = dbeta(seq(xmin,xmax,length.out = M), alpha0w, beta0w),
+#                                   variable = factor(7),
+#                                   type = factor("Prior")))
+# levels(prior2$variable) = xlabels[1:7]
+# ylim.df = data.frame(y = c(0.12,0.13,0.1,0.15,0,1,0,1,0,2,0,0.2,0,1.5),
+#                      variable = factor(rep(1:7,each=2)))
+# levels(ylim.df$variable) = xlabels[1:7]
+# ggplot(prior2) +
+#   geom_line(aes(thetas, dens), col=colors[2],size=1,alpha=0.8) +
+#   facet_wrap( ~ variable, ncol=7, scales="free",labeller=label_parsed) + xlab("") + ylab("") +
+#   geom_hline(data = ylim.df, aes(yintercept = y), alpha = 0) +
+#   my_theme
+# # ggsave("example_SV_prior_model_2_24_by_6.png",dpi = 300,width = 24,height = 6)

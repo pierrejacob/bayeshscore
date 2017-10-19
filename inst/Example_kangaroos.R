@@ -116,6 +116,8 @@ saveRDS(list(results_all = results_all, post_all = post_all), file = savefilenam
 #--------------------------------------------------------------------------------------------
 # plot posterior
 post_plot_all = list()
+axis_titlesize = 24
+axis_ticktextsize = 20
 colors = wes_palette("Darjeeling")[c(1,3,5)]
 for (m in models_to_run){
   dimtheta = model(m)$dimtheta
@@ -123,28 +125,31 @@ for (m in models_to_run){
                     repl = rep(post_all[[m]]$repl,dimtheta),
                     w = rep(post_all[[m]]$W,dimtheta),
                     type = rep(factor(1:dimtheta),each=length(post_all[[m]]$repl)))
-  if (m==1){levels(post$type) = c("r","b",expression(sigma),expression(tau)); nbcol = 2}
+  if (m==1){levels(post$type) = c("r","b",expression(sigma),expression(tau)); nbcol = 4}
   if (m==2){levels(post$type) = c("r",expression(sigma),expression(tau)); nbcol = 3}
   if (m==3){levels(post$type) = c(expression(sigma),expression(tau)); nbcol = 2}
 
   local({m = m;
   post_plot_all[[m]] <<-ggplot(post) +
-    geom_density(aes(thetas, weight = w, group = interaction(type,repl)),col=colors[m],size=1,alpha=0.3) +
-    facet_wrap( ~ type, ncol=nbcol, scales="free",labeller=label_parsed) + xlab("") + ylab("Posterior density") +
-    theme(strip.text.y = element_text(size = 12, colour = "black")) +
-    theme(legend.text=element_text(size=12)) +
-    theme(legend.title=element_text(size=12)) +
-    theme(legend.position="none") +
-    theme(axis.title.y=element_text(margin=margin(0,10,0,0))) +
-    theme(axis.title.x=element_text(margin=margin(10,0,0,0)))})
+    geom_density(aes(thetas, weight = w, group = interaction(type,repl)),adjust = 1.25,col=colors[m],size=1,alpha=0.8) +
+    facet_wrap( ~ type, ncol=nbcol, scales="free",labeller=label_parsed) + xlab("") + ylab("") +
+    theme(axis.text.x = element_text(size = axis_ticktextsize),
+          axis.text.y = element_text(size = axis_ticktextsize),
+          axis.title.x = element_text(size = axis_titlesize, margin=margin(20,0,0,0)),
+          axis.title.y = element_text(size = axis_titlesize, angle = 90, margin = margin(0,20,0,0)),
+          strip.text.y = element_text(size = axis_titlesize, colour = "black"),
+          strip.text.x = element_text(size = axis_titlesize, colour = "black"),
+          strip.background = element_rect(fill="gray88"),
+          panel.background = element_rect(fill="gray95",linetype = "solid", colour="white"),
+          legend.position = "none")})
 }
 
 post_plot_all[[1]]
-# ggsave("example_5_kangaroos_posterior_model_1.png",plot = post_plot_all[[1]],dpi = 300,width = 10,height = 5)
 post_plot_all[[2]]
-# ggsave("example_5_kangaroos_posterior_model_2.png",plot = post_plot_all[[2]],dpi = 300,width = 10,height = 5)
 post_plot_all[[3]]
-# ggsave("example_5_kangaroos_posterior_model_3.png",plot = post_plot_all[[3]],dpi = 300,width = 10,height = 5)
+# ggsave("example_kangaroos_posterior_model_1_24_by_6.png",plot = post_plot_all[[1]],dpi = 300,width = 24,height = 6)
+# ggsave("example_kangaroos_posterior_model_2_24_by_6.png",plot = post_plot_all[[2]],dpi = 300,width = 24,height = 6)
+# ggsave("example_kangaroos_posterior_model_3_24_by_6.png",plot = post_plot_all[[3]],dpi = 300,width = 24,height = 6)
 
 #--------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------
@@ -265,3 +270,4 @@ ggplot() +
         legend.position = "none")
 # ggsave("example_kangaroos_12_by_9.png",dpi = 300,width = 12,height = 9)
 # ggsave("example_kangaroos_15_by_9.png",dpi = 300,width = 15,height = 9)
+
