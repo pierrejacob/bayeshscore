@@ -3,7 +3,7 @@
 # (see also Barndorff-Nielsen and Shephard, 2001)
 ##################################################################################################
 # rm(list = ls())
-library(HyvarinenSSM)
+library(bayeshscore)
 library(ggplot2)
 library(gridExtra)
 library(doParallel)

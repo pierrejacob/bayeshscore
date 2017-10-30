@@ -2,7 +2,7 @@
 # Generic template to compute the hscore of a model
 ##################################################################################################
 rm(list = ls())
-library(HyvarinenSSM)
+library(bayeshscore)
 library(ggplot2)
 library(gridExtra)
 set.seed(29)

@@ -1,7 +1,7 @@
 ##################################################################################################
 # Example - Kangaroo population models (Knape and Valpine, 2012)
 ##################################################################################################
-library(HyvarinenSSM)
+library(bayeshscore)
 library(ggplot2)
 library(gridExtra)
 library(doParallel)

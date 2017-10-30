@@ -1,7 +1,7 @@
 ##################################################################################################
 # Example - iid Normal (example 3.2. in O'Hagan, 1995)
 ##################################################################################################
-library(HyvarinenSSM)
+library(bayeshscore)
 library(ggplot2)
 library(gridExtra)
 library(doParallel)
