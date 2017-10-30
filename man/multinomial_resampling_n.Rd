@@ -13,4 +13,3 @@ A vector of ancestors
 Runs a multinomial resampling algorithm, taking a normalized weights and a number of desired draws
 and returning a vector of ancestors
 }
-

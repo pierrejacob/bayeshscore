@@ -9,4 +9,3 @@ get_proposal_independent_normal()
 \description{
 Independent Normal proposal using fitted mean and covariance matrix
 }
-

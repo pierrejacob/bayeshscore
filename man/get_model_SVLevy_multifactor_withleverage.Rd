@@ -17,4 +17,3 @@ in Barndorff-Nielsen and Shephard (2002).
 The states are Xt = (v1t, z1t, v2t, z2t, sum_e1t, sum_e2t), where sum_e1t and sum_e2t denote the
 sum of the error variables involved in the generation of the vt's.
 }
-

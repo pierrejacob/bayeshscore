@@ -10,4 +10,3 @@ get_proposal_mixture(nclust = 5, maxattempts = 5)
 Independent proposal from a fitted mixture of Normals with \code{nclust} components (default is 5).
 If the fit is unsuccessful, return independent Normal proposal (see \code{get_independent_normal_proposal}).
 }
-

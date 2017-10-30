@@ -11,4 +11,3 @@ This function runs the SMC algorithm, using tempering.
 It also computes the log-evidence and the prequential Hyvarinen score (optional).
 It is a wrapper of the function \code{smc_} with a time budgeting and partial save feature.
 }
-

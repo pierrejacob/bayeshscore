@@ -9,4 +9,3 @@ get_derivative_RBFlocal(ys, ystar, sigma2star, order)
 \description{
 Estimates derivative of p(y) up to order 2 by fitting a constant via a local loss.
 }
-

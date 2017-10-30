@@ -10,4 +10,3 @@ get_derivative_RBF(ys, lambda, sigma2, order, ynew = NULL)
 Estimates p'(y) or p''(y) via RBF regression.
 The function assumes length(ys) is a multiple of kfold.
 }
-

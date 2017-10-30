@@ -9,4 +9,3 @@ fast_rmvnorm(nparticles, mean, covariance)
 \description{
 Fast samples from Normal using Rcpp (observations row-wise, dimensions column-wise)
 }
-

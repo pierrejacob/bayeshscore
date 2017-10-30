@@ -15,4 +15,3 @@ Levy-driven Stochastic volatility model with multi-factor, as described by equat
 in Barndorff-Nielsen and Shephard (2002).
 The states are Xt = (v1t, z1t, v2t, z2t).
 }
-

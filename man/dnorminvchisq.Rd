@@ -9,4 +9,3 @@ dnorminvchisq(theta, mu0, kappa0, nu0, sigma02, log)
 \description{
 Density of a Normal-Inverse-Chi-square (cf. Bayesian data analysis equation 3.6)
 }
-

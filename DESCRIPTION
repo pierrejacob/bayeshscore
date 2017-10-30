@@ -1,15 +1,15 @@
-Package: HyvarinenSSM
+Package: bayeshscore
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Bayesian Model Comparison using the Hyvarinen Score
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
+Author: Stephane Shao
+Maintainer: Stephane Shao <stephaneshao@g.harvard.edu>
+Description: Computes the Hyvarinen score using sequential Monte Carlo samplers
+License: GPL v2
 LazyData: TRUE
 Depends:
     Rcpp,RcppEigen,doRNG,foreach,dplyr,reshape2,ggplot2,BH,numDeriv,Rmixmod
 Imports:
     Rcpp (>= 0.11.6),RcppEigen,BH
 LinkingTo: Rcpp,RcppEigen,BH
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1

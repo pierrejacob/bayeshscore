@@ -13,4 +13,3 @@ Levy-driven Stochastic volatility model with single factor, as described by equa
 in Barndorff-Nielsen and Shephard (2002).
 The states are Xt = (vt, zt).
 }
-

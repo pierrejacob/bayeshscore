@@ -11,4 +11,3 @@ smc_resume(RDSsave = NULL, savefilename = NULL, next_observations = NULL,
 This function resumes a previously interrupted SMC run.
 It is a wrapper of the function \code{smc_resume_} with a time budgeting and partial save feature.
 }
-

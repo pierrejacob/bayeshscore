@@ -9,4 +9,3 @@ get_model_ARMA(p, q, nu0, sigma02)
 \description{
 Auto-regressive-Moving-average model of order (p,q)
 }
-

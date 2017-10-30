@@ -9,4 +9,3 @@ rnorminvchisq(N, mu0, kappa0, nu0, sigma02)
 \description{
 Samples from a Normal-Inverse-Chi-square (cf. Bayesian data analysis equation 3.6)
 }
-

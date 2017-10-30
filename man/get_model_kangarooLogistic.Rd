@@ -17,4 +17,3 @@ on (0,\code{range_tau}) for \code{tau},
 on (-\code{range_r},\code{range_r}) for \code{r},
 on (0,\code{range_b}) for \code{b}.
 }
-

@@ -5,7 +5,7 @@
 \title{get_additional_particles_smc2}
 \usage{
 get_additional_particles_smc2(Nc, thetas, normw, PFs, t, observations, model,
-  logtargetdensities, algorithmic_parameters)
+  logtargetdensities, algorithmic_parameters, Ncx = NULL)
 }
 \description{
 (SMC2 version) Generates additional particles given current ones, in order to reduce the variance
@@ -16,4 +16,3 @@ Note that in the continuous observations case, the particles (theta,xt) target t
 distribution p(theta, xt | y_1, ..., y_t), whereas in the discrete case, they must target
 the posterior-one-step-predictive distribution p(theta, xt | y_1, ..., y_(t-1)).
 }
-

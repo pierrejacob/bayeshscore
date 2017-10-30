@@ -1,2 +1,2 @@
-# HyvarinenSSM
-Implementation of Hyvarinen scoring rule for iid, time series and state space models
+# bayeshscore
+Bayesian model comparison using the Hyvärinen score

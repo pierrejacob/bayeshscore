@@ -9,4 +9,3 @@ get_model_AR2(nu0, sigma02)
 \description{
 Auto-regressive model of order 2
 }
-

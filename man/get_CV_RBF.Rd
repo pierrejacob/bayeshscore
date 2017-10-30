@@ -10,4 +10,3 @@ get_CV_RBF(ys, kfold, range_lambda, range_sigma2, order)
 Finds the optimal lambda and sigma2 for p'(y) or p''(y) via cross-validation.
 The function assumes length(ys) is a multiple of kfold.
 }
-

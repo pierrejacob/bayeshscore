@@ -9,4 +9,3 @@ repeat_column(n, x)
 \description{
 This function repeats n times a column vector X to form a nrow(X) by n matrix
 }
-

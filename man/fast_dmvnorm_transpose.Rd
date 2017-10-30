@@ -9,4 +9,3 @@ fast_dmvnorm_transpose(x, mean, covariance)
 \description{
 Fast Normal log-density using Rcpp (dimensions row-wise, observations column-wise)
 }
-

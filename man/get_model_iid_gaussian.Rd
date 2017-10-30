@@ -9,4 +9,3 @@ get_model_iid_gaussian(mu0, kappa0, nu0, sigma02)
 \description{
 Univariate iid normal observations with unknown mean and variance
 }
-

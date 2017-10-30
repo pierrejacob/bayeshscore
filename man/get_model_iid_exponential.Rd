@@ -9,4 +9,3 @@ get_model_iid_exponential(a, b)
 \description{
 Univariate iid exponential observations
 }
-

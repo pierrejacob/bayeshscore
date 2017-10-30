@@ -11,4 +11,3 @@ This function runs the SMC2 algorithm, using adapive Nx and tempering.
 It also computes the log-evidence and the prequential Hyvarinen score (optional).
 It is a wrapper of the function \code{smc2_} with a time budgeting and partial save feature.
 }
-

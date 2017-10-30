@@ -9,4 +9,3 @@ get_estimate_RBF(y, ys, theta, sigma2)
 \description{
 Evaluate the RBF model at y given the fitted parameters and the training set ys.
 }
-

@@ -9,4 +9,3 @@ get_model_iid_lognormal(mu0, kappa0, nu0, sigma02)
 \description{
 Univariate iid lognormal observations
 }
-

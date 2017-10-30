@@ -9,4 +9,3 @@ rinvgamma(N, a, b)
 \description{
 Samples from inverse gamma distribution
 }
-

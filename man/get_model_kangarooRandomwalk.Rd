@@ -14,4 +14,3 @@ The priors are independent uniforms
 on (0,\code{range_sigma}) for \code{sigma},
 on (0,\code{range_tau}) for \code{tau}.
 }
-

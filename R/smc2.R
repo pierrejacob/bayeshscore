@@ -7,7 +7,7 @@
 smc2 = function(observations, model, algorithmic_parameters){
   # load TreeClass if needed
   tryCatch(TreeClass, error = function(e) {
-    if (regexpr("TreeClass",e$message) > -1) {module_tree <<- Module("module_tree", PACKAGE = "HyvarinenSSM");
+    if (regexpr("TreeClass",e$message) > -1) {module_tree <<- Module("module_tree", PACKAGE = "bayeshscore");
     TreeClass <<- module_tree$Tree}})
   # Set the time budget if needed
   saveprompt  = "not saved (no savefilename provided or option save is off)"

@@ -13,4 +13,3 @@ of the associated particle estimators. Nc is the desired total number of particl
 to be used in the computation / estimation (so about Nc - Ntheta new particles are generated,
 used in the estimation, and then discarded). The generated particles are equally weigthed.
 }
-

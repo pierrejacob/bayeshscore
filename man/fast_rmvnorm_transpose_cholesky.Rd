@@ -9,4 +9,3 @@ fast_rmvnorm_transpose_cholesky(nparticles, mean, cholcovariance)
 \description{
 fast_rmvnorm_transpose_cholesky
 }
-

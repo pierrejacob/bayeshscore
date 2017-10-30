@@ -12,4 +12,3 @@ This function resumes a previously interrupted SMC / SMC2 run to compute the hsc
 It is a wrapper of the four different cases: continuous or discrete / SMC or SMC2.
 It also computes the successive log-evidence as a by-product.
 }
-
