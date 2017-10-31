@@ -278,7 +278,7 @@ hincrement_discrete_smc2 = function(thetas, normw, PFs, t, observations, model,
     return (Hd_smc2(t,model,observations[,t],thetas_pool,normw_pool,Xpred,XnormW_previous, discrete_diff_type))
   } else {
     Ntheta = ncol(thetas)
-    Nx = PFs_pool[[1]]$Nx
+    Nx = PFs[[1]]$Nx
     # Construct particles targeting the one-step-ahead predictive (need to reconstruct since size Nx might change)
     if (t==1) {
       Xpred = array(NA,dim = c(model$dimX, Nx, Ntheta))
