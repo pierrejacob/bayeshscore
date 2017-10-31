@@ -125,8 +125,8 @@ for (m in models_to_run){
                     repl = rep(post_all[[m]]$repl,dimtheta),
                     w = rep(post_all[[m]]$W,dimtheta),
                     type = rep(factor(1:dimtheta),each=length(post_all[[m]]$repl)))
-  if (m==1){levels(post$type) = c("r","b",expression(sigma),expression(tau)); nbcol = 4}
-  if (m==2){levels(post$type) = c("r",expression(sigma),expression(tau)); nbcol = 3}
+  if (m==1){levels(post$type) = c(expression(sigma),expression(tau),"r","b"); nbcol = 4}
+  if (m==2){levels(post$type) = c(expression(sigma),expression(tau),"r"); nbcol = 3}
   if (m==3){levels(post$type) = c(expression(sigma),expression(tau)); nbcol = 2}
 
   local({m = m;
