@@ -41,7 +41,7 @@ results_all1 = data.frame()
 #--------------------------------------------------------------------------------------------
 ### Compute logevidence and hscore for each model
 for (m in 1:nb_models){
-  results = foreach(i=1:repl,.packages=c('HyvarinenSSM'),.verbose = TRUE) %dorng% {
+  results = foreach(i=1:repl,.packages=c('bayeshscore'),.verbose = TRUE) %dorng% {
     hscore(observations1, model(m), algorithmic_parameters)
   }
   for (r in 1:repl){
@@ -64,7 +64,7 @@ results_all2 = data.frame()
 #--------------------------------------------------------------------------------------------
 ### Compute logevidence and hscore for each model
 for (m in 1:nb_models){
-  results = foreach(i=1:repl,.packages=c('HyvarinenSSM'),.verbose = TRUE) %dorng% {
+  results = foreach(i=1:repl,.packages=c('bayeshscore'),.verbose = TRUE) %dorng% {
     hscore(observations2, model(m), algorithmic_parameters)
   }
   for (r in 1:repl){

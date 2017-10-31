@@ -33,7 +33,7 @@ repl = 5 #number of replications
 registerDoParallel(cores=5) #number of workers in parallel
 #--------------------------------------------------------------------------------------------
 # Monitor progress in parallel via log file
-# setwd("C:/Users/shao/Desktop/HyvarinenSSM")
+# setwd("C:/Users/shao/Desktop/bayeshscore")
 logfilename = "results.log"
 writeLines(c(""), logfilename)
 sink(logfilename, append = TRUE)
@@ -56,7 +56,7 @@ for (i in 1:length(DGP_mu)){
 results_all = list()
 post_all = list()
 schedule = expand.grid(1:repl,1:2,1:length(DGP_mu))
-results = foreach(s=1:nrow(schedule),.packages=c('HyvarinenSSM'),.verbose = TRUE) %dorng% {
+results = foreach(s=1:nrow(schedule),.packages=c('bayeshscore'),.verbose = TRUE) %dorng% {
   dgp = schedule[s,3]
   m = schedule[s,2]
   r = schedule[s,1]

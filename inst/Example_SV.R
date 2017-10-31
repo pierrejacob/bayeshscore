@@ -12,7 +12,7 @@ library(wesanderson)
 set.seed(19)
 #--------------------------------------------------------------------------------------------
 # Monitor progress in parallel via log file
-# setwd("C:/Users/shao/Desktop/HyvarinenSSM")
+# setwd("C:/Users/shao/Desktop/bayeshscore")
 logfilename = "results.log"
 writeLines(c(""), logfilename)
 sink(logfilename, append = TRUE)
@@ -70,7 +70,7 @@ results_all = data.frame()
 post_all = vector("list",length(models_to_run))
 schedule = expand.grid(1:repl,models_to_run)
 #--------------------------------------------------------------------------------------------
-results = foreach(s=1:nrow(schedule),.packages=c('HyvarinenSSM'),.verbose = TRUE) %dorng% {
+results = foreach(s=1:nrow(schedule),.packages=c('bayeshscore'),.verbose = TRUE) %dorng% {
   m = schedule[s,2]
   r = schedule[s,1]
   gc() # attempt to limit RAM usage

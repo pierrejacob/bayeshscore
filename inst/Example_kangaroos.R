@@ -82,7 +82,7 @@ for (m in models_to_run){
   algorithmic_parameters$Nx = Nxs[m]
   algorithmic_parameters$Nc = Nc[m]
   algorithmic_parameters$Ncx = Ncx[m]
-  results = foreach(i=1:repl,.packages=c('HyvarinenSSM'),.verbose = TRUE) %dorng% {
+  results = foreach(i=1:repl,.packages=c('bayeshscore'),.verbose = TRUE) %dorng% {
     gc() # attempt at preserving RAM
     sink(file = logfilename, append = TRUE) # keep track of progress in a log file
     algorithmic_parameters$savefilename = paste("model_",toString(m),"_repl_",toString(i),".rds",sep="")

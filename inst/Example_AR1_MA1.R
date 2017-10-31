@@ -33,7 +33,7 @@ repl = 5 #number of replications
 registerDoParallel(cores=5) #number of workers in parallel
 #--------------------------------------------------------------------------------------------
 # Monitor progress in parallel via log file
-# setwd("C:/Users/shao/Desktop/HyvarinenSSM")
+# setwd("C:/Users/shao/Desktop/bayeshscore")
 logfilename = "results.log"
 writeLines(c(""), logfilename)
 sink(logfilename, append = TRUE)
@@ -49,7 +49,7 @@ observations1 = simulateData(model(true_model),true_theta,nobservations)
 results_all1 = data.frame()
 ### Compute logevidence and hscore for each model
 for (m in 1:nb_models){
-  results = foreach(i=1:repl,.packages=c('HyvarinenSSM'),.verbose = TRUE) %dorng% {
+  results = foreach(i=1:repl,.packages=c('bayeshscore'),.verbose = TRUE) %dorng% {
     sink(logfilename, append = TRUE) # Monitor progress in parallel via log file
     hscore(observations1, model(m), algorithmic_parameters)
   }
@@ -71,7 +71,7 @@ observations2 = simulateData(model(true_model),true_theta,nobservations)$Y
 results_all2 = data.frame()
 ### Compute logevidence and hscore for each model
 for (m in 1:nb_models){
-  results = foreach(i=1:repl,.packages=c('HyvarinenSSM'),.verbose = TRUE) %dorng% {
+  results = foreach(i=1:repl,.packages=c('bayeshscore'),.verbose = TRUE) %dorng% {
     sink(logfilename, append = TRUE) # Monitor progress in parallel via log file
     hscore(observations2, model(m), algorithmic_parameters)
   }
