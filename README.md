@@ -4,7 +4,7 @@
 
 This package provides functions that compute the **Hyvärinen score** (and the log-evidence as an aside) of a Bayesian model. This is achieved by using either **SMC** \[e.g. [Chopin (2002)](https://academic.oup.com/biomet/article-abstract/89/3/539/251804) and [Del Moral, Doucet, Jasra (2006)](http://onlinelibrary.wiley.com/doi/10.1111/j.1467-9868.2006.00553.x/abstract)\] or **SMC<sup>2</sup>** \[cf. [Chopin, Jacob, Papaspiliopoulos (2013)](http://onlinelibrary.wiley.com/doi/10.1111/j.1467-9868.2012.01046.x/abstract)\], depending on whether the likelihood can be evaluated.
 
-# Table of contents
+## Table of contents
 1. [Computing the Hyvärinen score](#howto_hscore)
 2. [Defining a model](#howto_model)
 3. [Setting algorithmic parameters](#howto_algoparam)
