@@ -5,6 +5,8 @@
 #'It is a wrapper of the function \code{smc2_} with a time budgeting and partial save feature.
 #'@export
 smc2 = function(observations, model, algorithmic_parameters){
+  # set missing algorithmic parameters to default values
+  algorithmic_parameters = set_default_algorithmic_parameters(observations,model,algorithmic_parameters)
   # load TreeClass if needed
   tryCatch(TreeClass, error = function(e) {
     if (regexpr("TreeClass",e$message) > -1) {module_tree <<- Module("module_tree", PACKAGE = "bayeshscore");

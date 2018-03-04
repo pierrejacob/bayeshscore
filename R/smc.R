@@ -5,6 +5,8 @@
 #'It is a wrapper of the function \code{smc_} with a time budgeting and partial save feature.
 #'@export
 smc = function(observations, model, algorithmic_parameters){
+  # set missing algorithmic parameters to default values
+  algorithmic_parameters = set_default_algorithmic_parameters(observations,model,algorithmic_parameters)
   # Set the time budget if needed
   saveprompt  = "not saved (no savefilename provided or option save is off)"
   if (!is.null(algorithmic_parameters$time_budget)){
