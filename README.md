@@ -12,14 +12,18 @@ hscore(observations, model, algorithmic_parameters)
 ```
 where the inputs consist of
 * `observations`: sequence of d<sub>Y</sub>-dimensional observations Y<sub>1</sub> , ... , Y<sub>T</sub> encoded as a d<sub>Y</sub> by T `matrix`
-* `model`: Bayesian model encoded as a `list` ([learn more](#howto_model))
-* `algorithmic_parameters` : algorithmic parameters provided as a `list` ([learn more](#howto_algoparam))
+* `model`: Bayesian model encoded as a `list` (see [Defining a model](#howto_model))
+* `algorithmic_parameters` : algorithmic parameters provided as a `list` (see [Setting algorithmic parameters](#howto_algoparam))
 
-The function `hscore` is essentially a wrapper that calls either 
+The function `hscore` is essentially a wrapper that either calls  
 ```R
 smc(observations, model, algorithmic_parameters)
 ```
-
+or
+```R
+smc2(observations, model, algorithmic_parameters)
+```
+depending on whether the `model` specifies the likelihood or not.
 
 ### <a name="howto_model"></a> Defining a model
 
