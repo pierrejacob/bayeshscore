@@ -51,4 +51,4 @@ The output of `hscore`, `smc`, or `smc2` is a `list`. Depending on the specified
 * `algorithmic_parameters` : `list` of algorithmic parameters used
 
 ### <a name="particlefilter"></a> Particle filter
-\[... editing in progress ...\]
+The particle filter is implemented in `R/conditional_particle_filter.R`. The function `conditional_particle_filter` uses the bootstrap particle filter. It takes an optional argument `path` when conditioning on a particular path is needed. The output is a `list` containing the number of x-particles (`Nx`), the last set of x-particles (`X`), their respective normalized weights (`xnormW`), an estimator of the log-likelihood (`log_p_y_hat`), the last incremental log-likelihood (`incremental_ll`), a tree encoding the paths and ancestral lineages (`tree`), and a realized path sampled from the final sets of paths (`path`).
