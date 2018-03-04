@@ -21,8 +21,8 @@ get_model_nameOfTheModel <- function(){
   # model$upper[j] are respectively the lower and upper bound defining the support of the j-th
   # component of the observations
   # Note: if no bounds are provided, the lower/upper bounds are set to -Inf/Inf by default
-  model$lower = c(0,0)
-  model$upper = c(Inf,Inf)
+  model$lower = rep(-Inf, model$dimY)
+  model$upper = rep(Inf, model$dimY)
   #----------------------------------------------------------------------------------------------------
   #----------------------------------------------------------------------------------------------------
 
