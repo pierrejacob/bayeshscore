@@ -149,8 +149,7 @@ get_model_nameOfTheModel <- function(){
     ...
     return (list(jacobian = ..., hessiandiag = ..))
   }
-
-  # sampler from the observation distribution
+  # OPTIONAL: sampler from the observation distribution
   # inputs: single state Xt (dimX by 1), time t, theta (single vector)
   # outputs: single observation (dimY by 1 matrix)
   model$robs = function(Xt,t,theta){
