@@ -26,7 +26,7 @@ The function `hscore` is a wrapper that either calls `smc(observations, model, a
 The output is detailed below (see [Output description](#output)).
 
 ### <a name="howto_model"></a> Defining a model
-The `model` needs to be provided as a `list`. A complete description of the required fields is provided in the file `inst/_template_model.R`. Missing optional fields are automatically filled-in via the function `set_default_model` defined in the file `R/util_default.R`.
+The `model` needs to be provided as a `list`. A description of the required fields is provided in the file `inst/_template_model.R`. Missing fields may be automatically filled-in via the function `set_default_model` defined in the file `R/util_default.R`.
 
 ### <a name="howto_algoparam"></a> Setting algorithmic parameters
 The `algorithmic_parameters` need to be provided as a `list`. A complete description of the required fields along with their default values can be found in the function `set_default_algorithmic_parameters` defined in the file `R/util_default.R`.
