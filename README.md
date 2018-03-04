@@ -28,12 +28,12 @@ The output is detailed below (see [Output description](#output)).
 The output of `hscore`, `smc`, or `smc2` is a `list`. Depending on the specified `algorithmic_parameters`, some of its fields may be set to `NULL`. In its most exhaustive form, the outputs will contain the following objects:
 * `thetas` = last set of particles thetas (dimtheta by Ntheta `matrix`)
 * `normw` = corresponding normalized weights (`vector` of length Ntheta)
-* `byproducts` or `PFs` = corresponding `list` of byproducts (e.g. particle filters in the case of `smc2`)
+* `byproducts` or `PFs` = corresponding `list` of byproducts (e.g. particle filters for `smc2`, see [Particle filter](#particlefilter))
 * `logtargetdensities` = corresponding evaluations of target log-densities (`vector` of length Ntheta)
-* `thetas_history` = `list` of all successive sets of particles thetas (one `matrix` per timestep, starting with the prior, so the length of the `list` is T+1)
-* `normw_history` = `list` of corresponding normalized weights (i.e. `list` of `vector`)
-* `logtargetdensities_history` = `list` of corresponding target log-densities evaluations (i.e. `list` of `vector`)
-* `byproducts_history` of `PF_history` = `list` of corresponding byproducts or particle filters (i.e. `list` of `list`)
+* `thetas_history` = `list` of successive sets of particles thetas (one `matrix` per timestep, starting with the prior, so the length of the `list` is T+1)
+* `normw_history` = `list` of successive normalized weights (i.e. `list` of `vector`)
+* `logtargetdensities_history` = `list` of successive target log-densities evaluations (i.e. `list` of `vector`)
+* `byproducts_history` of `PF_history` = `list` of successive byproducts or particle filters (i.e. `list` of `list`)
 * `logevidence` = cumulative logevidence (`vector` of length T)
 * `hscore` = cumulative H-score using Fisher/Louis type identities (`vector` of length T)
 * `hscoreDDE` = cumulative H-score using kernel density estimation (`vector` of length T)
@@ -42,3 +42,5 @@ The output of `hscore`, `smc`, or `smc2` is a `list`. Depending on the specified
 * `rejuvenation_rate` = associated acceptance rates (`vector` of random length less than T)
 * `method` = method called (`string` equal to 'SMC' or 'SMC2')
 * `algorithmic_parameters` = `list` of algorithmic parameters used
+
+### <a name="particlefilter"></a> Particle filter
