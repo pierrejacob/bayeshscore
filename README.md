@@ -44,3 +44,4 @@ The output of `hscore`, `smc`, or `smc2` is a `list`. Depending on the specified
 * `algorithmic_parameters` = `list` of algorithmic parameters used
 
 ### <a name="particlefilter"></a> Particle filter
+\[... editing in progress ...\]
