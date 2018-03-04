@@ -15,14 +15,15 @@ where the inputs consist of
 * `model`: Bayesian model encoded as a `list` (see [Defining a model](#howto_model))
 * `algorithmic_parameters` : algorithmic parameters provided as a `list` (see [Setting algorithmic parameters](#howto_algoparam))
 
-The function `hscore` is a wrapper that either calls `smc(observations, model, algorithmic_parameters)` or `smc2(observations, model, algorithmic_parameters)` depending on whether the `model` specifies the likelihood or not. The output is detailed below (see [Output description](#output))
+The function `hscore` is a wrapper that either calls `smc(observations, model, algorithmic_parameters)` or `smc2(observations, model, algorithmic_parameters)` depending on whether the `model` specifies the likelihood or not.  
+The output is detailed below (see [Output description](#output)).
 
 ### <a name="howto_model"></a> Defining a model
 
 ### <a name="howto_algoparam"></a> Setting algorithmic parameters
 
 ### <a name="output"></a> Output description
-The output is a `list`. Depending on the specified `algorithmic_parameters`, some fields may be set to `NULL`. In its most exhaustive form, the output will contain the following objects:
+The output of `hscore`, `smc`, or `smc2` is a `list`. Depending on the specified `algorithmic_parameters`, some of its fields may be set to `NULL`. In its most exhaustive form, the outputs will contain the following objects:
 * `thetas` = last set of particles thetas (dimtheta by Ntheta `matrix`)
 * `normw` = corresponding normalized weights (`vector` of length Ntheta)
 * `byproducts` or `PFs` = corresponding `list` of byproducts (e.g. particle filters in the case of `smc2`)
