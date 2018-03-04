@@ -13,7 +13,7 @@ This package provides functions that compute the **Hyvärinen score** (and the l
 
 ### <a name="howto_hscore"></a> Computing the Hyvärinen score
 
-After installing and loading the package (via `library(bayeshscore)`), computing the Hyvärinen score (abbrv. H-score) of a model is done by calling
+After installing and loading the package, computing the Hyvärinen score (abbrv. H-score) of a model is done by calling
 ```R
 hscore(observations, model, algorithmic_parameters)
 ```
