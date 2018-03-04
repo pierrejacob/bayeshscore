@@ -19,8 +19,10 @@ The function `hscore` is a wrapper that either calls `smc(observations, model, a
 The output is detailed below (see [Output description](#output)).
 
 ### <a name="howto_model"></a> Defining a model
+\[... editing in progress ...\]
 
 ### <a name="howto_algoparam"></a> Setting algorithmic parameters
+\[... editing in progress ...\]
 
 ### <a name="output"></a> Output description
 The output of `hscore`, `smc`, or `smc2` is a `list`. Depending on the specified `algorithmic_parameters`, some of its fields may be set to `NULL`. In its most exhaustive form, the outputs will contain the following objects:
