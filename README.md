@@ -10,6 +10,7 @@ This package provides functions that compute the **Hyvärinen score** (and the l
 3. [Setting algorithmic parameters](#howto_algoparam)
 4. [Output description](#output)
 5. [Particle filter](#particlefilter)
+6. [Examples](#examples)
 
 ### <a name="howto_hscore"></a> Computing the Hyvärinen score
 
@@ -52,3 +53,6 @@ The output of `hscore`, `smc`, or `smc2` is a `list`. Depending on the specified
 
 ### <a name="particlefilter"></a> Particle filter
 The particle filter is implemented in `R/conditional_particle_filter.R`. The function `conditional_particle_filter` uses the bootstrap particle filter. It takes an optional argument `path` when conditioning on a particular path is needed. The output is a `list` containing the number of x-particles (`Nx`), the last set of x-particles (`X`), their respective normalized weights (`xnormW`), an estimator of the log-likelihood (`log_p_y_hat`), the last incremental log-likelihood (`incremental_ll`), a tree encoding the paths and ancestral lineages (`tree`), and a realized path sampled from the final sets of paths (`path`).
+
+### <a name="example"></a> Examples
+Some examples are provided in the folder `inst`. These scripts reproduce the figures presented in [Shao, Jacob, Ding, Tarokh (2017)](https://arxiv.org/abs/1711.00136) and its [supplementary material](https://sites.google.com/site/pierrejacob/articles).
