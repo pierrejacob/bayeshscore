@@ -33,7 +33,7 @@ The `model` needs to be provided as a `list`. A description of the required fiel
 The `algorithmic_parameters` need to be provided as a `list`. A complete description of the required fields along with their default values can be found in the function `set_default_algorithmic_parameters` defined in `R/util_default.R`.
 
 ### <a name="output"></a> Output description
-The output of `hscore`, `smc`, or `smc2` is a `list`. Depending on the specified `algorithmic_parameters`, some of its fields may be set to `NULL`. In its most exhaustive form, the outputs will contain the following objects:
+The output of `hscore`, `smc`, or `smc2` is a `list`. Depending on the specified `algorithmic_parameters`, some of its fields may be set to `NULL`. In its most exhaustive form, the output will contain the following objects:
 * `thetas` : last set of particles thetas (dimtheta by Ntheta `matrix`)
 * `normw` : corresponding normalized weights (`vector` of length Ntheta)
 * `byproducts` or `PFs` : corresponding `list` of byproducts (e.g. particle filters for `smc2`, see [Particle filter](#particlefilter))
