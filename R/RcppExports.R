@@ -21,6 +21,10 @@ dmvnorm_transpose <- function(x, mean, covariance) {
     .Call('_bayeshscore_dmvnorm_transpose', PACKAGE = 'bayeshscore', x, mean, covariance)
 }
 
+SSP_resampling_n_ <- function(weights, u, tol = 1e-15) {
+    .Call('_bayeshscore_SSP_resampling_n_', PACKAGE = 'bayeshscore', weights, u, tol)
+}
+
 systematic_resampling_n_ <- function(weights, ndraws, u) {
     .Call('_bayeshscore_systematic_resampling_n_', PACKAGE = 'bayeshscore', weights, ndraws, u)
 }

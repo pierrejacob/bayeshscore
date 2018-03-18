@@ -70,6 +70,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// SSP_resampling_n_
+IntegerVector SSP_resampling_n_(const NumericVector& weights, const NumericVector& u, const double tol);
+RcppExport SEXP _bayeshscore_SSP_resampling_n_(SEXP weightsSEXP, SEXP uSEXP, SEXP tolSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type weights(weightsSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type u(uSEXP);
+    Rcpp::traits::input_parameter< const double >::type tol(tolSEXP);
+    rcpp_result_gen = Rcpp::wrap(SSP_resampling_n_(weights, u, tol));
+    return rcpp_result_gen;
+END_RCPP
+}
 // systematic_resampling_n_
 IntegerVector systematic_resampling_n_(const NumericVector& weights, int ndraws, double u);
 RcppExport SEXP _bayeshscore_systematic_resampling_n_(SEXP weightsSEXP, SEXP ndrawsSEXP, SEXP uSEXP) {
@@ -544,6 +557,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_bayeshscore_rmvnorm_transpose", (DL_FUNC) &_bayeshscore_rmvnorm_transpose, 3},
     {"_bayeshscore_dmvnorm", (DL_FUNC) &_bayeshscore_dmvnorm, 3},
     {"_bayeshscore_dmvnorm_transpose", (DL_FUNC) &_bayeshscore_dmvnorm_transpose, 3},
+    {"_bayeshscore_SSP_resampling_n_", (DL_FUNC) &_bayeshscore_SSP_resampling_n_, 3},
     {"_bayeshscore_systematic_resampling_n_", (DL_FUNC) &_bayeshscore_systematic_resampling_n_, 3},
     {"_bayeshscore_phi_cpp", (DL_FUNC) &_bayeshscore_phi_cpp, 3},
     {"_bayeshscore_dphi_cpp", (DL_FUNC) &_bayeshscore_dphi_cpp, 3},

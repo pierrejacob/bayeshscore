@@ -10,6 +10,6 @@ systematic_resampling_n(normalized_weights, N, u)
 A vector of ancestors
 }
 \description{
-Runs a systematic resampling algorithm, taking a uniform variable, normalized weights and a number of desired draws
+Runs a systematic resampling algorithm, taking a vector of normalized weights, a number of desired draws, and a uniform variable
 and returning a vector of ancestors
 }
