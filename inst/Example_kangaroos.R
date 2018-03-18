@@ -43,7 +43,7 @@ model = function(i){
 }
 models_to_run = c(1,2,3)
 # set algorithmic parameters
-Nthetas = c(2^14,2^12,2^12)
+Nthetas = c(2^14,2^13,2^13)
 Nxs = c(2^5,2^5,2^5)
 
 algorithmic_parameters = list()
@@ -53,6 +53,7 @@ algorithmic_parameters$save_stepsize = 5
 algorithmic_parameters$store_last_byproducts = FALSE
 algorithmic_parameters$nmoves = 2
 algorithmic_parameters$discrete_diff_type = "central"
+algorithmic_parameters$resampling = function(normw) ssp_resampling_n(normw, runif(length(normw)))
 
 algorithmic_parameters$reduce_variance = TRUE
 Nc = c(2^15,2^13,2^12)
@@ -150,6 +151,9 @@ post_plot_all[[3]]
 # ggsave("example_kangaroos_posterior_model_1_24_by_6.png",plot = post_plot_all[[1]],dpi = 300,width = 24,height = 6)
 # ggsave("example_kangaroos_posterior_model_2_24_by_6.png",plot = post_plot_all[[2]],dpi = 300,width = 24,height = 6)
 # ggsave("example_kangaroos_posterior_model_3_24_by_6.png",plot = post_plot_all[[3]],dpi = 300,width = 24,height = 6)
+# ggsave("example_kangaroos_posterior_model_1_24_by_6.pdf",plot = post_plot_all[[1]],dpi = 300,width = 24,height = 6)
+# ggsave("example_kangaroos_posterior_model_2_24_by_6.pdf",plot = post_plot_all[[2]],dpi = 300,width = 24,height = 6)
+# ggsave("example_kangaroos_posterior_model_3_24_by_6.pdf",plot = post_plot_all[[3]],dpi = 300,width = 24,height = 6)
 
 #--------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------
@@ -249,8 +253,8 @@ ggplot() +
   scale_fill_manual(values = colors) +
   facet_grid(score_type~., scales="free", labeller = case_labeller) +
   # geom_line(data = subset(results.df,score_type=="data"), aes(time,score,group=repl), color = wes_palette("Darjeeling")[1]) +
-  geom_point(data = subset(results.df,score_type=="data"), aes(time,score), color = wes_palette("Darjeeling2")[2]) +
   geom_segment(data = subset(results.df,score_type=="data"&repl==0),aes(x = time, y = score, xend = time, yend = yend),linetype="dotted",colour="black") +
+  geom_point(data = subset(results.df,score_type=="data"), aes(time,score), color = wes_palette("Darjeeling2")[2]) +
   geom_line(data = subset(results.df,score_type=="H"),aes(time, score/time, color = Model, group=interaction(Model,repl)),alpha=0.7) +
   geom_line(data = subset(results.df,score_type=="log"),aes(time, score/time, color = Model, group=interaction(Model,repl)),alpha=0.7) +
   geom_hline(data = hlines.df, aes(yintercept = yintercept), alpha=0) +
@@ -270,4 +274,4 @@ ggplot() +
         legend.position = "none")
 # ggsave("example_kangaroos_12_by_9.png",dpi = 300,width = 12,height = 9)
 # ggsave("example_kangaroos_15_by_9.png",dpi = 300,width = 15,height = 9)
-
+# ggsave("example_kangaroos_15_by_9.pdf",dpi = 300,width = 15,height = 9)
