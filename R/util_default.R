@@ -55,7 +55,7 @@ set_default_algorithmic_parameters = function(observations, model, algorithmic_p
   }
   # Resampling scheme: the default option is systematic resampling
   if (is.null(algorithmic_parameters$resampling)) {
-    algorithmic_parameters$resampling = function(normw) systematic_resampling_n(normw, length(normw), runif(1))
+    algorithmic_parameters$resampling = function(normw) multinomial_resampling_n(normw, length(normw))
   }
   # Proposal for rejuvenation steps: the default is independent draws from a fitted mixture of Normals
   if (is.null(algorithmic_parameters$proposalmove)) {
