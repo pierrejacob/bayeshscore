@@ -2,7 +2,7 @@
 **Bayesian model comparison using the Hyvärinen score**.  
 *\[more details in Shao, Jacob, Ding, Tarokh (2017) at [https://arxiv.org/abs/1711.00136](https://arxiv.org/abs/1711.00136)\]*
 
-This package provides functions that compute the **Hyvärinen score** (and the log-evidence as an aside) of a Bayesian model. This is achieved by using either **SMC** \[e.g. [Chopin (2002)](https://academic.oup.com/biomet/article-abstract/89/3/539/251804) and [Del Moral, Doucet, Jasra (2006)](http://onlinelibrary.wiley.com/doi/10.1111/j.1467-9868.2006.00553.x/abstract)\] or **SMC<sup>2</sup>** \[cf. [Chopin, Jacob, Papaspiliopoulos (2013)](http://onlinelibrary.wiley.com/doi/10.1111/j.1467-9868.2012.01046.x/abstract)\], depending on whether the likelihood can be evaluated.
+This package provides functions that compute the **Hyvärinen score** (and the log-evidence as an aside) of a Bayesian model. This is achieved by using either **SMC** \[e.g. [Chopin (2002)](https://academic.oup.com/biomet/article-abstract/89/3/539/251804) and [Del Moral, Doucet, Jasra (2006)](http://onlinelibrary.wiley.com/doi/10.1111/j.1467-9868.2006.00553.x/abstract)\] or **SMC<sup>2</sup>** \[cf. [Chopin, Jacob, Papaspiliopoulos (2013)](http://onlinelibrary.wiley.com/doi/10.1111/j.1467-9868.2012.01046.x/abstract)\] depending on whether the likelihood can be evaluated.
 
 ## Table of contents
 1. [Computing the Hyvärinen score](#howto_hscore)
@@ -33,7 +33,7 @@ The `model` needs to be provided as a `list`. A description of the required fiel
 The `algorithmic_parameters` need to be provided as a `list`. A complete description of the required fields along with their default values can be found in the function `set_default_algorithmic_parameters` defined in `R/util_default.R`.
 
 ### <a name="output"></a> Output description
-The output of `hscore`, `smc`, or `smc2` is a `list`. Depending on the specified `algorithmic_parameters`, some of its fields may be set to `NULL`. In its most exhaustive form, the outputs will contain the following objects:
+The output of `hscore`, `smc`, or `smc2` is a `list`. Depending on the specified `algorithmic_parameters`, some of its fields may be set to `NULL`. In its most exhaustive form, the output will contain the following objects:
 * `thetas` : last set of particles thetas (dimtheta by Ntheta `matrix`)
 * `normw` : corresponding normalized weights (`vector` of length Ntheta)
 * `byproducts` or `PFs` : corresponding `list` of byproducts (e.g. particle filters for `smc2`, see [Particle filter](#particlefilter))
