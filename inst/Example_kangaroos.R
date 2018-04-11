@@ -43,7 +43,7 @@ model = function(i){
 }
 models_to_run = c(1,2,3)
 # set algorithmic parameters
-Nthetas = c(2^14,2^13,2^13)
+Nthetas = c(2^14,2^14,2^14)
 Nxs = c(2^5,2^5,2^5)
 
 algorithmic_parameters = list()
@@ -55,9 +55,9 @@ algorithmic_parameters$nmoves = 2
 algorithmic_parameters$discrete_diff_type = "central"
 algorithmic_parameters$resampling = function(normw) ssp_resampling_n(normw, runif(length(normw)))
 
-algorithmic_parameters$reduce_variance = TRUE
-Nc = c(2^15,2^13,2^12)
-Ncx = c(2^5,2^7,2^5)
+# algorithmic_parameters$reduce_variance = TRUE
+# Nc = c(2^15,2^13,2^12)
+# Ncx = c(2^5,2^7,2^5)
 # The remaining algorithmic parameters are set to their default values via the functions in util_default.R
 #--------------------------------------------------------------------------------------------
 repl = 5 #number of replications
@@ -95,7 +95,7 @@ for (m in models_to_run){
     results_all = rbind(results_all,data.frame(logevidence = results[[r]]$logevidence,
                                                hscore = results[[r]]$hscore,
                                                time = 1:nobservations,
-                                               model = factor(m),
+                                               Model = factor(m),
                                                repl = r))
     post = rbind(post,data.frame(t(results[[r]]$thetas),
                                  W = results[[r]]$normw,
@@ -231,20 +231,20 @@ results.df = rbind(results.df, data.frame(score = observations[1,],
 case_label <- list(
   'data'=expression(paste("Observations",sep="")),
   'log'=expression(paste("log-score / Time",sep="")),
-  'H'=expression(paste("H-score / Time",sep=""))
+  'H'=expression(paste("H-score",sep=""))
 )
 case_labeller <- function(variable,value){
   return(case_label[value])
 }
 #------------------------------------------------------------------------------
-labels.df = data.frame(x = rep(43.5,6), y = c(14.1,13.6,13.1,-0.58e-4,-1e-4,-1.42e-4),
+labels.df = data.frame(x = rep(43.5,6), y = c(14.1,13.6,13.1,-3.55e-3,-4.1e-3,-4.65e-3),
                        text = rep(c("Model 1","Model 2","Model 3"),2),
                        type = factor(rep(c("Model 1","Model 2","Model 3"),2)),
                        score_type = factor(rep(c("log","H"),each=3)))
 hlines.df = data.frame(yintercept = 12.8,
                        score_type = factor("log",levels = c("data","log","H")))
 colors = wes_palette("Darjeeling")[c(1,3,5)]
-axis_titlesize = 18
+axis_titlesize = 22
 axis_ticktextsize = 15
 ggplot() +
   xlab("Time (number of observations)") +
@@ -255,11 +255,11 @@ ggplot() +
   # geom_line(data = subset(results.df,score_type=="data"), aes(time,score,group=repl), color = wes_palette("Darjeeling")[1]) +
   geom_segment(data = subset(results.df,score_type=="data"&repl==0),aes(x = time, y = score, xend = time, yend = yend),linetype="dotted",colour="black") +
   geom_point(data = subset(results.df,score_type=="data"), aes(time,score), color = wes_palette("Darjeeling2")[2]) +
-  geom_line(data = subset(results.df,score_type=="H"),aes(time, score/time, color = Model, group=interaction(Model,repl)),alpha=0.7) +
+  geom_line(data = subset(results.df,score_type=="H"),aes(time, score, color = Model, group=interaction(Model,repl)),alpha=0.7) +
   geom_line(data = subset(results.df,score_type=="log"),aes(time, score/time, color = Model, group=interaction(Model,repl)),alpha=0.7) +
   geom_hline(data = hlines.df, aes(yintercept = yintercept), alpha=0) +
-  stat_summary(data = subset(results.df,score_type=="H"),aes(time, score/time, color = Model,group=interaction(Model),shape = Model),geom="point", fun.y=mean,size=2.5) +
-  stat_summary(data = subset(results.df,score_type=="H"),aes(time, score/time, color = Model,group=interaction(Model)),geom="line", fun.y=mean, size = 1) +
+  stat_summary(data = subset(results.df,score_type=="H"),aes(time, score, color = Model,group=interaction(Model),shape = Model),geom="point", fun.y=mean,size=2.5) +
+  stat_summary(data = subset(results.df,score_type=="H"),aes(time, score, color = Model,group=interaction(Model)),geom="line", fun.y=mean, size = 1) +
   stat_summary(data = subset(results.df,score_type=="log"),aes(time, score/time, color = Model,group=interaction(Model),shape = Model),geom="point", fun.y=mean,size=2.5) +
   stat_summary(data = subset(results.df,score_type=="log"),aes(time, score/time, color = Model,group=interaction(Model)),geom="line", fun.y=mean, size = 1) +
   scale_color_manual(values = rep(colors,2)) +
@@ -272,6 +272,5 @@ ggplot() +
         strip.background = element_rect(fill="gray88"),
         panel.background = element_rect(fill="gray95",linetype = "solid", colour="white"),
         legend.position = "none")
-# ggsave("example_kangaroos_12_by_9.png",dpi = 300,width = 12,height = 9)
 # ggsave("example_kangaroos_15_by_9.png",dpi = 300,width = 15,height = 9)
 # ggsave("example_kangaroos_15_by_9.pdf",dpi = 300,width = 15,height = 9)
