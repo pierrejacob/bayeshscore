@@ -32,6 +32,7 @@ algorithmic_parameters$dde_options = list(Ny = 2^10, nb_steps = Inf,
 # save intermediary results every "save_stepsize" observations
 algorithmic_parameters$save = TRUE
 algorithmic_parameters$save_stepsize = 100
+algorithmic_parameters$resampling = function(normw) ssp_resampling_n(normw, runif(length(normw)))
 #--------------------------------------------------------------------------------------------
 repl = 5 #number of replications
 registerDoParallel(cores=5) #number of workers in parallel
@@ -52,7 +53,7 @@ model = function(i){
 #--------------------------------------------------------------------------------------------
 # simulate observations
 theta = c(0, 0, 0.5, 0.0625, 0.01)
-observations = readRDS("../Harvard/MyHarvard/_Research/Model Selection for SSM (Pierre and Jie)/Simulation/Example 6 - Stochastic Volatility (Chopin et al., 2013)/T=1000_1/observations_1000.rds")
+observations = readRDS("../Documents/Harvard/MyHarvard/_Research/Bayesian Model Comparison with H-score (Pierre and Jie)/Simulation/Example 6 - Stochastic Volatility (Chopin et al., 2013)/T=1000_1/observations_1000.rds")
 
 # Plot observations
 ggplot() +
@@ -63,7 +64,7 @@ ggplot() +
 # ggsave("example_SV_observations.png",width = 10, height = 5,dpi = 300)
 
 # list of candidate models
-models_to_run = c(1,2,3)
+models_to_run = c(1,2)
 #--------------------------------------------------------------------------------------------
 ### Compute logevidence and hscore for each model
 results_all = data.frame()
@@ -114,6 +115,8 @@ for (m in models_to_run) {
 # close log file
 sink()
 #--------------------------------------------------------------------------------------------
+axis_titlesize = 22
+axis_ticktextsize = 15
 my_theme = theme(axis.text.x = element_text(size = axis_ticktextsize),
                  axis.text.y = element_text(size = axis_ticktextsize),
                  axis.title.x = element_text(size = axis_titlesize, margin=margin(20,0,0,0)),
@@ -125,8 +128,6 @@ my_theme = theme(axis.text.x = element_text(size = axis_ticktextsize),
                  legend.position = "none")
 # Check posterior for each model
 post_plot_all = list()
-axis_titlesize = 24
-axis_ticktextsize = 15
 xlabels = c(expression(mu), expression(beta), expression(xi), expression(omega^2),
             expression(lambda[1]), expression(lambda[2]), "w", expression(rho[1]), expression(rho[2]))
 colors = c(wes_palette("Darjeeling2")[c(2,3)],wes_palette("Darjeeling")[2])
@@ -215,28 +216,28 @@ ggplot(subset(results_all,time%in%x_resolution),aes(time, hscoreDDE, color = mod
 #--------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------
 x_resolution = (1:nobservations)[(1:nobservations)%%10==0]
-# x_resolution = (1:nobservations)
-centered = results_all
-centered$hscoreDDE = centered$hscoreDDE - rep(rowMeans(sapply(1:repl,function(i)subset(centered,model==1&repl==i)$hscoreDDE)),repl*length(unique(centered$model)))
-labels.df = data.frame(x = rep(1075,2), y = c(0,mean(subset(centered,time==1000 & model==2)$hscoreDDE)),
-                       text = c("Model 1","Model 2"),
-                       type = factor(c("Model 1","Model 2")))
-# Check the h-score DDE
-ggplot(subset(centered,time%in%x_resolution),aes(time, hscoreDDE, color = model)) +
-  ylab("Prequential Hyvärinen score (centered)") +
-  # guides(shape = guide_legend(override.aes = list(size=2))) +
-  xlim(0,1100) +
-  xlab("Time") +
-  geom_label(data = labels.df, aes(x,y,label = text,color=type), color = colors, fontface = "bold") +
-  theme(legend.position="none") +
-  scale_color_manual(values = colors) +
-  scale_fill_manual(values = colors) +
-  geom_line(aes(group=interaction(model,repl)),linetype="solid",alpha=0.5) +
-  # stat_summary(aes(group=model,fill=model),geom="ribbon", fun.data=mean_cl_normal, fun.args=list(conf.int=a),alpha=0.3) +
-  stat_summary(aes(group=model,shape = model),geom="point", fun.y=mean,size=2) +
-  stat_summary(aes(group=model),geom="line", fun.y=mean, size = 1) +
-  scale_x_continuous(breaks=seq(0,1000,200))
-# ggsave("example_SV_hscore_shift_every10steps.png",width = 10, height = 5,dpi = 300)
+# # x_resolution = (1:nobservations)
+# centered = results_all
+# centered$hscoreDDE = centered$hscoreDDE - rep(rowMeans(sapply(1:repl,function(i)subset(centered,model==1&repl==i)$hscoreDDE)),repl*length(unique(centered$model)))
+# labels.df = data.frame(x = rep(1075,2), y = c(0,mean(subset(centered,time==1000 & model==2)$hscoreDDE)),
+#                        text = c("Model 1","Model 2"),
+#                        type = factor(c("Model 1","Model 2")))
+# # Check the h-score DDE
+# ggplot(subset(centered,time%in%x_resolution),aes(time, hscoreDDE, color = model)) +
+#   ylab("Prequential Hyvärinen score (centered)") +
+#   # guides(shape = guide_legend(override.aes = list(size=2))) +
+#   xlim(0,1100) +
+#   xlab("Time") +
+#   geom_label(data = labels.df, aes(x,y,label = text,color=type), color = colors, fontface = "bold") +
+#   theme(legend.position="none") +
+#   scale_color_manual(values = colors) +
+#   scale_fill_manual(values = colors) +
+#   geom_line(aes(group=interaction(model,repl)),linetype="solid",alpha=0.5) +
+#   # stat_summary(aes(group=model,fill=model),geom="ribbon", fun.data=mean_cl_normal, fun.args=list(conf.int=a),alpha=0.3) +
+#   stat_summary(aes(group=model,shape = model),geom="point", fun.y=mean,size=2) +
+#   stat_summary(aes(group=model),geom="line", fun.y=mean, size = 1) +
+#   scale_x_continuous(breaks=seq(0,1000,200))
+# # ggsave("example_SV_hscore_shift_every10steps.png",width = 10, height = 5,dpi = 300)
 #--------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------
@@ -247,11 +248,11 @@ ggplot(subset(centered,time%in%x_resolution),aes(time, hscoreDDE, color = model)
 #### Artificially put all the things to be plotted into a single dataframe in order to use facets
 BHfactors.df = data.frame()
 for (r in 1:repl){
-  BHfactors.df = rbind(BHfactors.df, data.frame(value = subset(centered,model==2&repl==r)$hscoreDDE-subset(centered,model==1&repl==r)$hscoreDDE,
+  BHfactors.df = rbind(BHfactors.df, data.frame(value = subset(results_all,model==2&repl==r)$hscoreDDE-subset(results_all,model==1&repl==r)$hscoreDDE,
                                                 time = 1:nobservations,
                                                 repl = r,
                                                 type = factor("H",levels = c("data","log","H"))))
-  BHfactors.df = rbind(BHfactors.df, data.frame(value = -subset(centered,model==2&repl==r)$logevidence+subset(centered,model==1&repl==r)$logevidence,
+  BHfactors.df = rbind(BHfactors.df, data.frame(value = -subset(results_all,model==2&repl==r)$logevidence+subset(results_all,model==1&repl==r)$logevidence,
                                                 time = 1:nobservations,
                                                 repl = r,
                                                 type = factor("log",levels = c("data","log","H"))))
@@ -273,8 +274,6 @@ case_labeller <- function(variable,value){
 }
 colors = c("forestgreen","tomato",wes_palette("Darjeeling2")[2])
 mean_size = 1.5
-axis_titlesize = 18
-axis_ticktextsize = 15
 #--------------------------------------------------------------------------------------------
 ggplot() +
   xlab("Time (number of observations)") +
@@ -291,7 +290,7 @@ ggplot() +
   my_theme
 # ggsave("example_SV_12_by_9.png",dpi = 300,width = 12,height = 9)
 # ggsave("example_SV_15_by_9.png",dpi = 300,width = 15,height = 9)
-
+# ggsave("example_SV_15_by_9.pdf",dpi = 300,width = 15,height = 9)
 
 
 # #### Plot prior (WARNING: these are specific to a particular choice of prior, xmin and xmax were set manually
