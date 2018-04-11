@@ -193,12 +193,12 @@ case_label <- list(
 case_labeller <- function(variable,value){
   return(case_label[value])
 }
-labels.df = data.frame(x = c(350,850,500,875,900,900,900,900),
-                       y = c(300,150,-2500,-450,-600,150,-75,45),
+labels.df = data.frame(x = c(350,850,500,875,900,850,900,850),
+                       y = c(300,150,-2500,-450,-600,150,-75,50),
                        text = rep(c("HF 1 vs. 2","log-BF 1 vs. 2"),4),
                        crit = factor(rep(c("HF","LBF"),4)),
                        case = factor(rep(1:4,each=2)))
-axis_titlesize = 18
+axis_titlesize = 22
 axis_ticktextsize = 15
 colors = c("dodgerblue","tomato3")
 # plot one point every xstep observations (to speed up the printing and display of the graphs)
@@ -209,7 +209,7 @@ ggplot() +
   # scale_linetype_manual(values=c("dashed","solid")) +
   scale_color_manual(values=colors) +
   geom_hline(yintercept = 0,linetype = 2) +
-  geom_label(data = labels.df, aes(x,y,label = text,color=crit,fontface="bold"),size=4.5) +
+  geom_label(data = labels.df, aes(x,y,label = text,color=crit,fontface="bold"),size=6.5) +
   geom_line(data = slopes.df, aes(time, slope, group = interaction(crit,case), color = crit), alpha = 0) +
   xlab("Number of observations") +
   ylab("") +
