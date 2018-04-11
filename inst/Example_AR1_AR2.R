@@ -199,8 +199,8 @@ case_label <- list(
 case_labeller <- function(variable,value){
   return(case_label[value])
 }
-labels.df = data.frame(x = c(rep(900,2),rep(875,2)),
-                       y = c(6,2,-285,-65),
+labels.df = data.frame(x = c(900,900,rep(875,2)),
+                       y = c(5.5,1.5,-280,-65),
                        text = rep(c("HF 1 vs. 2","log-BF 1 vs. 2"),4),
                        crit = factor(rep(c("HF","LBF"),4)),
                        type = factor(rep(3:4,each=2)))
@@ -208,7 +208,7 @@ hline.df = data.frame(y = c(-5,10), type = factor(3))
 axis_titlesize = 18
 axis_ticktextsize = 15
 ggplot() +
-  geom_label(data = labels.df, aes(x,y,label = text,color=crit), fontface = "bold") +
+  geom_label(data = labels.df, aes(x,y,label = text,color=crit), fontface = "bold",size=5) +
   theme(legend.position="none") +
   scale_color_manual(values = colors[2:1]) +
   geom_line(data = crit.df, aes(time, value, color = crit, group = interaction(crit,repl)),alpha=0.6) +
@@ -228,3 +228,4 @@ ggplot() +
         panel.background = element_rect(fill="gray95",linetype = "solid", colour="white"),
         legend.position = "none")
 # ggsave("example_AR1_AR2_15_by_6.png",dpi = 300,width = 15,height = 6)
+# ggsave("example_AR1_AR2_15_by_6.pdf",dpi = 300,width = 15,height = 6)

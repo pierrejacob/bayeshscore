@@ -276,7 +276,7 @@ labels.df = data.frame(x = c(rep(900,2),rep(900,2)),
 axis_titlesize = 18
 axis_ticktextsize = 15
 ggplot() +
-  geom_label(data = labels.df, aes(x,y,label = text,color=crit), fontface = "bold") +
+  geom_label(data = labels.df, aes(x,y,label = text,color=crit), fontface = "bold", size = 5) +
   scale_color_manual(values = colors[2:1]) +
   geom_line(data = crit.df, aes(time, value, color = crit, group = interaction(crit,repl)),alpha=0.8) +
   geom_hline(yintercept = 0,linetype=2) +
@@ -295,4 +295,4 @@ ggplot() +
         strip.background = element_rect(fill="gray88"),
         panel.background = element_rect(fill="gray95",linetype = "solid", colour="white"))
 # ggsave("example_AR1_MA1_15_by_6.png",dpi = 300,width = 15,height = 6)
-
+# ggsave("example_AR1_MA1_15_by_6.pdf",dpi = 300,width = 15,height = 6)
