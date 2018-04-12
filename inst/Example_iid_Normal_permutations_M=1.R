@@ -14,6 +14,7 @@ algorithmic_parameters = list()
 algorithmic_parameters$Ntheta = 2^10
 algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$store_theta = TRUE
+algorithmic_parameters$resampling = function(normw) ssp_resampling_n(normw, runif(length(normw)))
 #--------------------------------------------------------------------------------------------
 # set hyperparameters
 muprior = 0

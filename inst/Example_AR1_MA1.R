@@ -27,6 +27,7 @@ algorithmic_parameters$Ntheta = 2^10
 algorithmic_parameters$Nx = 2^7
 algorithmic_parameters$verbose = TRUE
 algorithmic_parameters$nmoves = 1
+algorithmic_parameters$resampling = function(normw) ssp_resampling_n(normw, runif(length(normw)))
 # The remaining algorithmic parameters are set to their default values via the functions in util_default.R
 #--------------------------------------------------------------------------------------------
 repl = 5 #number of replications

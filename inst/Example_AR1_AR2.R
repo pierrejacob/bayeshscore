@@ -22,6 +22,7 @@ model = function(i){
 algorithmic_parameters = list()
 algorithmic_parameters$Ntheta = 2^10
 algorithmic_parameters$verbose = TRUE
+algorithmic_parameters$resampling = function(normw) ssp_resampling_n(normw, runif(length(normw)))
 # The remaining algorithmic parameters are set to their default values via util_default.R
 #--------------------------------------------------------------------------------------------
 repl = 5 #number of replications
