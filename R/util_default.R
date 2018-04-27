@@ -16,6 +16,8 @@ set_default_algorithmic_parameters = function(observations, model, algorithmic_p
   # ESS threshold to trigger the resample-move steps // Number of moves per rejuvenation steps
   if (is.null(algorithmic_parameters$ess_threshold)) {algorithmic_parameters$ess_threshold = 0.5}
   if (is.null(algorithmic_parameters$nmoves)) {algorithmic_parameters$nmoves = 1}
+  # Adaptive tempering or not (i.e. activate search gamma or not when assimilating a new observation)
+  if (is.null(algorithmic_parameters$adaptivetempering)) {algorithmic_parameters$adaptivetempering = TRUE}
   # Compute the Hyvarinen score or not
   if (is.null(algorithmic_parameters$hscore)) {algorithmic_parameters$hscore = FALSE}
   # For discrete observations, specify which differencing scheme to use

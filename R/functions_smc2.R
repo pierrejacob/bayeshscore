@@ -85,16 +85,21 @@ assimilate_one_smc2 = function(thetas, PFs, t, observations, model,
       normw = w / sum(w)
       return(1/(sum(normw^2)))
     }
-    # try gamma = 1 first
-    if (ess_given_gamma(1) > ess_objective){
-      gamma = 1
-    } else {
-      if (ess_given_gamma(current_gamma) < ess_objective){
-        gamma = current_gamma
-        cat("\n>>>>>> WARNING: ESS at current gamma too low; something went wrong <<<<<<")
+    if (algorithmic_parameters$adaptivetempering){
+      # try gamma = 1 first
+      if (ess_given_gamma(1) > ess_objective){
+        gamma = 1
       } else {
-        gamma = search_gamma(current_gamma, ess_given_gamma, objective = ess_objective)$x
+        if (ess_given_gamma(current_gamma) < ess_objective){
+          gamma = current_gamma
+          cat("\n>>>>>> WARNING: ESS at current gamma too low; something went wrong <<<<<<")
+        } else {
+          gamma = search_gamma(current_gamma, ess_given_gamma, objective = ess_objective)$x
+        }
       }
+    } else {
+      # assimilate next observation without tempering
+      gamma = 1
     }
     # now we've found our gamma
     logw_incremental_gamma = (gamma - current_gamma) * logw_incremental
@@ -113,7 +118,7 @@ assimilate_one_smc2 = function(thetas, PFs, t, observations, model,
     if (algorithmic_parameters$verbose){
       cat("\nStep", t, ", gamma = ", gamma, ", ESS = ", ESS)
     }
-    if (gamma<1){
+    if (ess_given_gamma(1) <= ess_objective){
       # we need to resample and move
       # First we get the proposal for the move steps. Note: proposalmove is a list with the following fields:
       # proposalmove$r : sampler from the proposal
