@@ -25,7 +25,7 @@ get_model_iid_gaussian_unknown_mean <- function(muprior,sigma2prior){
 
   # one-step predicitve density of the observation at time t given all the past from 1 to (t-1)
   model$dpredictive = function(observations,t,theta,log = TRUE){
-    return (dnorm(observations[,t], theta, model$sigma2, log))
+    return (dnorm(observations[,t], theta, sqrt(model$sigma2), log))
   }
 
   # OPTIONAL: derivatives of the predicitve density with respect to the observation at time t
