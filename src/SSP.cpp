@@ -21,7 +21,7 @@ IntegerVector SSP_resampling_n_(const NumericVector & weights, const NumericVect
     n = 0;
     m = 1;
     for(k = 0; k < N; k++){
-      if (m+1 > N){
+      if ((m+1) > N){
         break;
       }
       double delta_n = nb_offsprings(n)+1-Y(n);
@@ -45,50 +45,37 @@ IntegerVector SSP_resampling_n_(const NumericVector & weights, const NumericVect
         double epsilon = min(epsilon_n, epsilon_m);
         //// Keeping track of delta_n, delta_m, epsilon_n, epsilon_m prevents rounding errors
         if (u(k) < epsilon/(epsilon+delta)){
-          if (delta_n == delta_m){
-            Y(n) = nb_offsprings(n)+1;
-            Y(m) = nb_offsprings(m);
+          if (std::abs(delta_n-delta_m)<tol){
+            // Test delta_n == delta_m while accounting for numerical rounding imprecisions
             nb_offsprings(n) += 1;
-            Yn_is_integer = true;
-            Ym_is_integer = true;
+            n = m+1;
+            m = m+2;
           } else if (delta_n < delta_m){
-            Y(n) = nb_offsprings(n)+1;
             Y(m) = Y(m) - delta;
             nb_offsprings(n) += 1;
-            Yn_is_integer = true;
+            n = m;
+            m = m+1;
           } else if (delta_n > delta_m){
             Y(n) = Y(n) + delta;
-            Y(m) = nb_offsprings(m);
-            Ym_is_integer = true;
+            m = m+1;
+            // Note that nb_offsprings(m) is already set at the correct value
           }
         } else {
-          if (epsilon_n == epsilon_m){
-            Y(n) = nb_offsprings(n);
-            Y(m) = nb_offsprings(m)+1;
+          if (std::abs(epsilon_n-epsilon_m)<tol){
+            // Test epsilon_n == epsilon_m while accounting for numerical rounding imprecisions
             nb_offsprings(m) += 1;
-            Yn_is_integer = true;
-            Ym_is_integer = true;
+            n = m+1;
+            m = m+2;
           } else if (epsilon_n < epsilon_m){
-            Y(n) = nb_offsprings(n);
             Y(m) = Y(m) + epsilon;
-            Yn_is_integer = true;
+            n = m;
+            m = m+1;
+            // Note that nb_offsprings(n) is already set at the correct value
           } else if (epsilon_n > epsilon_m){
             Y(n) = Y(n) - epsilon;
-            Y(m) = nb_offsprings(m)+1;
             nb_offsprings(m) += 1;
-            Ym_is_integer = true;
+            m = m+1;
           }
-        }
-        if (Yn_is_integer && Ym_is_integer){
-          n = m+1;
-          m = m+2;
-        } else if (Yn_is_integer){
-          n = m;
-          m = m+1;
-        } else if (Ym_is_integer){
-          m = m+1;
-        } else {
-          // Do nothing since by construction either Y(n) or Y(m) (or both) must become an integer
         }
       }
     }
