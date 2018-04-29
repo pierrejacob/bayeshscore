@@ -61,7 +61,7 @@ set_default_algorithmic_parameters = function(observations, model, algorithmic_p
   }
   # Proposal for rejuvenation steps: the default is independent draws from a fitted mixture of Normals
   if (is.null(algorithmic_parameters$proposalmove)) {
-    algorithmic_parameters$proposalmove = get_proposal_mixture()
+    algorithmic_parameters$proposalmove = get_proposal_mixture(verbose = algorithmic_parameters$verbose)
   }
   # Use kernel density estimators to compute the log-predictives and their derivatives
   if (is.null(algorithmic_parameters$use_dde)) {algorithmic_parameters$use_dde = FALSE}

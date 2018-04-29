@@ -42,7 +42,6 @@ assimilate_one_smc2 = function(thetas, PFs, t, observations, model,
   adaptNx = algorithmic_parameters$adaptNx
   min_acceptance_rate = algorithmic_parameters$min_acceptance_rate
   ess_objective = algorithmic_parameters$ess_threshold*algorithmic_parameters$Ntheta
-  verbose = algorithmic_parameters$verbose
   # initialize variables
   Nx = PFs[[1]]$Nx
   current_gamma = 0

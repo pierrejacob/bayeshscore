@@ -29,7 +29,7 @@ get_proposal_independent_normal <- function(){
 #'@description Independent proposal from a fitted mixture of Normals with \code{nclust} components (default is 5).
 #' If the fit is unsuccessful, return independent Normal proposal (see \code{get_independent_normal_proposal}).
 #'@export
-get_proposal_mixture <- function(nclust = 5, maxattempts = 5){
+get_proposal_mixture <- function(nclust = 5, maxattempts = 5, verbose = FALSE){
   f <- function(thetas,normw,...){
     options(warn = -1)
     # resample
@@ -42,7 +42,7 @@ get_proposal_mixture <- function(nclust = 5, maxattempts = 5){
     attempt = 0
     while(attempt < maxattempts && is.error){
       attempt <- attempt + 1
-      cat("fitting mixture... attempt", attempt, "\n")
+      if(verbose){cat("fitting mixture... attempt", attempt, "\n")}
       fit <- mixmodCluster(data = data.frame(t(thetas_check)), nbCluster = nclust, dataType = "quantitative")
       # test that it worked
       is.error <- (length(fit@bestResult@parameters@proportions) == 0)
