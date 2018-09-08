@@ -252,13 +252,13 @@ ggplot() +
   facet_grid(score_type~., scales="free", labeller = case_labeller) +
   # geom_line(data = subset(results.df,score_type=="data"), aes(time,score,group=repl), color = wes_palette("Darjeeling")[1]) +
   geom_segment(data = subset(results.df,score_type=="data"&repl==0),aes(x = time, y = score, xend = time, yend = yend),linetype="dotted",colour="black") +
-  geom_point(data = subset(results.df,score_type=="data"), aes(time,score), color = wes_palette("Darjeeling2")[2]) +
-  geom_line(data = subset(results.df,score_type=="H"),aes(time, score, color = Model, group=interaction(Model,repl)),alpha=0.7) +
-  geom_line(data = subset(results.df,score_type=="log"),aes(time, score/time, color = Model, group=interaction(Model,repl)),alpha=0.7) +
+  geom_point(data = subset(results.df,score_type=="data"), aes(time,score), color = "black",size=2) +
+  geom_line(data = subset(results.df,score_type=="H"),aes(time, score, color = Model, group=interaction(Model,repl)),alpha=0.6) +
+  geom_line(data = subset(results.df,score_type=="log"),aes(time, score/time, color = Model, group=interaction(Model,repl)),alpha=0.6) +
   geom_hline(data = hlines.df, aes(yintercept = yintercept), alpha=0) +
-  stat_summary(data = subset(results.df,score_type=="H"),aes(time, score, color = Model,group=interaction(Model),shape = Model),geom="point", fun.y=mean,size=2.5) +
+  stat_summary(data = subset(results.df,score_type=="H"),aes(time, score, color = Model,group=interaction(Model),shape = Model),geom="point", fun.y=mean,size=3.5) +
   stat_summary(data = subset(results.df,score_type=="H"),aes(time, score, color = Model,group=interaction(Model)),geom="line", fun.y=mean, size = 1) +
-  stat_summary(data = subset(results.df,score_type=="log"),aes(time, score/time, color = Model,group=interaction(Model),shape = Model),geom="point", fun.y=mean,size=2.5) +
+  stat_summary(data = subset(results.df,score_type=="log"),aes(time, score/time, color = Model,group=interaction(Model),shape = Model),geom="point", fun.y=mean,size=3.5) +
   stat_summary(data = subset(results.df,score_type=="log"),aes(time, score/time, color = Model,group=interaction(Model)),geom="line", fun.y=mean, size = 1) +
   scale_color_manual(values = rep(colors,2)) +
   geom_label(data = labels.df, aes(x,y,label = text,color=rep(colors[3:1],2),fontface="bold"),size=5) +

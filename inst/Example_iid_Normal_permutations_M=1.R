@@ -194,8 +194,8 @@ case_label <- list(
 case_labeller <- function(variable,value){
   return(case_label[value])
 }
-labels.df = data.frame(x = c(350,850,500,875,900,850,900,850),
-                       y = c(300,150,-2500,-450,-600,150,-75,50),
+labels.df = data.frame(x = c(350,850,500,875,900,875,900,820),
+                       y = c(300,150,-2500,-450,-600,150,-75,47),
                        text = rep(c("HF 1 vs. 2","log-BF 1 vs. 2"),4),
                        crit = factor(rep(c("HF","LBF"),4)),
                        case = factor(rep(1:4,each=2)))
@@ -206,7 +206,7 @@ colors = c("dodgerblue","tomato3")
 x_step = 1
 # plot results
 ggplot() +
-  geom_line(data = subset(criteria.df,time%in%seq(1,nobservations, x_step)), aes(time, value, color = crit, group = interaction(case,repl,crit)),alpha=0.5) +
+  geom_line(data = subset(criteria.df,time%in%seq(1,nobservations, x_step)), aes(time, value, color = crit, group = interaction(case,repl,crit)),alpha=0.85) +
   # scale_linetype_manual(values=c("dashed","solid")) +
   scale_color_manual(values=colors) +
   geom_hline(yintercept = 0,linetype = 2) +

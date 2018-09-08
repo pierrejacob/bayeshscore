@@ -272,7 +272,7 @@ case_label <- list(
 case_labeller <- function(variable,value){
   return(case_label[value])
 }
-colors = c("forestgreen","tomato",wes_palette("Darjeeling2")[2])
+colors = c("black","tomato3", "dodgerblue")
 mean_size = 1.5
 #--------------------------------------------------------------------------------------------
 ggplot() +

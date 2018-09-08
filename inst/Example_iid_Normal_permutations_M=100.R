@@ -206,7 +206,7 @@ colors = c("dodgerblue","tomato3")
 x_step = 1
 # plot results
 ggplot() +
-  geom_line(data = subset(criteria.df,time%in%seq(1,nobservations, x_step)), aes(time, value, color = crit, group = interaction(case,repl,crit)),alpha=0.5) +
+  geom_line(data = subset(criteria.df,time%in%seq(1,nobservations, x_step)), aes(time, value, color = crit, group = interaction(case,repl,crit)),alpha=0.85) +
   # scale_linetype_manual(values=c("dashed","solid")) +
   scale_color_manual(values=colors) +
   geom_hline(yintercept = 0,linetype = 2) +

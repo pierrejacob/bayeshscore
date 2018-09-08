@@ -204,7 +204,7 @@ ggplot() +
 labels10by5.df = data.frame(x = rep(250,2), y = c(-8,12),
                             text = c("Case 2","Case 1"),
                             type = factor(c("Case 2","Case 1")))
-colors = c(wes_palette("Darjeeling")[c(4,2)])
+colors = c("tomato3","dodgerblue")
 ggplot() +
   geom_label(data = labels10by5.df, aes(x,y,label = text,color=type), color = colors, fontface = "bold") +
   scale_color_manual(values = colors[2:1]) +
@@ -279,7 +279,7 @@ axis_ticktextsize = 15
 ggplot() +
   geom_label(data = labels.df, aes(x,y,label = text,color=crit), fontface = "bold", size = 5) +
   scale_color_manual(values = colors[2:1]) +
-  geom_line(data = crit.df, aes(time, value, color = crit, group = interaction(crit,repl)),alpha=0.8) +
+  geom_line(data = crit.df, aes(time, value, color = crit, group = interaction(crit,repl)),alpha=0.85) +
   geom_hline(yintercept = 0,linetype=2) +
   # geom_hline(data = hline.df, aes(yintercept = y),linetype=2, alpha = 0) +
   xlab("Number of observations") +
