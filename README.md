@@ -1,6 +1,6 @@
 # bayeshscore
 **Bayesian model comparison using the Hyvärinen score**.  
-*\[more details in Shao, Jacob, Ding, Tarokh (2017) at [https://arxiv.org/abs/1711.00136](https://arxiv.org/abs/1711.00136)\]*
+*\[more details in S. Shao, P.E. Jacob, J. Ding, and V. Tarokh (2017), available at [https://arxiv.org/abs/1711.00136](https://arxiv.org/abs/1711.00136)\]*
 
 This package provides functions that compute the **Hyvärinen score** (and the log-evidence as an aside) of a Bayesian model. This is achieved by using either **SMC** \[e.g. [Chopin (2002)](https://academic.oup.com/biomet/article-abstract/89/3/539/251804) and [Del Moral, Doucet, Jasra (2006)](http://onlinelibrary.wiley.com/doi/10.1111/j.1467-9868.2006.00553.x/abstract)\] or **SMC<sup>2</sup>** \[cf. [Chopin, Jacob, Papaspiliopoulos (2013)](http://onlinelibrary.wiley.com/doi/10.1111/j.1467-9868.2012.01046.x/abstract)\] depending on whether the likelihood can be evaluated.
 
@@ -55,4 +55,4 @@ The output of `hscore`, `smc`, or `smc2` is a `list`. Depending on the specified
 The particle filter is implemented in `R/conditional_particle_filter.R`. The function `conditional_particle_filter` uses the bootstrap particle filter. It takes an optional argument `path` when conditioning on a particular path is needed. The output is a `list` containing the number of x-particles (`Nx`), the last set of x-particles (`X`), their respective normalized weights (`xnormW`), an estimator of the log-likelihood (`log_p_y_hat`), the last incremental log-likelihood (`incremental_ll`), a tree encoding the paths and ancestral lineages (`tree`), and a realized path sampled from the final sets of paths (`path`).
 
 ### <a name="examples"></a> Examples
-Some examples are provided in the folder `inst`. These scripts reproduce the figures presented in [Shao, Jacob, Ding, Tarokh (2017)](https://arxiv.org/abs/1711.00136) and its [supplementary material](https://sites.google.com/site/pierrejacob/articles).
+Some examples are provided in the folder `inst`. These scripts reproduce the figures presented in [S. Shao, P.E. Jacob, J. Ding, and V. Tarokh (2017)](https://doi.org/10.1080/01621459.2018.1518237) and its [supplementary material](https://www.tandfonline.com/doi/suppl/10.1080/01621459.2018.1518237). Open access to the manuscript and its supplement is also available [here](https://stephaneshao.github.io/publication/hyvarinen/).
