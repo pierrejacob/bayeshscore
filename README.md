@@ -2,6 +2,7 @@
 **Bayesian model comparison using the Hyvärinen score**.  
 *\[more details in S. Shao, P.E. Jacob, J. Ding, and V. Tarokh (2017), available [here](https://doi.org/10.1080/01621459.2018.1518237) (or alternatively [there](https://arxiv.org/abs/1711.00136))\]*
 
+
 This package provides functions that compute the **Hyvärinen score** (and the log-evidence as an aside) of a Bayesian model. This is achieved by using either **SMC** \[e.g. [Chopin (2002)](https://academic.oup.com/biomet/article-abstract/89/3/539/251804) and [Del Moral, Doucet, Jasra (2006)](http://onlinelibrary.wiley.com/doi/10.1111/j.1467-9868.2006.00553.x/abstract)\] or **SMC<sup>2</sup>** \[cf. [Chopin, Jacob, Papaspiliopoulos (2013)](http://onlinelibrary.wiley.com/doi/10.1111/j.1467-9868.2012.01046.x/abstract)\] depending on whether the likelihood can be evaluated.
 
 ## Table of contents
