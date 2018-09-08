@@ -3,7 +3,7 @@ Type: Package
 Title: Bayesian Model Comparison using the Hyvarinen Score
 Version: 0.1.0
 Author: Stephane Shao
-Maintainer: Stephane Shao <stephaneshao@g.harvard.edu>
+Maintainer: Stephane Shao <stephaneshao@alumni.harvard.edu>
 Description: Computes the Hyvarinen score using sequential Monte Carlo samplers
 License: GPL v2
 LazyData: TRUE
